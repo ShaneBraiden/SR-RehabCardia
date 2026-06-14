@@ -38,9 +38,11 @@ private data class FeedbackItem(
     val id: String,
     val patientName: String,
     val dateStr: String,
-    val stress: Boolean,
-    val strain: Boolean,
-    val respiratory: Int
+    val hadPain: Boolean,
+    val painIntensity: Int,
+    val painLocation: String?,
+    val respiration: Int,
+    val pulseRate: Int?
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -116,7 +118,7 @@ private fun FeedbackTabView(patientId: String, patientName: String) {
             val sdf = SimpleDateFormat("dd/MM/yyyy • hh:mm a", Locale.getDefault())
             feedbacks = res.map { fb ->
                 val dateStr = fb.submittedAtMs?.let { sdf.format(java.util.Date(it)) } ?: "Just now"
-                FeedbackItem(fb.id, patientName, dateStr, fb.stress, fb.strain, fb.respiratoryDifficulty)
+                FeedbackItem(fb.id, patientName, dateStr, fb.hadPain, fb.painIntensity, fb.painLocation, fb.respiration, fb.pulseRate)
             }
         } catch (e: Exception) {
             // failed
@@ -309,15 +311,30 @@ private fun FeedbackCard(item: FeedbackItem) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                MetricChip("Stress", if (item.stress) "Yes" else "No", if (item.stress) DesignTokens.Colors.Error else DesignTokens.Colors.Success)
-                MetricChip("Strain", if (item.strain) "Yes" else "No", if (item.strain) DesignTokens.Colors.Error else DesignTokens.Colors.Success)
-                
-                val respColor = when (item.respiratory) {
-                    in 1..3 -> DesignTokens.Colors.Success
+                val painColor = when {
+                    !item.hadPain -> DesignTokens.Colors.Success
+                    item.painIntensity >= 7 -> DesignTokens.Colors.Error
+                    else -> DesignTokens.Colors.Warning
+                }
+                MetricChip("Pain", if (item.hadPain) "${item.painIntensity}/10" else "None", painColor)
+
+                val respColor = when (item.respiration) {
+                    in 0..3 -> DesignTokens.Colors.Success
                     in 4..6 -> DesignTokens.Colors.Warning
                     else -> DesignTokens.Colors.Error
                 }
-                MetricChip("Respiratory", "${item.respiratory}/10", respColor)
+                MetricChip("Respiration", "${item.respiration}/10", respColor)
+
+                MetricChip("Pulse", item.pulseRate?.let { "$it bpm" } ?: "—", DesignTokens.Colors.Primary)
+            }
+
+            if (item.hadPain && !item.painLocation.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(DesignTokens.Spacing.SM))
+                Text(
+                    "Pain location: ${item.painLocation}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }

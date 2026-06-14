@@ -40,10 +40,12 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import com.srcardiocare.core.security.ErrorHandler
 import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.data.model.Assignment
+import com.srcardiocare.ui.components.AppLogoWatermark
 import com.srcardiocare.ui.components.rememberToast
 import com.srcardiocare.ui.theme.DesignTokens
 import kotlinx.coroutines.delay
@@ -82,10 +84,14 @@ fun AssignmentWorkoutScreen(
     var showAbandonDialog by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    // Keep screen on for the whole session
+    // Keep the screen on, and block screenshots / screen recording (anti-piracy) for the session.
     DisposableEffect(Unit) {
         activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        onDispose { activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) }
+        activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        onDispose {
+            activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
     }
 
     // Start session on first composition
@@ -342,6 +348,8 @@ private fun ExerciseStage(
                     factory = { ctx ->
                         PlayerView(ctx).apply {
                             useController = false
+                            // Fill the panel edge-to-edge with no black bars (preserves aspect, crops overflow).
+                            resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
                             player = exoPlayer
                         }
                     },
@@ -366,6 +374,15 @@ private fun ExerciseStage(
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                )
+            }
+
+            // App-logo watermark (branding + anti-piracy deterrent)
+            if (!videoUrl.isNullOrBlank()) {
+                AppLogoWatermark(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(DesignTokens.Spacing.SM)
                 )
             }
         }

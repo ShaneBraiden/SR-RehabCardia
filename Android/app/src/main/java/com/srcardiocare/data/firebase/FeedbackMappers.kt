@@ -9,9 +9,13 @@ fun Map<String, Any?>.toPostWorkoutFeedback(id: String): PostWorkoutFeedback = P
     id = id,
     patientId = this["patientId"] as? String ?: "",
     workoutId = this["workoutId"] as? String,
-    respiratoryDifficulty = (this["respiratoryDifficulty"] as? Number)?.toInt() ?: 1,
-    stress = this["stress"] as? Boolean ?: false,
-    strain = this["strain"] as? Boolean ?: false,
+    hadPain = this["hadPain"] as? Boolean ?: (((this["painIntensity"] as? Number)?.toInt() ?: 0) > 0),
+    painIntensity = (this["painIntensity"] as? Number)?.toInt() ?: 0,
+    painLocation = this["painLocation"] as? String,
+    // `respiration` is the current field; fall back to the legacy `respiratoryDifficulty` for old docs.
+    respiration = (this["respiration"] as? Number)?.toInt()
+        ?: (this["respiratoryDifficulty"] as? Number)?.toInt() ?: 0,
+    pulseRate = (this["pulseRate"] as? Number)?.toInt(),
     notes = this["notes"] as? String,
     submittedAtMs = (this["submittedAt"] as? Timestamp)?.toDate()?.time
 )

@@ -1,6 +1,7 @@
 package com.srcardiocare.ui.components
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,8 +22,11 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.srcardiocare.R
 import com.srcardiocare.ui.theme.DesignTokens
 
 private val HeartRed = Color(0xFFEF4C43)
@@ -99,4 +103,19 @@ fun BrandDashboardBanner(modifier: Modifier = Modifier) {
             )
         }
     }
+}
+
+/**
+ * Semi-transparent app-logo watermark for video surfaces — branding plus an
+ * anti-piracy deterrent. Drop inside a Box and position with `Modifier.align(...)`.
+ */
+@Composable
+fun AppLogoWatermark(modifier: Modifier = Modifier) {
+    Image(
+        painter = painterResource(id = R.drawable.sr_logo),
+        contentDescription = null,
+        contentScale = ContentScale.Fit,
+        alpha = 0.55f,
+        modifier = modifier.size(40.dp)
+    )
 }

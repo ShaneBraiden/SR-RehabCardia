@@ -6,6 +6,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.pm.ActivityInfo
 import android.net.Uri
+import android.view.WindowManager
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -36,6 +37,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.VideoSize
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
+import com.srcardiocare.ui.components.AppLogoWatermark
 import com.srcardiocare.ui.theme.DesignTokens
 import kotlinx.coroutines.launch
 
@@ -127,6 +129,13 @@ fun WorkoutPlayerScreen(
     // Lock fullscreen orientation to the video's aspect ratio. YouTube plays in a
     // WebView that can't report its size, so we leave those free to rotate.
     val activity = context as? Activity
+
+    // Anti-piracy: block screenshots and screen recording while the workout video is on screen.
+    DisposableEffect(activity) {
+        activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        onDispose { activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE) }
+    }
+
     DisposableEffect(isFullscreen, videoOrientation, isYoutube) {
         if (isFullscreen) {
             activity?.requestedOrientation = if (isYoutube) {
@@ -183,6 +192,13 @@ fun WorkoutPlayerScreen(
                     modifier = Modifier.fillMaxSize()
                 )
             }
+
+            // App-logo watermark (branding + anti-piracy deterrent)
+            AppLogoWatermark(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 16.dp)
+            )
 
             // Exit fullscreen button
             IconButton(
@@ -249,13 +265,9 @@ fun WorkoutPlayerScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .then(
-                        when (videoOrientation) {
-                            VideoOrientation.LANDSCAPE -> Modifier.aspectRatio(videoAspectRatio.coerceIn(1.2f, 2.5f))
-                            VideoOrientation.PORTRAIT -> Modifier.aspectRatio(videoAspectRatio.coerceIn(0.4f, 0.9f))
-                            VideoOrientation.SQUARE -> Modifier.aspectRatio(1f)
-                        }
-                    )
+                    // Match the container to the video's true aspect ratio so it fills
+                    // edge-to-edge in its own proportions — no fixed ratio, no black bars.
+                    .aspectRatio(videoAspectRatio)
             ) {
                 if (videoUrl.isNullOrBlank()) {
                     AndroidView(
@@ -281,6 +293,15 @@ fun WorkoutPlayerScreen(
                         },
                         update = { it.player = exoPlayer },
                         modifier = Modifier.fillMaxSize()
+                    )
+                }
+
+                // App-logo watermark (branding + anti-piracy deterrent)
+                if (!videoUrl.isNullOrBlank()) {
+                    AppLogoWatermark(
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = 8.dp)
                     )
                 }
 

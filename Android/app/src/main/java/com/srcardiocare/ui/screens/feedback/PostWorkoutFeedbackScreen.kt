@@ -2,13 +2,16 @@
 package com.srcardiocare.ui.screens.feedback
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.srcardiocare.core.security.ErrorHandler
 import com.srcardiocare.core.security.InputValidator
@@ -25,14 +29,32 @@ import com.srcardiocare.ui.components.rememberToast
 import com.srcardiocare.ui.theme.DesignTokens
 import kotlinx.coroutines.launch
 
+/** Body locations offered when a patient reports pain. */
+private val PAIN_LOCATIONS = listOf(
+    "Left Arm", "Right Arm",
+    "Left Leg", "Right Leg",
+    "Left Chest", "Right Chest",
+    "Head", "Other"
+)
+
+/** Colour for a Borg 0-10 rating: green (mild) -> orange (moderate) -> red (severe). */
+private fun borgColor(value: Int) = when {
+    value <= 3 -> DesignTokens.Colors.Success
+    value <= 6 -> DesignTokens.Colors.Warning
+    else -> DesignTokens.Colors.Error
+}
+
 @Composable
 fun PostWorkoutFeedbackScreen(
     workoutId: String? = null,
     onSubmit: () -> Unit
 ) {
-    var feltStress by remember { mutableStateOf<Boolean?>(null) }
-    var feltStrain by remember { mutableStateOf<Boolean?>(null) }
-    var respiratoryDifficulty by remember { mutableFloatStateOf(1f) }
+    var hadPain by remember { mutableStateOf<Boolean?>(null) }
+    var painIntensity by remember { mutableFloatStateOf(0f) }
+    var painLocation by remember { mutableStateOf<String?>(null) }
+    var locationExpanded by remember { mutableStateOf(false) }
+    var respiration by remember { mutableFloatStateOf(0f) }
+    var pulseRate by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
     var isSubmitting by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -47,6 +69,12 @@ fun PostWorkoutFeedbackScreen(
             patientName = UserRepository.getUser(uid).fullName.ifBlank { "Patient" }
         } catch (_: Exception) {}
     }
+
+    val pulseValue = pulseRate.toIntOrNull()
+    val pulseValid = pulseValue != null && pulseValue in 30..250
+    val painAnswered = hadPain != null
+    val painComplete = hadPain == false || (hadPain == true && painLocation != null)
+    val canSubmit = !isSubmitting && painAnswered && painComplete && pulseValid
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -93,14 +121,14 @@ fun PostWorkoutFeedbackScreen(
 
             Spacer(modifier = Modifier.height(DesignTokens.Spacing.XXL))
 
-            // Felt Stress — Yes/No
+            // ── Pain ──────────────────────────────────────────────────────────
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(DesignTokens.Radius.LG),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(modifier = Modifier.padding(DesignTokens.Spacing.MD)) {
-                    Text("Did you feel stressed?", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+                    Text("Did you experience any pain?", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
                     Spacer(modifier = Modifier.height(DesignTokens.Spacing.SM))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -108,85 +136,170 @@ fun PostWorkoutFeedbackScreen(
                     ) {
                         YesNoChip(
                             label = "Yes",
-                            selected = feltStress == true,
-                            onClick = { feltStress = true },
+                            selected = hadPain == true,
+                            onClick = { hadPain = true },
                             modifier = Modifier.weight(1f)
                         )
                         YesNoChip(
                             label = "No",
-                            selected = feltStress == false,
-                            onClick = { feltStress = false },
+                            selected = hadPain == false,
+                            onClick = {
+                                hadPain = false
+                                painLocation = null
+                                painIntensity = 0f
+                            },
                             modifier = Modifier.weight(1f)
                         )
+                    }
+
+                    if (hadPain == true) {
+                        Spacer(modifier = Modifier.height(DesignTokens.Spacing.MD))
+
+                        // Where is the pain? — dropdown
+                        Text("Where is the pain?", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
+                        Spacer(modifier = Modifier.height(DesignTokens.Spacing.SM))
+                        Box {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(DesignTokens.Radius.Base))
+                                    .border(
+                                        1.dp,
+                                        MaterialTheme.colorScheme.outline,
+                                        RoundedCornerShape(DesignTokens.Radius.Base)
+                                    )
+                                    .clickable { locationExpanded = true }
+                                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    painLocation ?: "Select location",
+                                    color = if (painLocation == null) MaterialTheme.colorScheme.onSurfaceVariant
+                                    else MaterialTheme.colorScheme.onSurface
+                                )
+                                Icon(
+                                    Icons.Default.ArrowDropDown,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = locationExpanded,
+                                onDismissRequest = { locationExpanded = false }
+                            ) {
+                                PAIN_LOCATIONS.forEach { location ->
+                                    DropdownMenuItem(
+                                        text = { Text(location) },
+                                        onClick = {
+                                            painLocation = location
+                                            locationExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(DesignTokens.Spacing.MD))
+
+                        // Pain intensity — Borg scale 0-10
+                        Text("Pain intensity (Borg scale)", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
+                        val painColor = borgColor(painIntensity.toInt())
+                        Slider(
+                            value = painIntensity,
+                            onValueChange = { painIntensity = it },
+                            valueRange = 0f..10f,
+                            steps = 9,
+                            colors = SliderDefaults.colors(
+                                thumbColor = painColor,
+                                activeTrackColor = painColor
+                            )
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("No pain (0)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(
+                                "${painIntensity.toInt()}",
+                                fontWeight = FontWeight.Bold,
+                                color = painColor,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Text("Worst (10)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(DesignTokens.Spacing.MD))
 
-            // Felt Strain — Yes/No
+            // ── Respiration — Borg scale 0-10 ───────────────────────────────────
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(DesignTokens.Radius.LG),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(modifier = Modifier.padding(DesignTokens.Spacing.MD)) {
-                    Text("Did you feel strain?", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+                    Text("Respiration (Borg scale)", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
                     Spacer(modifier = Modifier.height(DesignTokens.Spacing.SM))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.MD)
-                    ) {
-                        YesNoChip(
-                            label = "Yes",
-                            selected = feltStrain == true,
-                            onClick = { feltStrain = true },
-                            modifier = Modifier.weight(1f)
-                        )
-                        YesNoChip(
-                            label = "No",
-                            selected = feltStrain == false,
-                            onClick = { feltStrain = false },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(DesignTokens.Spacing.MD))
-
-            // Respiratory Difficulty — 1–10
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(DesignTokens.Radius.LG),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-            ) {
-                Column(modifier = Modifier.padding(DesignTokens.Spacing.MD)) {
-                    Text("Respiratory Difficulty", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
-                    Spacer(modifier = Modifier.height(DesignTokens.Spacing.SM))
+                    val respBorgColor = borgColor(respiration.toInt())
                     Slider(
-                        value = respiratoryDifficulty,
-                        onValueChange = { respiratoryDifficulty = it },
-                        valueRange = 1f..10f,
-                        steps = 8,
+                        value = respiration,
+                        onValueChange = { respiration = it },
+                        valueRange = 0f..10f,
+                        steps = 9,
                         colors = SliderDefaults.colors(
-                            thumbColor = DesignTokens.Colors.Primary,
-                            activeTrackColor = DesignTokens.Colors.Primary
+                            thumbColor = respBorgColor,
+                            activeTrackColor = respBorgColor
                         )
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Easy", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Easy (0)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(
-                            "${respiratoryDifficulty.toInt()}",
+                            "${respiration.toInt()}",
                             fontWeight = FontWeight.Bold,
-                            color = DesignTokens.Colors.Primary,
+                            color = respBorgColor,
                             style = MaterialTheme.typography.titleMedium
                         )
-                        Text("Severe", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Severe (10)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(DesignTokens.Spacing.MD))
+
+            // ── Pulse rate — entered by the patient ─────────────────────────────
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(DesignTokens.Radius.LG),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column(modifier = Modifier.padding(DesignTokens.Spacing.MD)) {
+                    Text("Pulse Rate", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+                    Spacer(modifier = Modifier.height(DesignTokens.Spacing.SM))
+                    OutlinedTextField(
+                        value = pulseRate,
+                        onValueChange = { input -> pulseRate = input.filter { it.isDigit() }.take(3) },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Beats per minute (bpm)") },
+                        singleLine = true,
+                        isError = pulseRate.isNotEmpty() && !pulseValid,
+                        supportingText = {
+                            if (pulseRate.isNotEmpty() && !pulseValid) {
+                                Text("Enter a value between 30 and 250")
+                            }
+                        },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        shape = RoundedCornerShape(DesignTokens.Radius.Base),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = DesignTokens.Colors.Primary,
+                            cursorColor = DesignTokens.Colors.Primary
+                        )
+                    )
                 }
             }
 
@@ -222,9 +335,11 @@ fun PostWorkoutFeedbackScreen(
                     scope.launch {
                         try {
                             val feedbackData = hashMapOf<String, Any?>(
-                                "stress" to feltStress,
-                                "strain" to feltStrain,
-                                "respiratoryDifficulty" to respiratoryDifficulty.toInt(),
+                                "hadPain" to (hadPain == true),
+                                "painIntensity" to if (hadPain == true) painIntensity.toInt() else 0,
+                                "painLocation" to if (hadPain == true) painLocation else null,
+                                "respiration" to respiration.toInt(),
+                                "pulseRate" to pulseValue,
                                 "notes" to notes.ifBlank { null },
                                 "submittedAt" to com.google.firebase.firestore.FieldValue.serverTimestamp(),
                                 "patientId" to FirebaseService.currentUID
@@ -233,13 +348,13 @@ fun PostWorkoutFeedbackScreen(
                                 feedbackData["workoutId"] = workoutId
                             }
                             FirebaseService.submitPostWorkoutFeedback(feedbackData)
-                            
+
                             val uid = FirebaseService.currentUID
                             if (uid != null && notes.isNotBlank()) {
                                 val chatText = "[Workout Feedback]\n$notes"
                                 FirebaseService.sendChatMessage(uid, uid, patientName, chatText)
                             }
-                            
+
                             toast("Feedback submitted")
                             onSubmit()
                         } catch (e: Exception) {
@@ -254,7 +369,7 @@ fun PostWorkoutFeedbackScreen(
                     .height(52.dp),
                 shape = RoundedCornerShape(DesignTokens.Radius.Base),
                 colors = ButtonDefaults.buttonColors(containerColor = DesignTokens.Colors.Primary),
-                enabled = !isSubmitting && feltStress != null && feltStrain != null
+                enabled = canSubmit
             ) {
                 if (isSubmitting) {
                     CircularProgressIndicator(

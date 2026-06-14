@@ -124,9 +124,11 @@ data class PostWorkoutFeedback(
     val id: String = "",
     val patientId: String = "",
     val workoutId: String? = null,
-    val respiratoryDifficulty: Int = 1,
-    val stress: Boolean = false,
-    val strain: Boolean = false,
+    val hadPain: Boolean = false,
+    val painIntensity: Int = 0,        // Borg scale 0-10
+    val painLocation: String? = null,  // e.g. "Left Arm"; null when no pain reported
+    val respiration: Int = 0,          // Borg scale 0-10 (perceived breathlessness)
+    val pulseRate: Int? = null,        // beats per minute, entered by the patient
     val notes: String? = null,
     val submittedAtMs: Long? = null
 )

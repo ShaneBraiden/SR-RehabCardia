@@ -20,6 +20,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -60,13 +61,15 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.srcardiocare.R
 import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.ui.theme.DesignTokens
 import kotlinx.coroutines.launch
@@ -90,7 +93,7 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                 title = "Welcome to RehabCardia",
                 body = "Your personal companion for cardiac rehabilitation — built around a recovery plan created just for you by your care team.",
                 accent = DesignTokens.Colors.Primary,
-                illustration = { HeartbeatIllustration() }
+                illustration = { LogoIllustration() }
             ),
             OnboardingPage(
                 title = "Exercises Made for You",
@@ -308,61 +311,28 @@ fun OnboardingScreen(onFinished: () -> Unit) {
 // Illustrations — drawn with Canvas so they scale crisply on any device
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** Beating heart with an ECG trace running through it. */
+/** The RehabCardia app logo, with a gentle breathing pulse. */
 @Composable
-private fun HeartbeatIllustration() {
-    val primary = DesignTokens.Colors.Primary
-    val accent = DesignTokens.Colors.Error
-
-    val transition = rememberInfiniteTransition(label = "heartbeat")
+private fun LogoIllustration() {
+    val transition = rememberInfiniteTransition(label = "logo")
     val pulse by transition.animateFloat(
         initialValue = 1f,
-        targetValue = 1.08f,
+        targetValue = 1.06f,
         animationSpec = infiniteRepeatable(
-            animation = tween(650, easing = FastOutSlowInEasing),
+            animation = tween(900, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "pulse"
     )
 
-    Canvas(
+    Image(
+        painter = painterResource(id = R.drawable.sr_logo),
+        contentDescription = "RehabCardia logo",
+        contentScale = ContentScale.Fit,
         modifier = Modifier
             .size(120.dp)
             .scale(pulse)
-    ) {
-        val w = size.width
-        val h = size.height
-
-        // Heart body — two cubic curves meeting at the bottom tip
-        val heart = Path().apply {
-            moveTo(w * 0.5f, h * 0.88f)
-            cubicTo(w * 0.08f, h * 0.58f, w * 0.04f, h * 0.18f, w * 0.32f, h * 0.12f)
-            cubicTo(w * 0.44f, h * 0.09f, w * 0.5f, h * 0.22f, w * 0.5f, h * 0.28f)
-            cubicTo(w * 0.5f, h * 0.22f, w * 0.56f, h * 0.09f, w * 0.68f, h * 0.12f)
-            cubicTo(w * 0.96f, h * 0.18f, w * 0.92f, h * 0.58f, w * 0.5f, h * 0.88f)
-            close()
-        }
-        drawPath(heart, color = accent.copy(alpha = 0.85f))
-
-        // ECG trace across the middle
-        val ecg = Path().apply {
-            moveTo(0f, h * 0.5f)
-            lineTo(w * 0.30f, h * 0.5f)
-            lineTo(w * 0.38f, h * 0.34f)
-            lineTo(w * 0.48f, h * 0.66f)
-            lineTo(w * 0.56f, h * 0.42f)
-            lineTo(w * 0.62f, h * 0.5f)
-            lineTo(w, h * 0.5f)
-        }
-        drawPath(
-            ecg,
-            color = Color.White,
-            style = Stroke(width = w * 0.045f, cap = StrokeCap.Round, join = StrokeJoin.Round)
-        )
-        // Trace continues subtly outside the heart in the brand color
-        drawCircle(color = primary, radius = w * 0.035f, center = Offset(w * 0.05f, h * 0.5f))
-        drawCircle(color = primary, radius = w * 0.035f, center = Offset(w * 0.95f, h * 0.5f))
-    }
+    )
 }
 
 /** Dumbbell with a gentle rocking motion. */

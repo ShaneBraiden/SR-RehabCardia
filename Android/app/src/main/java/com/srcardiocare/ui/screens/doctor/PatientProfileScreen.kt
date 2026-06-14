@@ -597,11 +597,13 @@ fun PatientProfileScreen(
                             verticalAlignment = Alignment.Bottom
                         ) {
                             recent.forEach { f ->
-                                val resp = f.respiratoryDifficulty.toFloat()
-                                val stress = f.stress
-                                val strain = f.strain
-                                
-                                val barColor = if (stress || strain) DesignTokens.Colors.Warning else DesignTokens.Colors.Success
+                                val resp = f.respiration.toFloat()
+
+                                val barColor = when {
+                                    f.hadPain && f.painIntensity >= 7 -> DesignTokens.Colors.Error
+                                    f.hadPain -> DesignTokens.Colors.Warning
+                                    else -> DesignTokens.Colors.Success
+                                }
                                 val barHeight = (resp / 10f * 60f).coerceAtLeast(4f)
                                 
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -617,7 +619,7 @@ fun PatientProfileScreen(
                         }
                         Spacer(modifier = Modifier.height(DesignTokens.Spacing.SM))
                         Text(
-                            "Respiratory Difficulty (1-10) with Stress/Strain (Yellow)",
+                            "Respiration (0-10); orange = pain reported, red = severe pain",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center,
