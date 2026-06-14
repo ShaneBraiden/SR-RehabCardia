@@ -299,12 +299,12 @@
 # OPTIMIZATION FLAGS
 # =============================================================================
 
-# Remove logging in release builds (optional - uncomment if desired)
-# -assumenosideeffects class android.util.Log {
-#     public static int v(...);
-#     public static int d(...);
-#     public static int i(...);
-# }
+# Remove verbose/debug/info logging in release builds (keeps warnings/errors)
+-assumenosideeffects class android.util.Log {
+    public static int v(...);
+    public static int d(...);
+    public static int i(...);
+}
 
 # Keep R class fields (needed for resource lookup)
 -keepclassmembers class **.R$* {

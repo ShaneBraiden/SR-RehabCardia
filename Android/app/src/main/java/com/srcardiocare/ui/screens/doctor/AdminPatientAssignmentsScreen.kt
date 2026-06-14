@@ -112,7 +112,7 @@ fun AdminPatientAssignmentsScreen(
 
                 // Fetch sessions for this assignment
                 val allSessions = try {
-                    SessionRepository.getAllSessionsForAssignment(assignment.id)
+                    SessionRepository.getAllSessionsForAssignment(patientId, assignment.id)
                 } catch (_: Exception) { emptyList() }
 
                 val completedSessions = allSessions.count { it.status == com.srcardiocare.data.model.SessionStatus.COMPLETED }

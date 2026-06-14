@@ -87,7 +87,7 @@ fun BrandDashboardBanner(modifier: Modifier = Modifier) {
         BrandHeartLogo(modifier = Modifier.size(58.dp))
         Column {
             Text(
-                text = "SrCardioCare",
+                text = "RehabCardia",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = BrandTextBlue

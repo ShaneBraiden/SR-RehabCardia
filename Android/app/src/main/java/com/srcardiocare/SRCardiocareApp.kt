@@ -3,9 +3,6 @@ package com.srcardiocare
 import android.app.Application
 import android.util.Log
 import com.google.firebase.FirebaseApp
-import com.google.firebase.appcheck.FirebaseAppCheck
-import com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory
-import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory
 import com.srcardiocare.core.auth.AuthManager
 import com.srcardiocare.core.push.PushChannels
 import kotlinx.coroutines.CoroutineScope
@@ -41,27 +38,14 @@ class SRCardiocareApp : Application() {
     }
 
     /**
-     * Initializes Firebase App Check with the appropriate provider.
-     * - Debug builds: Uses DebugAppCheckProviderFactory (prints debug token to logcat)
-     * - Release builds: Uses PlayIntegrityAppCheckProviderFactory (production attestation)
+     * Initializes Firebase App Check with the variant-specific provider.
+     * The implementation lives in per-variant source sets (src/debug installs
+     * the debug provider, src/release installs Play Integrity) so the
+     * debug-only dependency is never referenced in release compilation.
      */
     private fun initializeAppCheck() {
-        val appCheck = FirebaseAppCheck.getInstance()
-        
-        if (BuildConfig.DEBUG) {
-            // Debug provider — prints a debug token to logcat that you register
-            // in Firebase Console → App Check → Apps → Manage debug tokens
-            Log.d(TAG, "Initializing App Check with Debug provider")
-            appCheck.installAppCheckProviderFactory(
-                DebugAppCheckProviderFactory.getInstance()
-            )
-        } else {
-            // Production provider — uses Play Integrity API for attestation
-            Log.d(TAG, "Initializing App Check with Play Integrity provider")
-            appCheck.installAppCheckProviderFactory(
-                PlayIntegrityAppCheckProviderFactory.getInstance()
-            )
-        }
+        Log.d(TAG, "Initializing App Check")
+        AppCheckProviderInstaller.install()
     }
 
     /**

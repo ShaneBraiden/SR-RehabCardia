@@ -249,9 +249,10 @@ object FirebaseService {
         SessionRepository.fetchSessionsForDate(assignmentId, sessionDate)
 
     suspend fun fetchAllSessionsForAssignment(
+        patientId: String,
         assignmentId: String
     ): List<Pair<String, Map<String, Any?>>> =
-        SessionRepository.fetchAllSessionsForAssignment(assignmentId)
+        SessionRepository.fetchAllSessionsForAssignment(patientId, assignmentId)
 
     suspend fun fetchTodaysSessions(patientId: String): List<Pair<String, Map<String, Any?>>> =
         SessionRepository.fetchTodaysSessions(patientId)

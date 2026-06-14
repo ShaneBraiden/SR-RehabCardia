@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RehabCardia — Digital Cardiac Rehabilitation</title>
+<meta name="description" content="RehabCardia connects cardiac rehabilitation patients with their care team — doctor-assigned exercises, progress tracking, and secure messaging in one app.">
+<style>
+  :root {
+    --primary: #5A9EA6;
+    --primary-dark: #4A8A91;
+    --bg: #F7FAFA;
+    --surface: #FFFFFF;
+    --text: #2D3738;
+    --text-sub: #6B7D80;
+    --border: #E3E7E8;
+    --error: #D95959;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.65;
+  }
+  .container { max-width: 920px; margin: 0 auto; padding: 0 24px; }
+
+  /* Header */
+  header { background: var(--surface); border-bottom: 1px solid var(--border); }
+  .nav {
+    max-width: 920px; margin: 0 auto; padding: 14px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .brand img { width: 36px; height: 36px; object-fit: contain; }
+  .brand span { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+  .nav a.contact {
+    color: var(--primary-dark); text-decoration: none; font-weight: 600; font-size: .92rem;
+  }
+  .nav a.contact:hover { text-decoration: underline; }
+
+  /* Hero */
+  .hero { background: var(--surface); text-align: center; padding: 72px 24px; }
+  .hero img { width: 84px; height: 84px; object-fit: contain; margin-bottom: 24px; }
+  .hero h1 { font-size: clamp(1.7rem, 4.5vw, 2.4rem); font-weight: 700; letter-spacing: -.3px; }
+  .hero p {
+    max-width: 600px; margin: 14px auto 0;
+    font-size: 1.05rem; color: var(--text-sub);
+  }
+  .hero .note { margin-top: 28px; font-size: .88rem; color: var(--text-sub); }
+  .hero .note strong { color: var(--text); }
+
+  /* Sections */
+  section { padding: 56px 0; }
+  h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 24px; }
+
+  .grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 22px;
+  }
+  .card h3 { font-size: 1rem; margin-bottom: 6px; color: var(--primary-dark); }
+  .card p { font-size: .92rem; color: var(--text-sub); }
+
+  ol.steps { list-style: none; counter-reset: n; }
+  ol.steps li {
+    counter-increment: n; position: relative;
+    padding: 0 0 18px 44px; font-size: .95rem; color: var(--text-sub);
+  }
+  ol.steps li strong { display: block; color: var(--text); font-size: 1rem; margin-bottom: 2px; }
+  ol.steps li::before {
+    content: counter(n);
+    position: absolute; left: 0; top: 2px;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--primary); color: #fff;
+    font-weight: 700; font-size: .85rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  ul.plain { list-style: none; }
+  ul.plain li {
+    padding: 10px 0 10px 28px; position: relative;
+    font-size: .95rem; color: var(--text-sub);
+    border-bottom: 1px solid var(--border);
+  }
+  ul.plain li:last-child { border-bottom: none; }
+  ul.plain li::before {
+    content: "✓"; position: absolute; left: 4px; color: var(--primary-dark); font-weight: 700;
+  }
+  ul.plain li strong { color: var(--text); }
+
+  .disclaimer {
+    background: #FDF5F5; border: 1px solid #F0C9C9; border-radius: 12px;
+    padding: 18px 22px; font-size: .9rem;
+  }
+  .disclaimer strong { color: var(--error); }
+
+  /* Footer */
+  footer { background: var(--surface); border-top: 1px solid var(--border); padding: 32px 0; }
+  .footer-inner {
+    max-width: 920px; margin: 0 auto; padding: 0 24px;
+    display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center;
+    font-size: .88rem; color: var(--text-sub);
+  }
+  .footer-inner a { color: var(--primary-dark); text-decoration: none; margin-right: 18px; }
+  .footer-inner a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a class="brand" href="#">
+      <img src="/sr_logo.png" alt="RehabCardia logo">
+      <span>RehabCardia</span>
+    </a>
+    <a class="contact" href="mailto:sr.cardiocare@gmail.com">Contact us</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <img src="/sr_logo.png" alt="RehabCardia logo">
+  <h1>Cardiac rehabilitation, guided by your care team</h1>
+  <p>RehabCardia connects patients recovering from cardiac events with their doctors — personalised exercise programs, daily progress tracking, and in-app messaging.</p>
+  <p class="note"><strong>Available for Android.</strong> Accounts are provided by your clinic. Powered by SRET-AIDA.</p>
+</div>
+
+<section>
+  <div class="container">
+    <h2>What the app does</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>Doctor-assigned exercises</h3>
+        <p>Video-guided sessions prescribed by your doctor, with sets, reps, and rest periods built in.</p>
+      </div>
+      <div class="card">
+        <h3>Progress tracking</h3>
+        <p>Daily progress rings and history charts show your adherence and recovery over time.</p>
+      </div>
+      <div class="card">
+        <h3>Messaging</h3>
+        <p>Chat with your doctor and share post-workout feedback — pain, difficulty, and notes.</p>
+      </div>
+      <div class="card">
+        <h3>Appointments &amp; reminders</h3>
+        <p>Scheduled appointments and exercise reminders keep your program on track.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="background:var(--surface); border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
+  <div class="container">
+    <h2>How it works</h2>
+    <ol class="steps">
+      <li><strong>Your clinic sets you up</strong> Your doctor or clinic administrator creates your account and builds a rehabilitation plan for your condition.</li>
+      <li><strong>Follow your program</strong> Sign in, complete video-guided sessions at your own pace, and log how each workout felt.</li>
+      <li><strong>Your doctor stays in the loop</strong> Your care team reviews your progress and feedback, adjusts your plan, and messages you when it matters.</li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2>Your data, protected</h2>
+    <ul class="plain">
+      <li><strong>Encrypted in transit and at rest</strong> — all communication uses HTTPS/TLS, and stored data is encrypted on our servers and on your device.</li>
+      <li><strong>Role-based access</strong> — patients see only their own records; doctors see only the patients under their care.</li>
+      <li><strong>Never sold, no ads</strong> — your data is used only to deliver your care program.</li>
+    </ul>
+  </div>
+</section>
+
+<section style="padding-top:0;">
+  <div class="container">
+    <div class="disclaimer">
+      <strong>Medical notice:</strong> RehabCardia supports — but does not replace — the care you receive from your healthcare provider. If you experience chest pain, severe shortness of breath, or dizziness, stop exercising and seek immediate medical attention.
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <span>© 2026 SRET-AIDA · RehabCardia</span>
+    <span>
+      <a href="/privacy-policy.html">Privacy Policy</a>
+      <a href="/terms-of-service.html">Terms of Service</a>
+      <a href="mailto:sr.cardiocare@gmail.com">sr.cardiocare@gmail.com</a>
+    </span>
+  </div>
+</footer>
+
+</body>
+</html>

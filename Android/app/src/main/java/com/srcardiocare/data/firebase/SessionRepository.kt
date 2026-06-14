@@ -212,11 +212,17 @@ object SessionRepository {
         return snapshot.documents.map { it.id to (it.data ?: emptyMap()) }
     }
 
-    /** Fetch all sessions for an assignment (for history/stats). */
+    /**
+     * Fetch all sessions for an assignment (for history/stats).
+     * [patientId] is required so the query passes the Firestore list rule
+     * (patients may only list sessionLogs constrained to their own patientId).
+     */
     suspend fun fetchAllSessionsForAssignment(
+        patientId: String,
         assignmentId: String
     ): List<Pair<String, Map<String, Any?>>> {
         val snapshot = FirebaseClients.db.collection("sessionLogs")
+            .whereEqualTo("patientId", patientId)
             .whereEqualTo("assignmentId", assignmentId)
             .get().await()
         return snapshot.documents.map { it.id to (it.data ?: emptyMap()) }
@@ -257,8 +263,8 @@ object SessionRepository {
     suspend fun getSessionsForDate(assignmentId: String, sessionDate: String): List<SessionLog> =
         fetchSessionsForDate(assignmentId, sessionDate).map { (id, data) -> data.toSessionLog(id) }
 
-    suspend fun getAllSessionsForAssignment(assignmentId: String): List<SessionLog> =
-        fetchAllSessionsForAssignment(assignmentId).map { (id, data) -> data.toSessionLog(id) }
+    suspend fun getAllSessionsForAssignment(patientId: String, assignmentId: String): List<SessionLog> =
+        fetchAllSessionsForAssignment(patientId, assignmentId).map { (id, data) -> data.toSessionLog(id) }
 
     suspend fun getTodaysSessions(patientId: String): List<SessionLog> =
         fetchTodaysSessions(patientId).map { (id, data) -> data.toSessionLog(id) }

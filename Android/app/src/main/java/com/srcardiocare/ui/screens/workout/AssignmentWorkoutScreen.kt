@@ -8,6 +8,7 @@ import android.media.AudioManager
 import android.media.ToneGenerator
 import android.net.Uri
 import android.view.WindowManager
+import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.compose.BackHandler
@@ -647,7 +648,16 @@ private fun YouTubeWebPlayer(html: String, modifier: Modifier = Modifier) {
             WebView(context).apply {
                 settings.javaScriptEnabled = true
                 settings.mediaPlaybackRequiresUserGesture = false
-                webViewClient = WebViewClient()
+                // Restrict navigation to YouTube domains only
+                webViewClient = object : WebViewClient() {
+                    override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                        val host = request.url.host ?: return true
+                        val allowed = host.endsWith("youtube.com") || host.endsWith("youtu.be") ||
+                            host.endsWith("youtube-nocookie.com") || host.endsWith("ytimg.com") ||
+                            host.endsWith("googlevideo.com")
+                        return !allowed  // true = block, false = allow
+                    }
+                }
                 loadDataWithBaseURL("https://www.youtube.com", html, "text/html", "utf-8", null)
             }
         },
@@ -664,22 +674,37 @@ private fun buildPlayerHtml(videoUrl: String?): String {
             </body></html>
         """.trimIndent()
     }
+    // Validate ID contains only safe YouTube ID characters before embedding
     val videoId = extractYoutubeVideoId(videoUrl)
+        ?.takeIf { it.matches(Regex("[A-Za-z0-9_\\-]{1,20}")) }
     return if (videoId != null) {
         """
-            <html><body style="margin:0;padding:0;background:#000;">
+            <html>
+            <head>
+              <meta http-equiv="Content-Security-Policy"
+                content="default-src 'none'; frame-src https://www.youtube.com https://www.youtube-nocookie.com; script-src 'none'; style-src 'unsafe-inline';">
+            </head>
+            <body style="margin:0;padding:0;background:#000;">
               <iframe width="100%" height="100%"
-                src="https://www.youtube.com/embed/$videoId?playsinline=1&rel=0&autoplay=1&mute=1&loop=1&playlist=$videoId&controls=0&modestbranding=1"
+                src="https://www.youtube-nocookie.com/embed/$videoId?playsinline=1&rel=0&autoplay=1&mute=1&loop=1&playlist=$videoId&controls=0&modestbranding=1"
                 frameborder="0" allow="autoplay; encrypted-media; picture-in-picture">
               </iframe>
             </body></html>
         """.trimIndent()
     } else {
-        val escapedUrl = videoUrl.replace("&", "&amp;")
+        // Only allow HTTPS URLs for non-YouTube video sources, URL-encoded so the
+        // value cannot break out of the src attribute (HTML injection).
+        if (!videoUrl.startsWith("https://")) return buildPlayerHtml(null)
+        val encodedUrl = Uri.encode(videoUrl, ":/?&=%.\\-_~")
         """
-            <html><body style="margin:0;padding:0;background:#000;">
+            <html>
+            <head>
+              <meta http-equiv="Content-Security-Policy"
+                content="default-src 'none'; media-src https:; script-src 'none'; style-src 'unsafe-inline';">
+            </head>
+            <body style="margin:0;padding:0;background:#000;">
               <video width="100%" height="100%" autoplay loop muted playsinline>
-                <source src="$escapedUrl" type="video/mp4" />
+                <source src="$encodedUrl" type="video/mp4" />
               </video>
             </body></html>
         """.trimIndent()

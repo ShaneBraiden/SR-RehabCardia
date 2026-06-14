@@ -111,7 +111,7 @@ fun LoginScreen(onLoginSuccess: (role: String) -> Unit, onChangePassword: () -> 
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.sr_logo),
-                        contentDescription = "SrCardioCare logo",
+                        contentDescription = "RehabCardia logo",
                         modifier = Modifier
                             .padding(12.dp)
                             .size(82.dp),

@@ -50,6 +50,12 @@ fun PatientProfileScreen(
     onHistoryTap: () -> Unit,
     onManageAssignments: () -> Unit = {}
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    // Server rules only permit admins to delete user accounts — hide the
+    // action for doctors so they don't hit a guaranteed permission error.
+    val isAdmin = remember {
+        com.srcardiocare.core.auth.AuthManager(context).userRole == "ADMIN"
+    }
     var patientName by remember { mutableStateOf("") }
     var patientCondition by remember { mutableStateOf("") }
     var patientInitials by remember { mutableStateOf("") }
@@ -928,17 +934,19 @@ fun PatientProfileScreen(
                 )
             }
 
-            OutlinedButton(
-                onClick = { showDeleteDialog = true },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = DesignTokens.Spacing.XL)
-                    .height(48.dp),
-                shape = RoundedCornerShape(DesignTokens.Radius.Button),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = DesignTokens.Colors.Error),
-                border = androidx.compose.foundation.BorderStroke(1.dp, DesignTokens.Colors.Error)
-            ) {
-                Text("Delete Patient", fontWeight = FontWeight.SemiBold)
+            if (isAdmin) {
+                OutlinedButton(
+                    onClick = { showDeleteDialog = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = DesignTokens.Spacing.XL)
+                        .height(48.dp),
+                    shape = RoundedCornerShape(DesignTokens.Radius.Button),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = DesignTokens.Colors.Error),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, DesignTokens.Colors.Error)
+                ) {
+                    Text("Delete Patient", fontWeight = FontWeight.SemiBold)
+                }
             }
 
             Spacer(modifier = Modifier.height(DesignTokens.Spacing.XXL))

@@ -59,7 +59,7 @@ fun PatientHistoryScreen(
 
                 if (today.isBefore(startDate)) continue
 
-                val allSessions = SessionRepository.getAllSessionsForAssignment(assignment.id)
+                val allSessions = SessionRepository.getAllSessionsForAssignment(patientId, assignment.id)
                 val groupedByDate = allSessions.groupBy { it.sessionDate }
 
                 val limitDate = if (today.isAfter(endDate)) endDate else today.minusDays(1)

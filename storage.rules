@@ -29,6 +29,11 @@ service firebase.storage {
       return request.resource.size <= mb * 1024 * 1024;
     }
 
+    // Role lookup from Firestore (cross-service rules).
+    function isClinician() {
+      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role in ['doctor', 'admin'];
+    }
+
     // ── User Profile Images ───────────────────────────────────────────────
     // Path: /users/{userId}/profile/{fileName}
     // Doctors and patients both have profile photos. Any authenticated user
@@ -49,6 +54,14 @@ service firebase.storage {
     }
 
     // ── Exercise Library Videos ───────────────────────────────────────────
+    // Path: /videos/{fileName} — written by the app's Video Upload screen
+    // (doctors/admins adding exercise demonstration videos).
+    match /videos/{fileName} {
+      allow read:   if isAuth();
+      allow write:  if isAuth() && isClinician() && isVideo() && underMB(500);
+      allow delete: if isAuth() && isClinician();
+    }
+
     // Path: /exercises/{exerciseId}/{fileName}
     // Read-only for all authenticated users. Writes must go through a Cloud
     // Function using the Admin SDK — no direct client uploads permitted.

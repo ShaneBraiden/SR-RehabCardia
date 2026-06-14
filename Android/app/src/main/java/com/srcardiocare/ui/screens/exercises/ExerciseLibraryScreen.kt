@@ -4,6 +4,7 @@ package com.srcardiocare.ui.screens.exercises
 import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
+import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.background
@@ -415,7 +416,16 @@ private fun VideoPlayerDialog(
                                 WebView(context).apply {
                                     settings.javaScriptEnabled = true
                                     settings.mediaPlaybackRequiresUserGesture = false
-                                    webViewClient = WebViewClient()
+                                    // Restrict navigation to YouTube domains only
+                                    webViewClient = object : WebViewClient() {
+                                        override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                                            val host = request.url.host ?: return true
+                                            val allowed = host.endsWith("youtube.com") || host.endsWith("youtu.be") ||
+                                                host.endsWith("youtube-nocookie.com") || host.endsWith("ytimg.com") ||
+                                                host.endsWith("googlevideo.com")
+                                            return !allowed  // true = block, false = allow
+                                        }
+                                    }
                                     loadDataWithBaseURL("https://www.youtube.com", html, "text/html", "utf-8", null)
                                 }
                             },

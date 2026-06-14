@@ -34,10 +34,6 @@ import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.data.firebase.SessionRepository
 import com.srcardiocare.data.firebase.UserRepository
 import com.srcardiocare.ui.components.ShimmerBox
-import com.srcardiocare.ui.components.TourOverlay
-import com.srcardiocare.ui.components.TourStep
-import com.srcardiocare.ui.components.rememberTourState
-import com.srcardiocare.ui.components.tourTarget
 import com.srcardiocare.ui.theme.DesignTokens
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -53,56 +49,16 @@ fun PatientHomeScreen(
     onAnalyticsTap: () -> Unit,
     onNotificationsTap: () -> Unit,
     onChatTap: () -> Unit = {},
-    onProfile: () -> Unit = {}
+    onProfile: () -> Unit = {},
+    onOnboardingNeeded: () -> Unit = {}
 ) {
     var userName by remember { mutableStateOf("") }
     var completedCount by remember { mutableIntStateOf(0) }
     var totalCount by remember { mutableIntStateOf(0) }
     var expiryText by remember { mutableStateOf<String?>(null) }
-    var shouldShowTour by remember { mutableStateOf(false) }
+    var onboardingShown by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(true) }
     val scope = rememberCoroutineScope()
-
-    val tourSteps = remember {
-        listOf(
-            TourStep(
-                key = "progress",
-                title = "Your Daily Progress",
-                body = "This ring shows how many of today's exercises you've completed. It refreshes each day."
-            ),
-            TourStep(
-                key = "exercises",
-                title = "Exercises",
-                body = "Start your assigned workouts here. Your doctor sets these based on your recovery plan."
-            ),
-            TourStep(
-                key = "schedule",
-                title = "Schedule",
-                body = "View upcoming appointments and session reminders for your care plan."
-            ),
-            TourStep(
-                key = "progressCard",
-                title = "Progress Analytics",
-                body = "Track your recovery trends and see stats over time."
-            ),
-            TourStep(
-                key = "messages",
-                title = "Messages",
-                body = "Chat directly with your care team. A red dot means a new reply is waiting."
-            ),
-            TourStep(
-                key = "notifications",
-                title = "Notifications",
-                body = "All reminders, feedback, and alerts land here."
-            ),
-            TourStep(
-                key = "profile",
-                title = "Profile",
-                body = "Manage your account, change your password, or sign out from here."
-            )
-        )
-    }
-    val tour = rememberTourState(steps = tourSteps, active = shouldShowTour)
 
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
@@ -114,10 +70,11 @@ fun PatientHomeScreen(
                         val user = UserRepository.getUser(uid)
                         userName = user.firstName
 
-                        // First-login tour trigger: fires only if the user has never
-                        // completed (or dismissed) the tour before.
-                        if (!shouldShowTour && !user.hasCompletedOnboarding) {
-                            shouldShowTour = true
+                        // First-login welcome flow: shown once per account, until the
+                        // user finishes (or skips) it.
+                        if (!onboardingShown && !user.hasCompletedOnboarding) {
+                            onboardingShown = true
+                            onOnboardingNeeded()
                         }
 
                         FirebaseService.updateLastSeen()
@@ -198,13 +155,13 @@ fun PatientHomeScreen(
                         ) {
                             Image(
                                 painter = painterResource(id = R.drawable.sr_logo),
-                                contentDescription = "SrCardioCare logo",
+                                contentDescription = "RehabCardia logo",
                                 modifier = Modifier.size(38.dp),
                                 contentScale = ContentScale.Fit
                             )
                             Column {
                                 Text(
-                                    "SrCardioCare",
+                                    "RehabCardia",
                                     fontWeight = FontWeight.Bold,
                                     style = MaterialTheme.typography.titleMedium
                                 )
@@ -269,8 +226,7 @@ fun PatientHomeScreen(
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = DesignTokens.Spacing.XL)
-                            .tourTarget(tour, "progress"),
+                            .padding(horizontal = DesignTokens.Spacing.XL),
                         shape = RoundedCornerShape(DesignTokens.Radius.XL),
                         colors = CardDefaults.cardColors(containerColor = DesignTokens.Colors.Primary)
                     ) {
@@ -322,7 +278,7 @@ fun PatientHomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.MD)
                 ) {
                     DashboardCard(
-                        modifier = Modifier.weight(1f).tourTarget(tour, "exercises"),
+                        modifier = Modifier.weight(1f),
                         icon = Icons.Default.FitnessCenter,
                         title = "Exercises",
                         subtitle = "$totalCount assigned",
@@ -330,7 +286,7 @@ fun PatientHomeScreen(
                         onClick = onExerciseTap
                     )
                     DashboardCard(
-                        modifier = Modifier.weight(1f).tourTarget(tour, "schedule"),
+                        modifier = Modifier.weight(1f),
                         icon = Icons.Default.CalendarMonth,
                         title = "Schedule",
                         subtitle = "View appointments",
@@ -349,14 +305,14 @@ fun PatientHomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.MD)
                 ) {
                     DashboardCard(
-                        modifier = Modifier.weight(1f).tourTarget(tour, "progressCard"),
+                        modifier = Modifier.weight(1f),
                         icon = Icons.Default.Insights,
                         title = "Progress",
                         subtitle = "Track your stats",
                         onClick = onAnalyticsTap
                     )
                     DashboardCard(
-                        modifier = Modifier.weight(1f).tourTarget(tour, "messages"),
+                        modifier = Modifier.weight(1f),
                         icon = Icons.Default.ChatBubble,
                         title = "Messages",
                         subtitle = "Chat with doctor",
@@ -375,14 +331,14 @@ fun PatientHomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.MD)
                 ) {
                     DashboardCard(
-                        modifier = Modifier.weight(1f).tourTarget(tour, "notifications"),
+                        modifier = Modifier.weight(1f),
                         icon = Icons.Default.Notifications,
                         title = "Notifications",
                         subtitle = "View alerts",
                         onClick = onNotificationsTap
                     )
                     DashboardCard(
-                        modifier = Modifier.weight(1f).tourTarget(tour, "profile"),
+                        modifier = Modifier.weight(1f),
                         icon = Icons.Default.Person,
                         title = "Profile",
                         subtitle = "Your account",
@@ -392,20 +348,6 @@ fun PatientHomeScreen(
             }
             }
         }
-
-        val finishTour: () -> Unit = {
-            shouldShowTour = false
-            scope.launch {
-                try {
-                    FirebaseService.updateUser(mapOf("hasCompletedOnboarding" to true))
-                } catch (_: Exception) { }
-            }
-        }
-        TourOverlay(
-            state = tour,
-            onComplete = finishTour,
-            onSkip = finishTour
-        )
     }
 }
 

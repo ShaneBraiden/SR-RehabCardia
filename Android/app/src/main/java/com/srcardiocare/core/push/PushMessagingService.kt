@@ -31,7 +31,7 @@ class PushMessagingService : FirebaseMessagingService() {
         val data = message.data
         if (data.isEmpty()) return
 
-        val title = data["title"].orEmpty().ifBlank { "SR-Cardiocare" }
+        val title = data["title"].orEmpty().ifBlank { "RehabCardia" }
         val body = data["body"].orEmpty()
         val route = data["route"].orEmpty()
         val channelId = data["channelId"]?.takeIf { it.isNotBlank() } ?: PushChannels.GENERAL

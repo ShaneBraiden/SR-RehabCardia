@@ -58,6 +58,7 @@ import com.srcardiocare.data.model.Assignment
  */
 sealed class Route(val path: String) {
     object Login : Route("login")
+    object Onboarding : Route("onboarding")
     object PatientHome : Route("patient/home")
     object WorkoutPlayer : Route("workout/player?name={name}&videoUrl={videoUrl}&sets={sets}&reps={reps}&instructions={instructions}&planId={planId}&totalCount={totalCount}&isLastExercise={isLastExercise}") {
         fun createPath(
@@ -147,6 +148,12 @@ fun SRCardiocareNavGraph(
             )
         }
 
+        composable(Route.Onboarding.path) {
+            com.srcardiocare.ui.screens.onboarding.OnboardingScreen(
+                onFinished = { navController.popBackStack() }
+            )
+        }
+
         composable(Route.PatientHome.path) {
             PatientHomeScreen(
                 onExerciseTap = { navController.navigate(Route.AssignmentList.path) },
@@ -154,7 +161,10 @@ fun SRCardiocareNavGraph(
                 onAnalyticsTap = { navController.navigate(Route.Analytics.path) },
                 onNotificationsTap = { navController.navigate(Route.Notifications.path) },
                 onChatTap = { navController.navigate(Route.PatientChat.path) },
-                onProfile = { navController.navigate(Route.PatientProfileSelf.path) }
+                onProfile = { navController.navigate(Route.PatientProfileSelf.path) },
+                onOnboardingNeeded = {
+                    navController.navigate(Route.Onboarding.path) { launchSingleTop = true }
+                }
             )
         }
 

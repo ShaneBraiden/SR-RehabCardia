@@ -45,6 +45,49 @@ fun PoweredByBadge(modifier: Modifier = Modifier) {
 }
 
 /**
+ * Privacy Policy / Terms of Service links shown on profile screens.
+ * Required surface for Play Store health-app review; opens the hosted pages.
+ */
+@Composable
+fun LegalLinksRow(modifier: Modifier = Modifier) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    fun open(url: String) {
+        try {
+            context.startActivity(
+                android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
+            )
+        } catch (_: android.content.ActivityNotFoundException) {
+            // No browser installed — nothing sensible to do.
+        }
+    }
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        TextButton(onClick = { open("https://sr-cardiocare.web.app/privacy-policy.html") }) {
+            Text(
+                "Privacy Policy",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Text(
+            "·",
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.labelMedium
+        )
+        TextButton(onClick = { open("https://sr-cardiocare.web.app/terms-of-service.html") }) {
+            Text(
+                "Terms of Service",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+/**
  * Style variants for StatItem component.
  */
 enum class StatItemStyle {

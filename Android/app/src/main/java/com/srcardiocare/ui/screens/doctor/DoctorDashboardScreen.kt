@@ -133,13 +133,13 @@ fun DoctorDashboardScreen(
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.sr_logo),
-                            contentDescription = "SrCardioCare logo",
+                            contentDescription = "RehabCardia logo",
                             modifier = Modifier.size(38.dp),
                             contentScale = ContentScale.Fit
                         )
                         Column {
                             Text(
-                                "SrCardioCare",
+                                "RehabCardia",
                                 fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.titleMedium
                             )

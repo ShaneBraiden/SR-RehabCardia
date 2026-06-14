@@ -23,6 +23,7 @@ import com.srcardiocare.core.auth.AuthManager
 import com.srcardiocare.core.security.InputValidator
 import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.ui.components.InitialsAvatar
+import com.srcardiocare.ui.components.LegalLinksRow
 import com.srcardiocare.ui.components.LogoutConfirmDialog
 import com.srcardiocare.ui.components.ProfileFormSkeleton
 import com.srcardiocare.ui.components.ProfileInfoRow
@@ -273,6 +274,10 @@ fun DoctorProfileScreen(
             ) {
                 Text("Sign Out", fontWeight = FontWeight.SemiBold)
             }
+
+            Spacer(modifier = Modifier.height(DesignTokens.Spacing.SM))
+
+            LegalLinksRow()
 
             Spacer(modifier = Modifier.height(DesignTokens.Spacing.XL))
         }
