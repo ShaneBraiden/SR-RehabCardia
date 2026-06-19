@@ -26,6 +26,12 @@ import com.srcardiocare.core.security.InputValidator
 import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.data.firebase.UserRepository
 import com.srcardiocare.ui.components.rememberToast
+import com.srcardiocare.ui.components.tutorial.TutorialHelpButton
+import com.srcardiocare.ui.components.tutorial.TutorialHost
+import com.srcardiocare.ui.components.tutorial.TutorialIds
+import com.srcardiocare.ui.components.tutorial.TutorialKeys
+import com.srcardiocare.ui.components.tutorial.TutorialTours
+import com.srcardiocare.ui.components.tutorial.tutorialTarget
 import com.srcardiocare.ui.theme.DesignTokens
 import kotlinx.coroutines.launch
 
@@ -76,6 +82,7 @@ fun PostWorkoutFeedbackScreen(
     val painComplete = hadPain == false || (hadPain == true && painLocation != null)
     val canSubmit = !isSubmitting && painAnswered && painComplete && pulseValid
 
+    TutorialHost(tourKey = TutorialKeys.POST_WORKOUT_FEEDBACK, steps = TutorialTours.postWorkoutFeedback) {
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -87,7 +94,13 @@ fun PostWorkoutFeedbackScreen(
                 .padding(DesignTokens.Spacing.XL),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(DesignTokens.Spacing.XL))
+            // Replay-tour control (no top bar on this screen).
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                TutorialHelpButton()
+            }
 
             // Success icon
             Box(
@@ -131,7 +144,9 @@ fun PostWorkoutFeedbackScreen(
                     Text("Did you experience any pain?", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
                     Spacer(modifier = Modifier.height(DesignTokens.Spacing.SM))
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .tutorialTarget(TutorialIds.FEEDBACK_PAIN),
                         horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.MD)
                     ) {
                         YesNoChip(
@@ -236,7 +251,9 @@ fun PostWorkoutFeedbackScreen(
 
             // ── Respiration — Borg scale 0-10 ───────────────────────────────────
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .tutorialTarget(TutorialIds.FEEDBACK_BORG),
                 shape = RoundedCornerShape(DesignTokens.Radius.LG),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
@@ -274,7 +291,9 @@ fun PostWorkoutFeedbackScreen(
 
             // ── Pulse rate — entered by the patient ─────────────────────────────
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .tutorialTarget(TutorialIds.FEEDBACK_PULSE),
                 shape = RoundedCornerShape(DesignTokens.Radius.LG),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
@@ -366,7 +385,8 @@ fun PostWorkoutFeedbackScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp),
+                    .height(52.dp)
+                    .tutorialTarget(TutorialIds.FEEDBACK_SUBMIT),
                 shape = RoundedCornerShape(DesignTokens.Radius.Base),
                 colors = ButtonDefaults.buttonColors(containerColor = DesignTokens.Colors.Primary),
                 enabled = canSubmit
@@ -384,6 +404,7 @@ fun PostWorkoutFeedbackScreen(
 
             Spacer(modifier = Modifier.height(DesignTokens.Spacing.MD))
         }
+    }
     }
 }
 

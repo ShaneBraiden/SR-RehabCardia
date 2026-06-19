@@ -24,75 +24,16 @@ object PlanRepository {
     }
 
     /**
-     * Assigns an exercise to a patient by adding it to their active plan.
-     * If no active plan exists, creates one first.
-     */
-    suspend fun assignExerciseToPatient(
-        patientId: String,
-        exerciseData: Map<String, Any>
-    ) {
-        val doctorId = AuthRepository.currentUID ?: throw Exception("Not authenticated")
-        val plans = fetchPlans(patientId)
-        val activePlan = plans.firstOrNull { (it.second["isActive"] as? Boolean) == true }
-
-        if (activePlan != null) {
-            // Append exercise to existing plan
-            val planId = activePlan.first
-            FirebaseClients.db.collection("plans").document(planId).update(
-                "exercises", FieldValue.arrayUnion(exerciseData)
-            ).await()
-        } else {
-            // Create new active plan with this exercise
-            val planData = hashMapOf<String, Any>(
-                "patientId" to patientId,
-                "doctorId" to doctorId,
-                "isActive" to true,
-                "exercises" to listOf(exerciseData)
-            )
-            createPlan(planData)
-        }
-
-        // Also create a standalone Assignment for the new assignment-based system
-        val assignmentData = hashMapOf<String, Any>(
-            "patientId" to patientId,
-            "doctorId" to doctorId,
-            "exerciseId" to (exerciseData["exerciseId"] ?: ""),
-            "exerciseName" to (exerciseData["name"] ?: ""),
-            "exerciseVideoUrl" to (exerciseData["videoUrl"] ?: ""),
-            "exerciseCategory" to (exerciseData["category"] ?: ""),
-            "exerciseDifficulty" to (exerciseData["difficulty"] ?: ""),
-            "startDate" to java.time.LocalDate.now().toString(),
-            "endDate" to java.time.LocalDate.now().plusDays(7).toString(), // Default to 7 days
-            "dailyFrequency" to 1,
-            "sets" to (exerciseData["customSets"] ?: exerciseData["sets"] ?: 3),
-            "reps" to (exerciseData["customReps"] ?: exerciseData["reps"] ?: 10),
-            "restSeconds" to (exerciseData["restSeconds"] ?: 45),
-            "instructions" to (exerciseData["instructions"] ?: ""),
-            "completionThreshold" to 1.0f,
-            "isActive" to true
-        )
-        AssignmentRepository.createAssignment(assignmentData)
-
-        val exerciseName = exerciseData["name"]?.toString()
-            ?: exerciseData["title"]?.toString()
-            ?: "a new exercise"
-        com.srcardiocare.core.push.Notifier.send(
-            com.srcardiocare.core.push.NotificationEvent.ExerciseAssigned(
-                patientId = patientId,
-                exerciseName = exerciseName
-            )
-        )
-    }
-
-    /**
      * Assigns an exercise to a patient with prescription dates.
-     * Creates or updates the active plan with expiry information.
+     * Creates or updates the active plan with expiry information, and creates the
+     * standalone Assignment that the patient app actually reads.
      */
     suspend fun assignExerciseToPatientWithPrescription(
         patientId: String,
         exerciseData: Map<String, Any>,
         expiryDays: Int,
-        expiryDate: String
+        expiryDate: String,
+        dailyFrequency: Int = 1
     ) {
         val doctorId = AuthRepository.currentUID ?: throw Exception("Not authenticated")
         val plans = fetchPlans(patientId)
@@ -133,7 +74,7 @@ object PlanRepository {
             "exerciseDifficulty" to (exerciseData["difficulty"] ?: ""),
             "startDate" to java.time.LocalDate.now().toString(),
             "endDate" to expiryDate,
-            "dailyFrequency" to 1,
+            "dailyFrequency" to dailyFrequency,
             "sets" to (exerciseData["customSets"] ?: exerciseData["sets"] ?: 3),
             "reps" to (exerciseData["customReps"] ?: exerciseData["reps"] ?: 10),
             "restSeconds" to (exerciseData["restSeconds"] ?: 45),

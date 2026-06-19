@@ -29,6 +29,12 @@ import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.data.firebase.UserRepository
 import com.srcardiocare.data.model.ChatMessage
 import com.srcardiocare.ui.components.SkeletonListRow
+import com.srcardiocare.ui.components.tutorial.TutorialHelpButton
+import com.srcardiocare.ui.components.tutorial.TutorialHost
+import com.srcardiocare.ui.components.tutorial.TutorialIds
+import com.srcardiocare.ui.components.tutorial.TutorialKeys
+import com.srcardiocare.ui.components.tutorial.TutorialTours
+import com.srcardiocare.ui.components.tutorial.tutorialTarget
 import com.srcardiocare.ui.theme.DesignTokens
 import java.text.SimpleDateFormat
 import java.util.*
@@ -65,6 +71,7 @@ fun PatientFeedbackChatScreen(
         }
     }
 
+    TutorialHost(tourKey = TutorialKeys.PATIENT_FEEDBACK_CHAT, steps = TutorialTours.patientFeedbackChat) {
     Scaffold(
         topBar = {
             Column {
@@ -75,6 +82,7 @@ fun PatientFeedbackChatScreen(
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                         }
                     },
+                    actions = { TutorialHelpButton() },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
                 )
                 TabRow(
@@ -86,7 +94,12 @@ fun PatientFeedbackChatScreen(
                         Tab(
                             selected = selectedTab == index,
                             onClick = { selectedTab = index },
-                            text = { Text(title, fontWeight = FontWeight.SemiBold) }
+                            text = { Text(title, fontWeight = FontWeight.SemiBold) },
+                            modifier = if (index == 0) {
+                                Modifier.tutorialTarget(TutorialIds.PFC_FEEDBACKS_TAB)
+                            } else {
+                                Modifier.tutorialTarget(TutorialIds.PFC_CHAT_TAB)
+                            }
                         )
                     }
                 }
@@ -104,6 +117,7 @@ fun PatientFeedbackChatScreen(
                 ChatTabView(patientId = patientId)
             }
         }
+    }
     }
 }
 
@@ -264,7 +278,7 @@ private fun ChatTabView(patientId: String) {
                 containerColor = DesignTokens.Colors.Primary,
                 contentColor = Color.White,
                 shape = CircleShape,
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier.size(48.dp).tutorialTarget(TutorialIds.CHAT_SEND)
             ) {
                 Icon(Icons.Default.Send, contentDescription = "Send", modifier = Modifier.size(24.dp))
             }

@@ -126,7 +126,12 @@ fun OnboardingScreen(onFinished: () -> Unit) {
             isSaving = true
             scope.launch {
                 try {
-                    FirebaseService.updateUser(mapOf("hasCompletedOnboarding" to true))
+                    FirebaseService.updateUser(
+                        mapOf(
+                            "hasCompletedOnboarding" to true,
+                            "autoToursEnabled" to true
+                        )
+                    )
                 } catch (_: Exception) {
                     // Non-fatal: the flow re-offers next launch if the write failed.
                 }

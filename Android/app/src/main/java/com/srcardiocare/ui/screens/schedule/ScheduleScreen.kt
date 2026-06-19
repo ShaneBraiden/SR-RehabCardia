@@ -67,6 +67,12 @@ import com.srcardiocare.core.security.ErrorHandler
 import com.srcardiocare.core.security.InputValidator
 import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.ui.components.SkeletonListRow
+import com.srcardiocare.ui.components.tutorial.TutorialHelpButton
+import com.srcardiocare.ui.components.tutorial.TutorialHost
+import com.srcardiocare.ui.components.tutorial.TutorialIds
+import com.srcardiocare.ui.components.tutorial.TutorialKeys
+import com.srcardiocare.ui.components.tutorial.TutorialTours
+import com.srcardiocare.ui.components.tutorial.tutorialTarget
 import com.srcardiocare.ui.theme.DesignTokens
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -410,6 +416,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
         )
     }
 
+    TutorialHost(tourKey = TutorialKeys.SCHEDULE, steps = TutorialTours.schedule) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -423,6 +430,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
                     TextButton(onClick = { selectedDay = LocalDate.now().dayOfWeek.value - 1 }) {
                         Text("Today", color = DesignTokens.Colors.Primary, fontWeight = FontWeight.SemiBold)
                     }
+                    TutorialHelpButton()
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
@@ -431,7 +439,8 @@ fun ScheduleScreen(onBack: () -> Unit) {
             FloatingActionButton(
                 onClick = { showAddDialog = true },
                 containerColor = DesignTokens.Colors.Primary,
-                shape = CircleShape
+                shape = CircleShape,
+                modifier = Modifier.tutorialTarget(TutorialIds.SCHEDULE_ADD)
             ) {
                 Icon(Icons.Default.Add, contentDescription = "New appointment", tint = MaterialTheme.colorScheme.onPrimary)
             }
@@ -458,6 +467,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
                     Card(
                         modifier = Modifier
                             .width(56.dp)
+                            .then(if (index == 0) Modifier.tutorialTarget(TutorialIds.SCHEDULE_CALENDAR) else Modifier)
                             .clickable { selectedDay = index },
                         shape = RoundedCornerShape(DesignTokens.Radius.LG),
                         colors = CardDefaults.cardColors(
@@ -699,5 +709,6 @@ fun ScheduleScreen(onBack: () -> Unit) {
                 }
             }
         }
+    }
     }
 }

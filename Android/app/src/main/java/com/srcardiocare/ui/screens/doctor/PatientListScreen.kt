@@ -35,6 +35,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.srcardiocare.core.push.NotificationEvent
 import com.srcardiocare.core.push.Notifier
 import com.srcardiocare.core.security.InputValidator
+import com.srcardiocare.ui.components.tutorial.TutorialHelpButton
+import com.srcardiocare.ui.components.tutorial.TutorialHost
+import com.srcardiocare.ui.components.tutorial.TutorialIds
+import com.srcardiocare.ui.components.tutorial.TutorialKeys
+import com.srcardiocare.ui.components.tutorial.TutorialTours
+import com.srcardiocare.ui.components.tutorial.tutorialTarget
 import com.srcardiocare.ui.theme.DesignTokens
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -96,6 +102,7 @@ fun PatientListScreen(
 
     val screenTitle = if (userRole == "admin") "All Users" else "Patients"
 
+    TutorialHost(tourKey = TutorialKeys.PATIENT_LIST, steps = TutorialTours.patientList) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -105,6 +112,7 @@ fun PatientListScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
+                actions = { TutorialHelpButton() },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
             )
         },
@@ -130,7 +138,8 @@ fun PatientListScreen(
                         leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = DesignTokens.Spacing.XL, vertical = DesignTokens.Spacing.MD),
+                            .padding(horizontal = DesignTokens.Spacing.XL, vertical = DesignTokens.Spacing.MD)
+                            .tutorialTarget(TutorialIds.LIST_SEARCH),
                         shape = RoundedCornerShape(DesignTokens.Radius.Base),
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
@@ -339,17 +348,26 @@ fun PatientListScreen(
                 // User rows
                 if (!isLoading) {
                     items(filteredUsers) { user ->
-                        UserListRow(user = user, isAdmin = userRole == "admin", onClick = {
-                            if (user.role == "patient") {
-                                onPatientTap(user.id)
-                            } else if (user.role == "doctor" && userRole == "admin") {
-                                onDoctorTap(user.id)
+                        UserListRow(
+                            user = user,
+                            isAdmin = userRole == "admin",
+                            // First row carries the tour target.
+                            modifier = if (user.id == filteredUsers.firstOrNull()?.id) {
+                                Modifier.tutorialTarget(TutorialIds.LIST_ROW)
+                            } else Modifier,
+                            onClick = {
+                                if (user.role == "patient") {
+                                    onPatientTap(user.id)
+                                } else if (user.role == "doctor" && userRole == "admin") {
+                                    onDoctorTap(user.id)
+                                }
                             }
-                        })
+                        )
                     }
                 }
             }
         }
+    }
     }
 }
 
@@ -402,9 +420,9 @@ private fun SkeletonUserRow() {
 }
 
 @Composable
-private fun UserListRow(user: UserItem, isAdmin: Boolean, onClick: () -> Unit) {
+private fun UserListRow(user: UserItem, isAdmin: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = DesignTokens.Spacing.XL, vertical = DesignTokens.Spacing.XS)
             .clickable(onClick = onClick),

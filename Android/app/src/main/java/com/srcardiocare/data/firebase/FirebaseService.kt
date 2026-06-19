@@ -95,15 +95,13 @@ object FirebaseService {
 
     suspend fun createPlan(data: Map<String, Any>): String = PlanRepository.createPlan(data)
 
-    suspend fun assignExerciseToPatient(patientId: String, exerciseData: Map<String, Any>) =
-        PlanRepository.assignExerciseToPatient(patientId, exerciseData)
-
     suspend fun assignExerciseToPatientWithPrescription(
         patientId: String,
         exerciseData: Map<String, Any>,
         expiryDays: Int,
-        expiryDate: String
-    ) = PlanRepository.assignExerciseToPatientWithPrescription(patientId, exerciseData, expiryDays, expiryDate)
+        expiryDate: String,
+        dailyFrequency: Int = 1
+    ) = PlanRepository.assignExerciseToPatientWithPrescription(patientId, exerciseData, expiryDays, expiryDate, dailyFrequency)
 
     suspend fun removeExerciseFromPlan(patientId: String, exerciseData: Map<String, Any>) =
         PlanRepository.removeExerciseFromPlan(patientId, exerciseData)
@@ -112,24 +110,9 @@ object FirebaseService {
     suspend fun sendFeedback(patientId: String, message: String) =
         FeedbackRepository.sendFeedback(patientId, message)
 
-    // ── Workouts ────────────────────────────────────────────────────────
+    // ── Workouts (legacy `workouts` collection — read-only) ─────────────
     suspend fun fetchWorkouts(patientId: String): List<Pair<String, Map<String, Any?>>> =
         WorkoutRepository.fetchWorkouts(patientId)
-
-    suspend fun startWorkout(planId: String, totalExercises: Int): String =
-        WorkoutRepository.startWorkout(planId, totalExercises)
-
-    suspend fun completeWorkout(id: String, exercisesCompleted: Int) =
-        WorkoutRepository.completeWorkout(id, exercisesCompleted)
-
-    suspend fun incrementExerciseProgress(patientId: String, planId: String, totalCount: Int): String? =
-        WorkoutRepository.incrementExerciseProgress(patientId, planId, totalCount)
-
-    suspend fun submitFeedback(workoutId: String, painLevel: Int, difficulty: Int, notes: String?) =
-        WorkoutRepository.submitFeedback(workoutId, painLevel, difficulty, notes)
-
-    suspend fun fetchWorkoutCompletionsToday(patientId: String): Int =
-        WorkoutRepository.fetchWorkoutCompletionsToday(patientId)
 
     // ── Appointments ────────────────────────────────────────────────────
     suspend fun fetchAppointments(userId: String, role: String): List<Pair<String, Map<String, Any?>>> =

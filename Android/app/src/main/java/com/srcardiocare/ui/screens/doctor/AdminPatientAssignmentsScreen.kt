@@ -34,6 +34,12 @@ import com.srcardiocare.data.firebase.SessionRepository
 import com.srcardiocare.data.firebase.UserRepository
 import com.srcardiocare.data.model.AssignmentHistoryStatus
 import com.srcardiocare.ui.components.SkeletonListRow
+import com.srcardiocare.ui.components.tutorial.TutorialHelpButton
+import com.srcardiocare.ui.components.tutorial.TutorialHost
+import com.srcardiocare.ui.components.tutorial.TutorialIds
+import com.srcardiocare.ui.components.tutorial.TutorialKeys
+import com.srcardiocare.ui.components.tutorial.TutorialTours
+import com.srcardiocare.ui.components.tutorial.tutorialTarget
 import com.srcardiocare.ui.theme.DesignTokens
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -194,6 +200,7 @@ fun AdminPatientAssignmentsScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
+    TutorialHost(tourKey = TutorialKeys.ADMIN_PATIENT_ASSIGNMENTS, steps = TutorialTours.adminPatientAssignments) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -208,6 +215,7 @@ fun AdminPatientAssignmentsScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
+                actions = { TutorialHelpButton() },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
             )
         }
@@ -349,6 +357,9 @@ fun AdminPatientAssignmentsScreen(
                                     group = group,
                                     isExpanded = group.date in expandedDates,
                                     today = today,
+                                    modifier = if (group.date == displayedGroups.firstOrNull()?.date) {
+                                        Modifier.tutorialTarget(TutorialIds.ADMIN_ASSIGNMENT_ROW)
+                                    } else Modifier,
                                     onClick = {
                                         expandedDates = if (group.date in expandedDates) {
                                             expandedDates - group.date
@@ -374,6 +385,7 @@ fun AdminPatientAssignmentsScreen(
             }
         }
     }
+    }
 }
 
 @Composable
@@ -381,13 +393,14 @@ private fun DateGroupHeader(
     group: DateGroupedAssignment,
     isExpanded: Boolean,
     today: LocalDate,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val isExpired = group.date.isBefore(today)
     val isToday = group.date == today
 
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = DesignTokens.Spacing.XL, vertical = DesignTokens.Spacing.XS)
             .clickable(onClick = onClick),

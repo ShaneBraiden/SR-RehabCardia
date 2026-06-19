@@ -29,6 +29,12 @@ import com.srcardiocare.ui.components.LogoutConfirmDialog
 import com.srcardiocare.ui.components.ProfileFormSkeleton
 import com.srcardiocare.ui.components.ProfileInfoRow
 import com.srcardiocare.ui.components.rememberToast
+import com.srcardiocare.ui.components.tutorial.TutorialHelpButton
+import com.srcardiocare.ui.components.tutorial.TutorialHost
+import com.srcardiocare.ui.components.tutorial.TutorialIds
+import com.srcardiocare.ui.components.tutorial.TutorialKeys
+import com.srcardiocare.ui.components.tutorial.TutorialTours
+import com.srcardiocare.ui.components.tutorial.tutorialTarget
 import com.srcardiocare.ui.theme.DesignTokens
 import kotlinx.coroutines.launch
 
@@ -94,6 +100,7 @@ fun PatientProfileSelfScreen(
         )
     }
 
+    TutorialHost(tourKey = TutorialKeys.PATIENT_PROFILE, steps = TutorialTours.patientProfile) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -105,10 +112,14 @@ fun PatientProfileSelfScreen(
                 },
                 actions = {
                     if (!isEditing && !ui.isLoading) {
-                        IconButton(onClick = { beginEdit() }) {
+                        IconButton(
+                            onClick = { beginEdit() },
+                            modifier = Modifier.tutorialTarget(TutorialIds.PROFILE_EDIT)
+                        ) {
                             Icon(Icons.Default.Edit, contentDescription = "Edit profile")
                         }
                     }
+                    TutorialHelpButton()
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
@@ -239,7 +250,8 @@ fun PatientProfileSelfScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = DesignTokens.Spacing.XL)
-                        .height(52.dp),
+                        .height(52.dp)
+                        .tutorialTarget(TutorialIds.PROFILE_PASSWORD),
                     shape = RoundedCornerShape(DesignTokens.Radius.Base),
                     colors = ButtonDefaults.buttonColors(containerColor = DesignTokens.Colors.Primary)
                 ) {
@@ -253,7 +265,8 @@ fun PatientProfileSelfScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = DesignTokens.Spacing.XL)
-                        .height(52.dp),
+                        .height(52.dp)
+                        .tutorialTarget(TutorialIds.PROFILE_LOGOUT),
                     shape = RoundedCornerShape(DesignTokens.Radius.Base),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = DesignTokens.Colors.Error.copy(alpha = 0.1f),
@@ -270,5 +283,6 @@ fun PatientProfileSelfScreen(
                 Spacer(modifier = Modifier.height(DesignTokens.Spacing.XXXL))
             }
         }
+    }
     }
 }

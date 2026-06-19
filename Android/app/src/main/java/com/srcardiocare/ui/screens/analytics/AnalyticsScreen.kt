@@ -33,6 +33,12 @@ import com.srcardiocare.data.model.PostWorkoutFeedback
 import com.srcardiocare.ui.components.SkeletonBarChart
 import com.srcardiocare.ui.components.SkeletonDonutChart
 import com.srcardiocare.ui.components.SkeletonStatsCard
+import com.srcardiocare.ui.components.tutorial.TutorialHelpButton
+import com.srcardiocare.ui.components.tutorial.TutorialHost
+import com.srcardiocare.ui.components.tutorial.TutorialIds
+import com.srcardiocare.ui.components.tutorial.TutorialKeys
+import com.srcardiocare.ui.components.tutorial.TutorialTours
+import com.srcardiocare.ui.components.tutorial.tutorialTarget
 import com.srcardiocare.ui.theme.DesignTokens
 import java.time.Instant
 import java.time.LocalDate
@@ -140,6 +146,7 @@ fun AnalyticsScreen(onBack: () -> Unit) {
         DonutSegment("Missed", missedWorkouts, DesignTokens.Colors.Error)
     ).filter { it.value > 0 }
     
+    TutorialHost(tourKey = TutorialKeys.ANALYTICS, steps = TutorialTours.analytics) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -150,9 +157,13 @@ fun AnalyticsScreen(onBack: () -> Unit) {
                     }
                 },
                 actions = {
-                    TextButton(onClick = {}) {
+                    TextButton(
+                        onClick = {},
+                        modifier = Modifier.tutorialTarget(TutorialIds.ANALYTICS_RANGE)
+                    ) {
                         Text("This Week ▾", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold)
                     }
+                    TutorialHelpButton()
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
@@ -204,7 +215,7 @@ fun AnalyticsScreen(onBack: () -> Unit) {
                         onSegmentClick = { segment ->
                             selectedSegment = if (selectedSegment == segment) null else segment
                         },
-                        modifier = Modifier.size(200.dp)
+                        modifier = Modifier.size(200.dp).tutorialTarget(TutorialIds.ANALYTICS_CHART)
                     )
 
                     Spacer(modifier = Modifier.height(DesignTokens.Spacing.MD))
@@ -232,7 +243,9 @@ fun AnalyticsScreen(onBack: () -> Unit) {
 
             // Stat cards
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .tutorialTarget(TutorialIds.ANALYTICS_METRICS),
                 horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.MD)
             ) {
                 StatCard(complianceText, "Compliance", DesignTokens.Colors.Primary, Modifier.weight(1f))
@@ -362,6 +375,7 @@ fun AnalyticsScreen(onBack: () -> Unit) {
 
             Spacer(modifier = Modifier.height(DesignTokens.Spacing.XXL))
         }
+    }
     }
 }
 

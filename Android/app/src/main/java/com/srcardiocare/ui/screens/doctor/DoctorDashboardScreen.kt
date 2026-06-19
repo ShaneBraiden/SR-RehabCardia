@@ -47,6 +47,12 @@ import com.srcardiocare.ui.components.SkeletonDonutChart
 import com.srcardiocare.ui.components.SkeletonStatsCard
 import com.srcardiocare.ui.components.StatItem
 import com.srcardiocare.ui.components.StatItemStyle
+import com.srcardiocare.ui.components.tutorial.TutorialHelpButton
+import com.srcardiocare.ui.components.tutorial.TutorialHost
+import com.srcardiocare.ui.components.tutorial.TutorialIds
+import com.srcardiocare.ui.components.tutorial.TutorialKeys
+import com.srcardiocare.ui.components.tutorial.TutorialTours
+import com.srcardiocare.ui.components.tutorial.tutorialTarget
 import com.srcardiocare.ui.theme.DesignTokens
 import java.time.Instant
 import java.time.ZoneId
@@ -122,6 +128,7 @@ fun DoctorDashboardScreen(
     val attentionCount = allUsers.count { it.role == "patient" && it.status == UserStatus.NEEDS_ATTENTION }
     val notAssignedCount = allUsers.count { it.role == "patient" && it.status == UserStatus.INACTIVE }
 
+    TutorialHost(tourKey = TutorialKeys.DOCTOR_DASHBOARD, steps = TutorialTours.doctorDashboard) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -137,7 +144,7 @@ fun DoctorDashboardScreen(
                             modifier = Modifier.size(38.dp),
                             contentScale = ContentScale.Fit
                         )
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 "RehabCardia",
                                 fontWeight = FontWeight.Bold,
@@ -149,6 +156,7 @@ fun DoctorDashboardScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
+                        TutorialHelpButton()
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -281,7 +289,7 @@ fun DoctorDashboardScreen(
                         horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.MD)
                     ) {
                         DashboardCard(
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1f).tutorialTarget(TutorialIds.DASH_PATIENTS),
                             icon = Icons.Default.People,
                             title = if (userRole == "admin") "Users" else "Patients",
                             subtitle = if (userRole == "admin") "${allUsers.size} total users" else "${patientCount} patients",
@@ -290,7 +298,7 @@ fun DoctorDashboardScreen(
                             onClick = onPatientList
                         )
                         DashboardCard(
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1f).tutorialTarget(TutorialIds.DASH_EXERCISES),
                             icon = Icons.Default.FitnessCenter,
                             title = "Exercises",
                             subtitle = "Exercise library",
@@ -307,14 +315,14 @@ fun DoctorDashboardScreen(
                         horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.MD)
                     ) {
                         DashboardCard(
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1f).tutorialTarget(TutorialIds.DASH_FEEDBACK),
                             icon = Icons.Default.PlayArrow,
                             title = "Feedbacks",
                             subtitle = "Patient responses",
                             onClick = onFeedbacks
                         )
                         DashboardCard(
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1f).tutorialTarget(TutorialIds.DASH_SCHEDULE),
                             icon = Icons.Default.CalendarMonth,
                             title = "Schedule",
                             subtitle = "Appointments",
@@ -331,7 +339,7 @@ fun DoctorDashboardScreen(
                         horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.MD)
                     ) {
                         DashboardCard(
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1f).tutorialTarget(TutorialIds.DASH_PROFILE),
                             icon = Icons.Default.Person,
                             title = "Profile",
                             subtitle = "Your account",
@@ -339,7 +347,7 @@ fun DoctorDashboardScreen(
                         )
                         if (userRole == "doctor") {
                             DashboardCard(
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier.weight(1f).tutorialTarget(TutorialIds.DASH_ADD_PATIENT),
                                 icon = Icons.Default.PersonAdd,
                                 title = "Add Patient",
                                 subtitle = "Create new patient",
@@ -353,6 +361,7 @@ fun DoctorDashboardScreen(
                 }
             }
         }
+    }
     }
 }
 

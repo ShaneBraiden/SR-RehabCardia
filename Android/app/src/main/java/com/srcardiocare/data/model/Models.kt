@@ -22,6 +22,8 @@ data class User(
     val blockReason: String? = null,
     val lastSeenMs: Long? = null,
     val hasCompletedOnboarding: Boolean = false,
+    val toursSeen: List<String> = emptyList(),
+    val autoToursEnabled: Boolean = false,
     // Patient profile fields
     val gender: String? = null,
     val dateOfBirth: String? = null,

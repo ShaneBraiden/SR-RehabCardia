@@ -28,6 +28,12 @@ import com.srcardiocare.ui.components.LogoutConfirmDialog
 import com.srcardiocare.ui.components.ProfileFormSkeleton
 import com.srcardiocare.ui.components.ProfileInfoRow
 import com.srcardiocare.ui.components.rememberToast
+import com.srcardiocare.ui.components.tutorial.TutorialHelpButton
+import com.srcardiocare.ui.components.tutorial.TutorialHost
+import com.srcardiocare.ui.components.tutorial.TutorialIds
+import com.srcardiocare.ui.components.tutorial.TutorialKeys
+import com.srcardiocare.ui.components.tutorial.TutorialTours
+import com.srcardiocare.ui.components.tutorial.tutorialTarget
 import com.srcardiocare.ui.theme.DesignTokens
 import kotlinx.coroutines.launch
 
@@ -90,6 +96,7 @@ fun DoctorProfileScreen(
         )
     }
 
+    TutorialHost(tourKey = TutorialKeys.DOCTOR_PROFILE, steps = TutorialTours.doctorProfile) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -101,10 +108,14 @@ fun DoctorProfileScreen(
                 },
                 actions = {
                     if (!isEditing && !ui.isLoading) {
-                        IconButton(onClick = { beginEdit() }) {
+                        IconButton(
+                            onClick = { beginEdit() },
+                            modifier = Modifier.tutorialTarget(TutorialIds.PROFILE_EDIT)
+                        ) {
                             Icon(Icons.Default.Edit, contentDescription = "Edit profile")
                         }
                     }
+                    TutorialHelpButton()
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
@@ -256,7 +267,7 @@ fun DoctorProfileScreen(
 
             Button(
                 onClick = onChangePassword,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().tutorialTarget(TutorialIds.PROFILE_PASSWORD),
                 shape = RoundedCornerShape(DesignTokens.Radius.Button),
                 colors = ButtonDefaults.buttonColors(containerColor = DesignTokens.Colors.Primary)
             ) {
@@ -267,7 +278,7 @@ fun DoctorProfileScreen(
 
             OutlinedButton(
                 onClick = { showLogoutDialog = true },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().tutorialTarget(TutorialIds.PROFILE_LOGOUT),
                 shape = RoundedCornerShape(DesignTokens.Radius.Button),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = DesignTokens.Colors.Error),
                 border = androidx.compose.foundation.BorderStroke(1.dp, DesignTokens.Colors.Error)
@@ -281,5 +292,6 @@ fun DoctorProfileScreen(
 
             Spacer(modifier = Modifier.height(DesignTokens.Spacing.XL))
         }
+    }
     }
 }

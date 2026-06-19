@@ -34,6 +34,12 @@ import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.data.firebase.SessionRepository
 import com.srcardiocare.data.firebase.UserRepository
 import com.srcardiocare.ui.components.ShimmerBox
+import com.srcardiocare.ui.components.tutorial.TutorialHelpButton
+import com.srcardiocare.ui.components.tutorial.TutorialHost
+import com.srcardiocare.ui.components.tutorial.TutorialIds
+import com.srcardiocare.ui.components.tutorial.TutorialKeys
+import com.srcardiocare.ui.components.tutorial.TutorialTours
+import com.srcardiocare.ui.components.tutorial.tutorialTarget
 import com.srcardiocare.ui.theme.DesignTokens
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -143,6 +149,7 @@ fun PatientHomeScreen(
         else -> "Good Evening"
     }
 
+    TutorialHost(tourKey = TutorialKeys.PATIENT_HOME, steps = TutorialTours.patientHome) {
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             topBar = {
@@ -159,7 +166,7 @@ fun PatientHomeScreen(
                                 modifier = Modifier.size(38.dp),
                                 contentScale = ContentScale.Fit
                             )
-                            Column {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     "RehabCardia",
                                     fontWeight = FontWeight.Bold,
@@ -171,6 +178,7 @@ fun PatientHomeScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
+                            TutorialHelpButton()
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -278,7 +286,7 @@ fun PatientHomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.MD)
                 ) {
                     DashboardCard(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).tutorialTarget(TutorialIds.HOME_START),
                         icon = Icons.Default.FitnessCenter,
                         title = "Exercises",
                         subtitle = "$totalCount assigned",
@@ -286,7 +294,7 @@ fun PatientHomeScreen(
                         onClick = onExerciseTap
                     )
                     DashboardCard(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).tutorialTarget(TutorialIds.HOME_SCHEDULE),
                         icon = Icons.Default.CalendarMonth,
                         title = "Schedule",
                         subtitle = "View appointments",
@@ -305,14 +313,14 @@ fun PatientHomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.MD)
                 ) {
                     DashboardCard(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).tutorialTarget(TutorialIds.HOME_PROGRESS),
                         icon = Icons.Default.Insights,
                         title = "Progress",
                         subtitle = "Track your stats",
                         onClick = onAnalyticsTap
                     )
                     DashboardCard(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).tutorialTarget(TutorialIds.HOME_CHAT),
                         icon = Icons.Default.ChatBubble,
                         title = "Messages",
                         subtitle = "Chat with doctor",
@@ -331,14 +339,14 @@ fun PatientHomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.MD)
                 ) {
                     DashboardCard(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).tutorialTarget(TutorialIds.HOME_NOTIFICATIONS),
                         icon = Icons.Default.Notifications,
                         title = "Notifications",
                         subtitle = "View alerts",
                         onClick = onNotificationsTap
                     )
                     DashboardCard(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).tutorialTarget(TutorialIds.HOME_PROFILE),
                         icon = Icons.Default.Person,
                         title = "Profile",
                         subtitle = "Your account",
@@ -348,6 +356,7 @@ fun PatientHomeScreen(
             }
             }
         }
+    }
     }
 }
 

@@ -107,6 +107,7 @@ object AuthRepository {
             "apiAccessBlocked" to false,
             "phone" to null,
             "profileImageUrl" to null,
+            "autoToursEnabled" to true,
             "createdAt" to FieldValue.serverTimestamp()
         )
         FirebaseClients.db.collection("users").document(uid).set(userData).await()
@@ -160,6 +161,7 @@ object AuthRepository {
                 "apiAccessBlocked" to false,
                 "phone" to null,
                 "profileImageUrl" to null,
+                "autoToursEnabled" to true,
                 "createdAt" to FieldValue.serverTimestamp()
             )
             FirebaseClients.db.collection("users").document(newUid).set(userData).await()

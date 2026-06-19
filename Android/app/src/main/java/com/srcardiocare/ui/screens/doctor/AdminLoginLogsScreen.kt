@@ -43,6 +43,12 @@ import com.google.firebase.Timestamp
 import com.srcardiocare.core.security.ErrorHandler
 import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.ui.components.SkeletonListRow
+import com.srcardiocare.ui.components.tutorial.TutorialHelpButton
+import com.srcardiocare.ui.components.tutorial.TutorialHost
+import com.srcardiocare.ui.components.tutorial.TutorialIds
+import com.srcardiocare.ui.components.tutorial.TutorialKeys
+import com.srcardiocare.ui.components.tutorial.TutorialTours
+import com.srcardiocare.ui.components.tutorial.tutorialTarget
 import com.srcardiocare.ui.theme.DesignTokens
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -90,6 +96,7 @@ fun AdminLoginLogsScreen(
         isLoading = false
     }
 
+    TutorialHost(tourKey = TutorialKeys.ADMIN_LOGIN_LOGS, steps = TutorialTours.adminLoginLogs) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -103,6 +110,7 @@ fun AdminLoginLogsScreen(
                     IconButton(onClick = { refreshKey++ }) {
                         Icon(Icons.Default.Refresh, contentDescription = "Refresh")
                     }
+                    TutorialHelpButton()
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
             )
@@ -155,17 +163,23 @@ fun AdminLoginLogsScreen(
                     verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.SM)
                 ) {
                     items(logs) { item ->
-                        LoginLogCard(item = item)
+                        LoginLogCard(
+                            item = item,
+                            modifier = if (item.id == logs.firstOrNull()?.id) {
+                                Modifier.tutorialTarget(TutorialIds.ADMIN_LOGIN_LOG_ROW)
+                            } else Modifier
+                        )
                     }
                     item { Spacer(modifier = Modifier.height(DesignTokens.Spacing.XXL)) }
                 }
             }
         }
     }
+    }
 }
 
 @Composable
-private fun LoginLogCard(item: LoginLogItem) {
+private fun LoginLogCard(item: LoginLogItem, modifier: Modifier = Modifier) {
     val statusLabel = when (item.status) {
         "success" -> "SUCCESS"
         "failed" -> "FAILED"
@@ -182,7 +196,7 @@ private fun LoginLogCard(item: LoginLogItem) {
     val dateText = item.createdAt?.toDate()?.let { sdf.format(it) } ?: "Unknown time"
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(DesignTokens.Radius.Card),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {

@@ -24,6 +24,12 @@ import com.srcardiocare.core.security.ErrorHandler
 import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.data.firebase.UserRepository
 import com.srcardiocare.ui.components.SkeletonListRow
+import com.srcardiocare.ui.components.tutorial.TutorialHelpButton
+import com.srcardiocare.ui.components.tutorial.TutorialHost
+import com.srcardiocare.ui.components.tutorial.TutorialIds
+import com.srcardiocare.ui.components.tutorial.TutorialKeys
+import com.srcardiocare.ui.components.tutorial.TutorialTours
+import com.srcardiocare.ui.components.tutorial.tutorialTarget
 import com.srcardiocare.ui.theme.DesignTokens
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -81,6 +87,7 @@ fun FeedbackDashboardScreen(
         isLoading = false
     }
 
+    TutorialHost(tourKey = TutorialKeys.FEEDBACK_DASHBOARD, steps = TutorialTours.feedbackDashboard) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -95,6 +102,7 @@ fun FeedbackDashboardScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
+                actions = { TutorialHelpButton() },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
         },
@@ -143,6 +151,7 @@ fun FeedbackDashboardScreen(
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .then(if (patient.id == patients.firstOrNull()?.id) Modifier.tutorialTarget(TutorialIds.FD_LIST) else Modifier)
                             .clickable { onPatientTap(patient.id) },
                         shape = RoundedCornerShape(8.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -173,5 +182,6 @@ fun FeedbackDashboardScreen(
                 item { Spacer(modifier = Modifier.height(DesignTokens.Spacing.XXL)) }
             }
         }
+    }
     }
 }

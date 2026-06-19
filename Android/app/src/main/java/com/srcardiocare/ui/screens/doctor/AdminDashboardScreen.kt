@@ -39,6 +39,12 @@ import com.srcardiocare.ui.components.SkeletonDonutChart
 import com.srcardiocare.ui.components.SkeletonStatsCard
 import com.srcardiocare.ui.components.StatItem
 import com.srcardiocare.ui.components.StatItemStyle
+import com.srcardiocare.ui.components.tutorial.TutorialHelpButton
+import com.srcardiocare.ui.components.tutorial.TutorialHost
+import com.srcardiocare.ui.components.tutorial.TutorialIds
+import com.srcardiocare.ui.components.tutorial.TutorialKeys
+import com.srcardiocare.ui.components.tutorial.TutorialTours
+import com.srcardiocare.ui.components.tutorial.tutorialTarget
 import com.srcardiocare.ui.theme.DesignTokens
 import java.time.Duration
 import java.time.Instant
@@ -93,6 +99,7 @@ fun AdminDashboardScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
+    TutorialHost(tourKey = TutorialKeys.ADMIN_DASHBOARD, steps = TutorialTours.adminDashboard) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -103,9 +110,13 @@ fun AdminDashboardScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onSettings) {
+                    IconButton(
+                        onClick = onSettings,
+                        modifier = Modifier.tutorialTarget(TutorialIds.ADMIN_SETTINGS_NAV)
+                    ) {
                         Icon(Icons.Default.Settings, contentDescription = "Settings")
                     }
+                    TutorialHelpButton()
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
             )
@@ -242,14 +253,14 @@ fun AdminDashboardScreen(
                         horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.MD)
                     ) {
                         QuickActionCard(
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1f).tutorialTarget(TutorialIds.ADMIN_PATIENTS),
                             icon = Icons.Default.People,
                             title = "All Users",
                             subtitle = "$totalUsers users",
                             onClick = onUserList
                         )
                         QuickActionCard(
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1f).tutorialTarget(TutorialIds.ADMIN_PROFILE),
                             icon = Icons.Default.Person,
                             title = "Profile",
                             subtitle = "Your account",
@@ -275,7 +286,7 @@ fun AdminDashboardScreen(
                             onClick = onChatMonitor
                         )
                         QuickActionCard(
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1f).tutorialTarget(TutorialIds.ADMIN_LOGS),
                             icon = Icons.Default.History,
                             title = "Login Logs",
                             subtitle = "Audit sign-ins",
@@ -382,11 +393,18 @@ fun AdminDashboardScreen(
                 // Doctor cards
                 if (!isLoading && errorMessage == null) {
                     items(doctors) { doctor ->
-                        DoctorCard(doctor = doctor, onClick = { onDoctorTap(doctor.id) })
+                        DoctorCard(
+                            doctor = doctor,
+                            onClick = { onDoctorTap(doctor.id) },
+                            modifier = if (doctor.id == doctors.firstOrNull()?.id) {
+                                Modifier.tutorialTarget(TutorialIds.ADMIN_DOCTORS)
+                            } else Modifier
+                        )
                     }
                 }
             }
         }
+    }
     }
 }
 
@@ -442,9 +460,9 @@ private fun QuickActionCard(
 }
 
 @Composable
-private fun DoctorCard(doctor: DoctorItem, onClick: () -> Unit) {
+private fun DoctorCard(doctor: DoctorItem, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = DesignTokens.Spacing.XL, vertical = DesignTokens.Spacing.XS)
             .clickable(onClick = onClick),

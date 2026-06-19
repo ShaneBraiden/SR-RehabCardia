@@ -8,8 +8,6 @@
 //   api.getPatients()     -> FirebaseService.fetchPatients(doctorId)
 //   api.getExercises()    -> FirebaseService.fetchExercises(category)
 //   api.getPlans()        -> FirebaseService.fetchPlans(patientId)
-//   api.startWorkout()    -> FirebaseService.startWorkout(planId, total)
-//   api.submitFeedback()  -> FirebaseService.submitFeedback(workoutId, ...)
 //   api.getAppointments() -> FirebaseService.fetchAppointments(userId, role)
 //   api.uploadVideo()     -> FirebaseService.uploadVideo(accessToken, data, title)
 //

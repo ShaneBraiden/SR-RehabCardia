@@ -27,6 +27,12 @@ import com.srcardiocare.core.security.ErrorHandler
 import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.data.firebase.UserRepository
 import com.srcardiocare.ui.components.SkeletonListRow
+import com.srcardiocare.ui.components.tutorial.TutorialHelpButton
+import com.srcardiocare.ui.components.tutorial.TutorialHost
+import com.srcardiocare.ui.components.tutorial.TutorialIds
+import com.srcardiocare.ui.components.tutorial.TutorialKeys
+import com.srcardiocare.ui.components.tutorial.TutorialTours
+import com.srcardiocare.ui.components.tutorial.tutorialTarget
 import com.srcardiocare.ui.theme.DesignTokens
 import kotlinx.coroutines.launch
 import java.time.Duration
@@ -107,6 +113,7 @@ fun AdminDoctorPatientsScreen(
 
     LaunchedEffect(doctorId) { loadData() }
 
+    TutorialHost(tourKey = TutorialKeys.ADMIN_DOCTOR_PATIENTS, steps = TutorialTours.adminDoctorPatients) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -121,6 +128,7 @@ fun AdminDoctorPatientsScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
+                actions = { TutorialHelpButton() },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
             )
         }
@@ -246,19 +254,26 @@ fun AdminDoctorPatientsScreen(
                         }
 
                         items(patients) { patient ->
-                            DoctorPatientCard(patient = patient, onClick = { onPatientTap(patient.id) })
+                            DoctorPatientCard(
+                                patient = patient,
+                                onClick = { onPatientTap(patient.id) },
+                                modifier = if (patient.id == patients.firstOrNull()?.id) {
+                                    Modifier.tutorialTarget(TutorialIds.ADMIN_DOCTOR_PATIENT_ROW)
+                                } else Modifier
+                            )
                         }
                     }
                 }
             }
         }
     }
+    }
 }
 
 @Composable
-private fun DoctorPatientCard(patient: DoctorPatientItem, onClick: () -> Unit) {
+private fun DoctorPatientCard(patient: DoctorPatientItem, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = DesignTokens.Spacing.XL, vertical = DesignTokens.Spacing.XS)
             .clickable(onClick = onClick),

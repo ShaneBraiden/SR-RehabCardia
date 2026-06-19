@@ -1,7 +1,6 @@
 // NavGraph.kt — Jetpack Compose Navigation for SR-Cardiocare
 package com.srcardiocare.navigation
 
-import android.net.Uri
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -32,13 +31,13 @@ import com.srcardiocare.ui.screens.auth.LoginScreen
 import com.srcardiocare.ui.screens.auth.ChangePasswordScreen
 import com.srcardiocare.ui.screens.patient.PatientHomeScreen
 import com.srcardiocare.ui.screens.patient.PatientProfileSelfScreen
-import com.srcardiocare.ui.screens.workout.WorkoutPlayerScreen
 import com.srcardiocare.ui.screens.feedback.PostWorkoutFeedbackScreen
 import com.srcardiocare.ui.screens.doctor.DoctorDashboardScreen
 import com.srcardiocare.ui.screens.doctor.AdminDashboardScreen
 import com.srcardiocare.ui.screens.doctor.AdminLoginLogsScreen
 import com.srcardiocare.ui.screens.doctor.AddPatientScreen
 import com.srcardiocare.ui.screens.doctor.PatientProfileScreen
+import com.srcardiocare.ui.screens.doctor.AssignExerciseScreen
 import com.srcardiocare.ui.screens.doctor.AdminDoctorPatientsScreen
 import com.srcardiocare.ui.screens.doctor.AdminPatientAssignmentsScreen
 import com.srcardiocare.ui.screens.doctor.EditAssignmentScreen
@@ -60,24 +59,6 @@ sealed class Route(val path: String) {
     object Login : Route("login")
     object Onboarding : Route("onboarding")
     object PatientHome : Route("patient/home")
-    object WorkoutPlayer : Route("workout/player?name={name}&videoUrl={videoUrl}&sets={sets}&reps={reps}&instructions={instructions}&planId={planId}&totalCount={totalCount}&isLastExercise={isLastExercise}") {
-        fun createPath(
-            name: String,
-            videoUrl: String?,
-            sets: Int,
-            reps: Int,
-            instructions: String?,
-            planId: String,
-            totalCount: Int,
-            isLastExercise: Boolean
-        ): String {
-            val encodedName = Uri.encode(name)
-            val encodedVideoUrl = Uri.encode(videoUrl ?: "")
-            val encodedInstructions = Uri.encode(instructions ?: "")
-            val encodedPlanId = Uri.encode(planId)
-            return "workout/player?name=$encodedName&videoUrl=$encodedVideoUrl&sets=$sets&reps=$reps&instructions=$encodedInstructions&planId=$encodedPlanId&totalCount=$totalCount&isLastExercise=$isLastExercise"
-        }
-    }
     object PostWorkoutFeedback : Route("workout/feedback")
     object DoctorDashboard : Route("doctor/dashboard")
     object AdminDashboard : Route("admin/dashboard")
@@ -86,6 +67,9 @@ sealed class Route(val path: String) {
     object AddPatient : Route("doctor/add-patient")
     object AddDoctor : Route("doctor/add-doctor")
     object PatientProfile : Route("doctor/patient/{patientId}")
+    object AssignExercise : Route("doctor/patient/{patientId}/assign") {
+        fun createPath(patientId: String) = "doctor/patient/$patientId/assign"
+    }
     object AdminDoctorProfile : Route("admin/doctor/{doctorId}")
     object AdminLoginLogs : Route("admin/login-logs")
     object ExerciseLibrary : Route("exercises/library")
@@ -97,7 +81,6 @@ sealed class Route(val path: String) {
     object PatientProfileSelf : Route("patient/profile")
     object PatientChat : Route("patient/chat")
     object PatientList : Route("doctor/patients")
-    object ExerciseList : Route("patient/exercises")
     object ChangePassword : Route("change-password")
     object PatientFeedbackChat : Route("doctor/patientChat/{patientId}") {
         fun createPath(patientId: String) = "doctor/patientChat/$patientId"
@@ -168,57 +151,8 @@ fun SRCardiocareNavGraph(
             )
         }
 
-        composable(Route.ExerciseList.path) {
-            com.srcardiocare.ui.screens.patient.ExerciseListScreen(
-                onExerciseTap = { name, videoUrl, sets, reps, instructions, planId, totalCount, isLastExercise ->
-                    navController.navigate(
-                        Route.WorkoutPlayer.createPath(
-                            name, videoUrl, sets, reps, instructions, planId, totalCount, isLastExercise
-                        )
-                    )
-                },
-                onBack = { navController.popBackStack() }
-            )
-        }
-
         composable(Route.PatientChat.path) {
             com.srcardiocare.ui.screens.patient.PatientChatScreen(
-                onBack = { navController.popBackStack() }
-            )
-        }
-
-        composable(
-            route = Route.WorkoutPlayer.path,
-            arguments = listOf(
-                navArgument("name") { type = NavType.StringType; defaultValue = "Workout" },
-                navArgument("videoUrl") { type = NavType.StringType; defaultValue = "" },
-                navArgument("sets") { type = NavType.IntType; defaultValue = 3 },
-                navArgument("reps") { type = NavType.IntType; defaultValue = 10 },
-                navArgument("instructions") { type = NavType.StringType; defaultValue = "" },
-                navArgument("planId") { type = NavType.StringType; defaultValue = "" },
-                navArgument("totalCount") { type = NavType.IntType; defaultValue = 1 },
-                navArgument("isLastExercise") { type = NavType.BoolType; defaultValue = false }
-            )
-        ) { backStackEntry ->
-            val args = backStackEntry.arguments
-            WorkoutPlayerScreen(
-                exerciseName = args?.getString("name") ?: "Workout",
-                videoUrl = args?.getString("videoUrl").orEmpty().ifBlank { null },
-                sets = args?.getInt("sets") ?: 3,
-                reps = args?.getInt("reps") ?: 10,
-                instructions = args?.getString("instructions").orEmpty().ifBlank { null },
-                planId = args?.getString("planId") ?: "",
-                totalCount = args?.getInt("totalCount") ?: 1,
-                isLastExercise = args?.getBoolean("isLastExercise") ?: false,
-                onFinish = {
-                    if (args?.getBoolean("isLastExercise") == true) {
-                        navController.navigate(Route.PostWorkoutFeedback.path) {
-                            popUpTo(Route.PatientHome.path)
-                        }
-                    } else {
-                        navController.popBackStack()
-                    }
-                },
                 onBack = { navController.popBackStack() }
             )
         }
@@ -322,11 +256,27 @@ fun SRCardiocareNavGraph(
             PatientProfileScreen(
                 patientId = patientId,
                 onBack = { navController.popBackStack() },
-                onVideoUpload = { navController.navigate(Route.VideoUpload.path) },
+                onAssignExercise = { navController.navigate(Route.AssignExercise.createPath(patientId)) },
+                onEditAssignment = { assignmentId ->
+                    navController.navigate(Route.EditAssignment.createPath(assignmentId))
+                },
+                onOpenChat = { navController.navigate(Route.PatientFeedbackChat.createPath(patientId)) },
                 onHistoryTap = { navController.navigate(Route.PatientHistory.createPath(patientId)) },
                 onManageAssignments = {
                     navController.navigate(Route.AdminPatientAssignments.createPath(patientId))
                 }
+            )
+        }
+
+        composable(
+            route = Route.AssignExercise.path,
+            arguments = listOf(navArgument("patientId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val patientId = backStackEntry.arguments?.getString("patientId") ?: ""
+            AssignExerciseScreen(
+                patientId = patientId,
+                onBack = { navController.popBackStack() },
+                onAssigned = { navController.popBackStack() }
             )
         }
 
@@ -606,10 +556,23 @@ private fun CurrentUserDocGuard(navController: NavHostController) {
                             popUpTo(0) { inclusive = true }
                             launchSingleTop = true
                         }
+                        return@addSnapshotListener
                     }
+
+                    // Seed the in-memory tour cache so screens don't read Firestore
+                    // per page to decide whether to auto-run their guided tour.
+                    @Suppress("UNCHECKED_CAST")
+                    val toursSeen = (snapshot.get("toursSeen") as? List<*>)
+                        ?.mapNotNull { it as? String }
+                        ?: emptyList()
+                    val autoEnabled = snapshot.getBoolean("autoToursEnabled") == true
+                    com.srcardiocare.data.firebase.CurrentUserTours.seed(toursSeen, autoEnabled)
                 }
             }
 
-        onDispose { registration.remove() }
+        onDispose {
+            registration.remove()
+            com.srcardiocare.data.firebase.CurrentUserTours.clear()
+        }
     }
 }

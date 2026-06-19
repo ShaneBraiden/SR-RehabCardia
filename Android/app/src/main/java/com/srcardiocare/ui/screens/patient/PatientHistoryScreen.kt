@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -27,6 +28,12 @@ import com.srcardiocare.data.firebase.AssignmentRepository
 import com.srcardiocare.data.firebase.SessionRepository
 import com.srcardiocare.data.model.*
 import com.srcardiocare.ui.components.SkeletonListRow
+import com.srcardiocare.ui.components.tutorial.TutorialHelpButton
+import com.srcardiocare.ui.components.tutorial.TutorialHost
+import com.srcardiocare.ui.components.tutorial.TutorialIds
+import com.srcardiocare.ui.components.tutorial.TutorialKeys
+import com.srcardiocare.ui.components.tutorial.TutorialTours
+import com.srcardiocare.ui.components.tutorial.tutorialTarget
 import com.srcardiocare.ui.theme.DesignTokens
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -110,6 +117,7 @@ fun PatientHistoryScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
+    TutorialHost(tourKey = TutorialKeys.PATIENT_HISTORY, steps = TutorialTours.patientHistory) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -119,6 +127,7 @@ fun PatientHistoryScreen(
                     }
                 },
                 title = { Text("Workout History", fontWeight = FontWeight.Bold) },
+                actions = { TutorialHelpButton() },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
             )
         },
@@ -148,17 +157,26 @@ fun PatientHistoryScreen(
                         }
                     }
                 } else {
-                    items(historyExercises, key = { "${it.assignment.id}_${it.endDate}" }) { item ->
-                        HistoryCard(item)
+                    itemsIndexed(
+                        historyExercises,
+                        key = { _, it -> "${it.assignment.id}_${it.endDate}" }
+                    ) { index, item ->
+                        HistoryCard(
+                            item = item,
+                            modifier = if (index == 0) {
+                                Modifier.tutorialTarget(TutorialIds.HISTORY_LIST)
+                            } else Modifier
+                        )
                     }
                 }
             }
         }
     }
+    }
 }
 
 @Composable
-private fun HistoryCard(item: HistoryExerciseItem) {
+private fun HistoryCard(item: HistoryExerciseItem, modifier: Modifier = Modifier) {
     val dateLabel = try {
         LocalDate.parse(item.endDate).format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
     } catch (_: Exception) { item.endDate }
@@ -170,7 +188,7 @@ private fun HistoryCard(item: HistoryExerciseItem) {
     }
 
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = DesignTokens.Spacing.XL, vertical = DesignTokens.Spacing.XS),
         shape = RoundedCornerShape(DesignTokens.Radius.LG),

@@ -45,6 +45,12 @@ import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.data.firebase.UserRepository
 import com.srcardiocare.ui.components.ShimmerBox
 import com.srcardiocare.ui.components.rememberToast
+import com.srcardiocare.ui.components.tutorial.TutorialHelpButton
+import com.srcardiocare.ui.components.tutorial.TutorialHost
+import com.srcardiocare.ui.components.tutorial.TutorialIds
+import com.srcardiocare.ui.components.tutorial.TutorialKeys
+import com.srcardiocare.ui.components.tutorial.TutorialTours
+import com.srcardiocare.ui.components.tutorial.tutorialTarget
 import com.srcardiocare.ui.theme.DesignTokens
 import kotlinx.coroutines.launch
 
@@ -113,6 +119,7 @@ fun ExerciseLibraryScreen(onBack: () -> Unit, onUpload: () -> Unit) {
         )
     }
 
+    TutorialHost(tourKey = TutorialKeys.EXERCISE_LIBRARY, steps = TutorialTours.exerciseLibrary) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -122,6 +129,7 @@ fun ExerciseLibraryScreen(onBack: () -> Unit, onUpload: () -> Unit) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
+                actions = { TutorialHelpButton() },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
         },
@@ -130,7 +138,8 @@ fun ExerciseLibraryScreen(onBack: () -> Unit, onUpload: () -> Unit) {
                 FloatingActionButton(
                     onClick = onUpload,
                     containerColor = DesignTokens.Colors.Primary,
-                    contentColor = Color.White
+                    contentColor = Color.White,
+                    modifier = Modifier.tutorialTarget(TutorialIds.LIBRARY_UPLOAD)
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Upload Video")
                 }
@@ -276,12 +285,14 @@ fun ExerciseLibraryScreen(onBack: () -> Unit, onUpload: () -> Unit) {
                     Card(
                         shape = RoundedCornerShape(DesignTokens.Radius.LG),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        modifier = Modifier.clickable {
-                            // Admin/Doctor can play videos
-                            if ((currentUserRole == "admin" || currentUserRole == "doctor") && !ex.videoUrl.isNullOrBlank()) {
-                                playingVideo = ex
+                        modifier = Modifier
+                            .then(if (ex.id == filtered.firstOrNull()?.id) Modifier.tutorialTarget(TutorialIds.LIBRARY_ROW) else Modifier)
+                            .clickable {
+                                // Admin/Doctor can play videos
+                                if ((currentUserRole == "admin" || currentUserRole == "doctor") && !ex.videoUrl.isNullOrBlank()) {
+                                    playingVideo = ex
+                                }
                             }
-                        }
                     ) {
                         Column(modifier = Modifier.padding(DesignTokens.Spacing.MD)) {
                             // Thumbnail placeholder
@@ -360,6 +371,7 @@ fun ExerciseLibraryScreen(onBack: () -> Unit, onUpload: () -> Unit) {
             }
             } // end else (isLoading)
         }
+    }
     }
 }
 

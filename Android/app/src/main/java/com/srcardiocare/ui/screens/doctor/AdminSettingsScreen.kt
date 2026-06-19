@@ -17,6 +17,12 @@ import com.srcardiocare.core.security.ErrorHandler
 import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.data.firebase.UserRepository
 import com.srcardiocare.ui.components.rememberToast
+import com.srcardiocare.ui.components.tutorial.TutorialHelpButton
+import com.srcardiocare.ui.components.tutorial.TutorialHost
+import com.srcardiocare.ui.components.tutorial.TutorialIds
+import com.srcardiocare.ui.components.tutorial.TutorialKeys
+import com.srcardiocare.ui.components.tutorial.TutorialTours
+import com.srcardiocare.ui.components.tutorial.tutorialTarget
 import com.srcardiocare.ui.theme.DesignTokens
 import kotlinx.coroutines.launch
 
@@ -78,6 +84,7 @@ fun AdminSettingsScreen(onBack: () -> Unit) {
 
     LaunchedEffect(Unit) { load() }
 
+    TutorialHost(tourKey = TutorialKeys.ADMIN_SETTINGS, steps = TutorialTours.adminSettings) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -87,6 +94,7 @@ fun AdminSettingsScreen(onBack: () -> Unit) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
+                actions = { TutorialHelpButton() },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
             )
         },
@@ -102,7 +110,7 @@ fun AdminSettingsScreen(onBack: () -> Unit) {
             Spacer(modifier = Modifier.height(DesignTokens.Spacing.MD))
 
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().tutorialTarget(TutorialIds.ADMIN_SETTINGS_TOGGLE),
                 shape = RoundedCornerShape(DesignTokens.Radius.Card),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
@@ -322,6 +330,7 @@ fun AdminSettingsScreen(onBack: () -> Unit) {
 
             Spacer(modifier = Modifier.height(DesignTokens.Spacing.XL))
         }
+    }
     }
 }
 

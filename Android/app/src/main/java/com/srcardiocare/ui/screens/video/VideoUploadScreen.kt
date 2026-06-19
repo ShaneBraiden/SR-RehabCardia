@@ -27,6 +27,12 @@ import com.srcardiocare.core.security.ErrorHandler
 import com.srcardiocare.core.security.InputValidator
 import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.ui.components.rememberToast
+import com.srcardiocare.ui.components.tutorial.TutorialHelpButton
+import com.srcardiocare.ui.components.tutorial.TutorialHost
+import com.srcardiocare.ui.components.tutorial.TutorialIds
+import com.srcardiocare.ui.components.tutorial.TutorialKeys
+import com.srcardiocare.ui.components.tutorial.TutorialTours
+import com.srcardiocare.ui.components.tutorial.tutorialTarget
 import com.srcardiocare.ui.theme.DesignTokens
 import kotlinx.coroutines.launch
 
@@ -65,6 +71,7 @@ fun VideoUploadScreen(onBack: () -> Unit, onUploaded: () -> Unit) {
         }
     }
 
+    TutorialHost(tourKey = TutorialKeys.VIDEO_UPLOAD, steps = TutorialTours.videoUpload) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -74,6 +81,7 @@ fun VideoUploadScreen(onBack: () -> Unit, onUploaded: () -> Unit) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
+                actions = { TutorialHelpButton() },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
         },
@@ -94,7 +102,8 @@ fun VideoUploadScreen(onBack: () -> Unit, onUploaded: () -> Unit) {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(160.dp),
+                    .height(160.dp)
+                    .tutorialTarget(TutorialIds.UPLOAD_PICK),
                 shape = RoundedCornerShape(DesignTokens.Radius.LG),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 onClick = { videoPicker.launch("video/*") }
@@ -148,7 +157,7 @@ fun VideoUploadScreen(onBack: () -> Unit, onUploaded: () -> Unit) {
                 value = exerciseName,
                 onValueChange = { exerciseName = InputValidator.limitLength(it, InputValidator.MaxLength.EXERCISE_NAME) },
                 label = { Text("Exercise Name") }, placeholder = { Text("e.g. Knee Flexion") },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().tutorialTarget(TutorialIds.UPLOAD_METADATA),
                 shape = RoundedCornerShape(DesignTokens.Radius.Base),
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = DesignTokens.Colors.Primary)
@@ -255,7 +264,7 @@ fun VideoUploadScreen(onBack: () -> Unit, onUploaded: () -> Unit) {
                         }
                     }
                 },
-                modifier = Modifier.fillMaxWidth().height(52.dp),
+                modifier = Modifier.fillMaxWidth().height(52.dp).tutorialTarget(TutorialIds.UPLOAD_SUBMIT),
                 shape = RoundedCornerShape(DesignTokens.Radius.Base),
                 colors = ButtonDefaults.buttonColors(containerColor = DesignTokens.Colors.Primary),
                 enabled = !isUploading && exerciseName.isNotBlank() && selectedVideoUri != null
@@ -268,5 +277,6 @@ fun VideoUploadScreen(onBack: () -> Unit, onUploaded: () -> Unit) {
 
             Spacer(modifier = Modifier.height(DesignTokens.Spacing.XXL))
         }
+    }
     }
 }

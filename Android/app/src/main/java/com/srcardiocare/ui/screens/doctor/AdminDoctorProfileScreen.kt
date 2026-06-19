@@ -19,6 +19,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.srcardiocare.ui.components.ProfileFormSkeleton
 import com.srcardiocare.ui.components.rememberToast
+import com.srcardiocare.ui.components.tutorial.TutorialHelpButton
+import com.srcardiocare.ui.components.tutorial.TutorialHost
+import com.srcardiocare.ui.components.tutorial.TutorialIds
+import com.srcardiocare.ui.components.tutorial.TutorialKeys
+import com.srcardiocare.ui.components.tutorial.TutorialTours
+import com.srcardiocare.ui.components.tutorial.tutorialTarget
 import com.srcardiocare.ui.theme.DesignTokens
 import kotlinx.coroutines.launch
 
@@ -81,6 +87,7 @@ fun AdminDoctorProfileScreen(
         )
     }
 
+    TutorialHost(tourKey = TutorialKeys.ADMIN_DOCTOR_PROFILE, steps = TutorialTours.adminDoctorProfile) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -90,6 +97,7 @@ fun AdminDoctorProfileScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
+                actions = { TutorialHelpButton() },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
         },
@@ -131,7 +139,7 @@ fun AdminDoctorProfileScreen(
 
             OutlinedTextField(
                 value = ui.firstName, onValueChange = viewModel::setFirstName,
-                label = { Text("First Name") }, modifier = Modifier.fillMaxWidth(),
+                label = { Text("First Name") }, modifier = Modifier.fillMaxWidth().tutorialTarget(TutorialIds.ADP_FORM),
                 shape = RoundedCornerShape(DesignTokens.Radius.Base), singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = DesignTokens.Colors.Primary)
             )
@@ -192,7 +200,7 @@ fun AdminDoctorProfileScreen(
                         }
                     )
                 },
-                modifier = Modifier.fillMaxWidth().height(52.dp),
+                modifier = Modifier.fillMaxWidth().height(52.dp).tutorialTarget(TutorialIds.ADP_SAVE),
                 shape = RoundedCornerShape(DesignTokens.Radius.Base),
                 colors = ButtonDefaults.buttonColors(containerColor = DesignTokens.Colors.Primary),
                 enabled = !ui.isSaving
@@ -209,7 +217,7 @@ fun AdminDoctorProfileScreen(
             // Delete user button
             OutlinedButton(
                 onClick = { showDeleteDialog = true },
-                modifier = Modifier.fillMaxWidth().height(52.dp),
+                modifier = Modifier.fillMaxWidth().height(52.dp).tutorialTarget(TutorialIds.ADP_DELETE),
                 shape = RoundedCornerShape(DesignTokens.Radius.Base),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = DesignTokens.Colors.Error),
                 border = androidx.compose.foundation.BorderStroke(1.dp, DesignTokens.Colors.Error)
@@ -219,5 +227,6 @@ fun AdminDoctorProfileScreen(
 
             Spacer(modifier = Modifier.height(DesignTokens.Spacing.XXL))
         }
+    }
     }
 }

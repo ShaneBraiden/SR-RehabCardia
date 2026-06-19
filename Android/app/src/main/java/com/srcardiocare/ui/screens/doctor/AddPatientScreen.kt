@@ -20,6 +20,12 @@ import com.srcardiocare.core.security.PasswordGenerator
 import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.data.firebase.UserRepository
 import com.srcardiocare.ui.components.rememberToast
+import com.srcardiocare.ui.components.tutorial.TutorialHelpButton
+import com.srcardiocare.ui.components.tutorial.TutorialHost
+import com.srcardiocare.ui.components.tutorial.TutorialIds
+import com.srcardiocare.ui.components.tutorial.TutorialKeys
+import com.srcardiocare.ui.components.tutorial.TutorialTours
+import com.srcardiocare.ui.components.tutorial.tutorialTarget
 import com.srcardiocare.ui.theme.DesignTokens
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -48,6 +54,7 @@ fun AddPatientScreen(onSaved: () -> Unit, onBack: () -> Unit) {
         }
     }
 
+    TutorialHost(tourKey = TutorialKeys.ADD_PATIENT, steps = TutorialTours.addPatient) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -57,6 +64,7 @@ fun AddPatientScreen(onSaved: () -> Unit, onBack: () -> Unit) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
+                actions = { TutorialHelpButton() },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
         },
@@ -77,7 +85,7 @@ fun AddPatientScreen(onSaved: () -> Unit, onBack: () -> Unit) {
                 value = fullName,
                 onValueChange = { fullName = InputValidator.limitLength(it, InputValidator.MaxLength.NAME) },
                 label = { Text("Full Name") }, placeholder = { Text("e.g. John Doe") },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().tutorialTarget(TutorialIds.ADD_FORM),
                 shape = RoundedCornerShape(DesignTokens.Radius.Base),
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = DesignTokens.Colors.Primary)
@@ -258,7 +266,7 @@ fun AddPatientScreen(onSaved: () -> Unit, onBack: () -> Unit) {
                         }
                     }
                 },
-                modifier = Modifier.fillMaxWidth().height(52.dp),
+                modifier = Modifier.fillMaxWidth().height(52.dp).tutorialTarget(TutorialIds.ADD_SAVE),
                 shape = RoundedCornerShape(DesignTokens.Radius.Base),
                 colors = ButtonDefaults.buttonColors(containerColor = DesignTokens.Colors.Primary),
                 enabled = !isLoading
@@ -272,5 +280,6 @@ fun AddPatientScreen(onSaved: () -> Unit, onBack: () -> Unit) {
 
             Spacer(modifier = Modifier.height(DesignTokens.Spacing.XXL))
         }
+    }
     }
 }

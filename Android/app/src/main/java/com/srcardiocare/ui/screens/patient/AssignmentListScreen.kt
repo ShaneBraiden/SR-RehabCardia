@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -25,6 +26,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.srcardiocare.data.model.*
 import com.srcardiocare.ui.components.SkeletonListRow
+import com.srcardiocare.ui.components.tutorial.TutorialHelpButton
+import com.srcardiocare.ui.components.tutorial.TutorialHost
+import com.srcardiocare.ui.components.tutorial.TutorialIds
+import com.srcardiocare.ui.components.tutorial.TutorialKeys
+import com.srcardiocare.ui.components.tutorial.TutorialTours
+import com.srcardiocare.ui.components.tutorial.tutorialTarget
 import com.srcardiocare.ui.theme.DesignTokens
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -50,10 +57,11 @@ fun AssignmentListScreen(
 
     LaunchedEffect(Unit) { viewModel.load() }
 
+    TutorialHost(tourKey = TutorialKeys.ASSIGNMENT_LIST, steps = TutorialTours.assignmentList) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Column {
                         Text("Daily Exercises", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                         Text(today.format(dateFormatter), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -65,9 +73,13 @@ fun AssignmentListScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onHistoryTap) {
+                    IconButton(
+                        onClick = onHistoryTap,
+                        modifier = Modifier.tutorialTarget(TutorialIds.ASSIGNMENT_HISTORY)
+                    ) {
                         Icon(Icons.Default.History, contentDescription = "History")
                     }
+                    TutorialHelpButton()
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
@@ -134,9 +146,16 @@ fun AssignmentListScreen(
                         )
                     }
 
-                    items(activeExercises, key = { it.assignment.id }) { item ->
+                    itemsIndexed(activeExercises, key = { _, it -> it.assignment.id }) { index, item ->
                         ActiveExerciseCard(
                             item = item,
+                            // First card carries the tour targets (always visible at top).
+                            cardModifier = if (index == 0) {
+                                Modifier.tutorialTarget(TutorialIds.ASSIGNMENT_CARD)
+                            } else Modifier,
+                            startModifier = if (index == 0) {
+                                Modifier.tutorialTarget(TutorialIds.ASSIGNMENT_START)
+                            } else Modifier,
                             onClick = {
                                 if (item.canStartSession) {
                                     onExerciseTap(item.assignment, item.sessionsToday + 1)
@@ -185,6 +204,7 @@ fun AssignmentListScreen(
             }
         }
     }
+    }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -194,12 +214,14 @@ fun AssignmentListScreen(
 @Composable
 private fun ActiveExerciseCard(
     item: ActiveExerciseItem,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    cardModifier: Modifier = Modifier,
+    startModifier: Modifier = Modifier
 ) {
     val isBlocked = !item.canStartSession && item.currentSession == null
 
     Card(
-        modifier = Modifier
+        modifier = cardModifier
             .fillMaxWidth()
             .padding(horizontal = DesignTokens.Spacing.XL, vertical = DesignTokens.Spacing.XS)
             .clickable(enabled = !isBlocked, onClick = onClick)
@@ -226,7 +248,7 @@ private fun ActiveExerciseCard(
         ) {
             // Status icon
             Box(
-                modifier = Modifier
+                modifier = startModifier
                     .size(48.dp)
                     .clip(CircleShape)
                     .background(

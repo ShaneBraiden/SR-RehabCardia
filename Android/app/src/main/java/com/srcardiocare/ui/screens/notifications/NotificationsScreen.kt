@@ -28,6 +28,12 @@ import com.srcardiocare.data.firebase.NotificationRepository
 import com.srcardiocare.data.model.AppNotification
 import com.srcardiocare.ui.components.SkeletonListRow
 import com.srcardiocare.ui.components.rememberToast
+import com.srcardiocare.ui.components.tutorial.TutorialHelpButton
+import com.srcardiocare.ui.components.tutorial.TutorialHost
+import com.srcardiocare.ui.components.tutorial.TutorialIds
+import com.srcardiocare.ui.components.tutorial.TutorialKeys
+import com.srcardiocare.ui.components.tutorial.TutorialTours
+import com.srcardiocare.ui.components.tutorial.tutorialTarget
 import com.srcardiocare.ui.theme.DesignTokens
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -53,6 +59,7 @@ fun NotificationsScreen(
         }
     }
 
+    TutorialHost(tourKey = TutorialKeys.NOTIFICATIONS, steps = TutorialTours.notifications) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -65,16 +72,20 @@ fun NotificationsScreen(
                 actions = {
                     val unread = items.count { !it.isRead }
                     if (unread > 0) {
-                        IconButton(onClick = {
-                            scope.launch {
-                                val uid = FirebaseService.currentUID ?: return@launch
-                                runCatching { FirebaseService.markAllNotificationsRead(uid) }
-                                    .onSuccess { toast("All notifications marked read") }
-                            }
-                        }) {
+                        IconButton(
+                            onClick = {
+                                scope.launch {
+                                    val uid = FirebaseService.currentUID ?: return@launch
+                                    runCatching { FirebaseService.markAllNotificationsRead(uid) }
+                                        .onSuccess { toast("All notifications marked read") }
+                                }
+                            },
+                            modifier = Modifier.tutorialTarget(TutorialIds.NOTIFICATION_MARK_READ)
+                        ) {
                             Icon(Icons.Default.DoneAll, contentDescription = "Mark all read")
                         }
                     }
+                    TutorialHelpButton()
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
             )
@@ -119,6 +130,10 @@ fun NotificationsScreen(
             items(items, key = { it.id }) { notification ->
                 NotificationRow(
                     notification = notification,
+                    // First row carries the tour target (top of list).
+                    modifier = if (notification.id == items.firstOrNull()?.id) {
+                        Modifier.tutorialTarget(TutorialIds.NOTIFICATION_ITEM)
+                    } else Modifier,
                     onTap = {
                         scope.launch { runCatching { FirebaseService.markNotificationRead(notification.id) } }
                         if (notification.route.isNotBlank()) onOpenRoute(notification.route, notification.params)
@@ -127,19 +142,21 @@ fun NotificationsScreen(
             }
         }
     }
+    }
 }
 
 @Composable
 private fun NotificationRow(
     notification: AppNotification,
-    onTap: () -> Unit
+    onTap: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val isRead = notification.isRead
     val type = notification.type
     val (icon, tint) = iconFor(type)
 
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onTap),
         shape = RoundedCornerShape(DesignTokens.Radius.LG),

@@ -39,6 +39,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import androidx.media3.common.VideoSize
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
@@ -47,6 +48,12 @@ import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.data.model.Assignment
 import com.srcardiocare.ui.components.AppLogoWatermark
 import com.srcardiocare.ui.components.rememberToast
+import com.srcardiocare.ui.components.tutorial.TutorialHelpButton
+import com.srcardiocare.ui.components.tutorial.TutorialHost
+import com.srcardiocare.ui.components.tutorial.TutorialIds
+import com.srcardiocare.ui.components.tutorial.TutorialKeys
+import com.srcardiocare.ui.components.tutorial.TutorialTours
+import com.srcardiocare.ui.components.tutorial.tutorialTarget
 import com.srcardiocare.ui.theme.DesignTokens
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -108,7 +115,10 @@ fun AssignmentWorkoutScreen(
         }
     }
 
-    // Looping demo video (muted, no controls)
+    // Demo video's native aspect ratio (updated once the video size is known).
+    var videoAspectRatio by remember { mutableFloatStateOf(16f / 9f) }
+
+    // Looping demo video, muted (no controls)
     val exoPlayer = remember(videoUrl) {
         if (videoUrl.isNullOrBlank() || isYoutube) null
         else ExoPlayer.Builder(context).build().apply {
@@ -117,6 +127,13 @@ fun AssignmentWorkoutScreen(
             volume = 0f
             prepare()
             playWhenReady = true
+            addListener(object : Player.Listener {
+                override fun onVideoSizeChanged(videoSize: VideoSize) {
+                    if (videoSize.width > 0 && videoSize.height > 0) {
+                        videoAspectRatio = videoSize.width.toFloat() / videoSize.height.toFloat()
+                    }
+                }
+            })
         }
     }
     DisposableEffect(exoPlayer) { onDispose { exoPlayer?.release() } }
@@ -172,6 +189,7 @@ fun AssignmentWorkoutScreen(
         )
     }
 
+    TutorialHost(tourKey = TutorialKeys.ASSIGNMENT_WORKOUT, steps = TutorialTours.assignmentWorkout) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -194,6 +212,7 @@ fun AssignmentWorkoutScreen(
                         Icon(Icons.Default.Close, contentDescription = "End workout")
                     }
                 },
+                actions = { TutorialHelpButton() },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 )
@@ -216,10 +235,13 @@ fun AssignmentWorkoutScreen(
                         isYoutube = isYoutube,
                         playerHtml = playerHtml,
                         exoPlayer = exoPlayer,
+                        videoAspectRatio = videoAspectRatio,
                         currentSet = currentSet,
                         totalSets = totalSets,
                         reps = reps,
-                        instructions = assignment.instructions
+                        instructions = assignment.instructions,
+                        videoModifier = Modifier.tutorialTarget(TutorialIds.AW_VIDEO),
+                        repModifier = Modifier.tutorialTarget(TutorialIds.AW_REP_TARGET)
                     )
                     Phase.REST -> RestStage(
                         remaining = restRemaining,
@@ -233,6 +255,7 @@ fun AssignmentWorkoutScreen(
 
             BottomActionBar(
                 phase = phase,
+                buttonModifier = Modifier.tutorialTarget(TutorialIds.AW_PRIMARY),
                 onPrimary = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     when (phase) {
@@ -267,6 +290,7 @@ fun AssignmentWorkoutScreen(
                 }
             )
         }
+    }
     }
 
     errorMessage?.let { msg ->
@@ -322,10 +346,13 @@ private fun ExerciseStage(
     isYoutube: Boolean,
     playerHtml: String,
     exoPlayer: ExoPlayer?,
+    videoAspectRatio: Float,
     currentSet: Int,
     totalSets: Int,
     reps: Int,
-    instructions: String?
+    instructions: String?,
+    videoModifier: Modifier = Modifier,
+    repModifier: Modifier = Modifier
 ) {
     Column(
         modifier = Modifier
@@ -333,14 +360,23 @@ private fun ExerciseStage(
             .padding(horizontal = DesignTokens.Spacing.XL),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Video panel (fixed aspect, no fullscreen toggle — keeps UX simple)
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(16f / 9f)
-                .clip(RoundedCornerShape(DesignTokens.Radius.Card))
-                .background(Color.Black)
+        // Video panel — sized to the video's true aspect ratio (whole frame, no crop),
+        // capped at half the area so the rep counter stays visible.
+        BoxWithConstraints(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.TopCenter
         ) {
+            val maxVideoHeight = maxHeight * 0.5f
+            val widthLimitedHeight = maxWidth / videoAspectRatio
+            val videoW = if (widthLimitedHeight <= maxVideoHeight) maxWidth else maxVideoHeight * videoAspectRatio
+            val videoH = if (widthLimitedHeight <= maxVideoHeight) widthLimitedHeight else maxVideoHeight
+            Box(
+                modifier = videoModifier
+                    .width(videoW)
+                    .height(videoH)
+                    .clip(RoundedCornerShape(DesignTokens.Radius.Card))
+                    .background(Color.Black)
+            ) {
             when {
                 videoUrl.isNullOrBlank() -> NoVideoPlaceholder()
                 isYoutube -> YouTubeWebPlayer(html = playerHtml, modifier = Modifier.fillMaxSize())
@@ -348,8 +384,8 @@ private fun ExerciseStage(
                     factory = { ctx ->
                         PlayerView(ctx).apply {
                             useController = false
-                            // Fill the panel edge-to-edge with no black bars (preserves aspect, crops overflow).
-                            resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                            // Container matches the video's ratio, so FIT fills it with no bars and no crop.
+                            resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
                             player = exoPlayer
                         }
                     },
@@ -385,6 +421,7 @@ private fun ExerciseStage(
                         .padding(DesignTokens.Spacing.SM)
                 )
             }
+            }
         }
 
         Spacer(modifier = Modifier.height(DesignTokens.Spacing.LG))
@@ -392,6 +429,7 @@ private fun ExerciseStage(
         // Big rep target
         Text(
             "$reps",
+            modifier = repModifier,
             fontSize = 96.sp,
             fontWeight = FontWeight.Black,
             color = if (phase == Phase.ACTIVE) DesignTokens.Colors.Success else DesignTokens.Colors.Primary
@@ -523,7 +561,7 @@ private fun RestStage(remaining: Int, total: Int, nextSet: Int, totalSets: Int) 
 // ───────────────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun BottomActionBar(phase: Phase, onPrimary: () -> Unit) {
+private fun BottomActionBar(phase: Phase, onPrimary: () -> Unit, buttonModifier: Modifier = Modifier) {
     val (label, container, icon) = when (phase) {
         Phase.DEMO -> Triple("I'm Ready", DesignTokens.Colors.Primary, Icons.Default.PlayArrow)
         Phase.ACTIVE -> Triple("Set Done", DesignTokens.Colors.Success, Icons.Default.Check)
@@ -538,7 +576,7 @@ private fun BottomActionBar(phase: Phase, onPrimary: () -> Unit) {
         Button(
             onClick = onPrimary,
             enabled = phase != Phase.ALL_DONE,
-            modifier = Modifier
+            modifier = buttonModifier
                 .fillMaxWidth()
                 .padding(
                     horizontal = DesignTokens.Spacing.XL,
