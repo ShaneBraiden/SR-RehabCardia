@@ -59,7 +59,6 @@ fun PatientProfileSelfScreen(
     // Editable fields (staging buffer)
     var editFirstName by remember { mutableStateOf("") }
     var editLastName by remember { mutableStateOf("") }
-    var editCondition by remember { mutableStateOf("") }
     var editPhone by remember { mutableStateOf("") }
 
     LogoutConfirmDialog(
@@ -77,7 +76,6 @@ fun PatientProfileSelfScreen(
     fun beginEdit() {
         editFirstName = ui.firstName
         editLastName = ui.lastName
-        editCondition = ui.condition
         editPhone = ui.phone
         isEditing = true
     }
@@ -87,7 +85,6 @@ fun PatientProfileSelfScreen(
             editFirstName = editFirstName,
             editLastName = editLastName,
             editPhone = editPhone,
-            editCondition = editCondition,
             onValidationError = { msg -> scope.launch { snackbarHostState.showSnackbar(msg) } },
             onSuccess = {
                 isEditing = false
@@ -194,15 +191,9 @@ fun PatientProfileSelfScreen(
                                 singleLine = true
                             )
                             Spacer(modifier = Modifier.height(DesignTokens.Spacing.SM))
-                            OutlinedTextField(
-                                value = editCondition,
-                                onValueChange = { editCondition = InputValidator.limitLength(it, InputValidator.MaxLength.INJURY_TYPE) },
-                                label = { Text("Condition") },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true
-                            )
-                            Spacer(modifier = Modifier.height(DesignTokens.Spacing.SM))
-                            ProfileInfoRow(label = "Email (not editable)", value = ui.email, showDivider = false)
+                            // Condition is set by the doctor and is not patient-editable.
+                            ProfileInfoRow(label = "Condition (set by your doctor)", value = ui.condition.ifBlank { "None listed" })
+                            ProfileInfoRow(label = "Email (not editable)", value = ui.email)
                             ProfileInfoRow(label = "Assigned Doctor", value = ui.assignedDoctor, showDivider = false)
                         } else {
                             ProfileInfoRow(label = "First Name", value = ui.firstName)

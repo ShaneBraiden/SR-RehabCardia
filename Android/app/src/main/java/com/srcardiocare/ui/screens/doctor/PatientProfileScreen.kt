@@ -35,9 +35,12 @@ import androidx.lifecycle.LifecycleEventObserver
 import com.srcardiocare.data.firebase.AssignmentRepository
 import com.srcardiocare.data.firebase.FeedbackRepository
 import com.srcardiocare.data.firebase.FirebaseService
+import com.srcardiocare.data.firebase.SessionRepository
 import com.srcardiocare.data.firebase.UserRepository
 import com.srcardiocare.data.model.Assignment
 import com.srcardiocare.data.model.PostWorkoutFeedback
+import com.srcardiocare.data.model.SessionStatus
+import com.srcardiocare.data.model.WorkoutDuration
 import com.srcardiocare.ui.components.InitialsAvatar
 import com.srcardiocare.ui.components.SkeletonBarChart
 import com.srcardiocare.ui.components.SkeletonListRow
@@ -56,6 +59,19 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 private val ExpiryDateFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+
+/** Formats a millisecond duration as "Xh Ym", "Xm Ys", or "Ys". */
+private fun formatWorkoutDuration(ms: Long): String {
+    val totalSeconds = ms / 1000
+    val hours = totalSeconds / 3600
+    val minutes = (totalSeconds % 3600) / 60
+    val seconds = totalSeconds % 60
+    return when {
+        hours > 0 -> "${hours}h ${minutes}m"
+        minutes > 0 -> "${minutes}m ${seconds}s"
+        else -> "${seconds}s"
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,7 +95,12 @@ fun PatientProfileScreen(
     var patientInitials by remember { mutableStateOf("") }
     var assignments by remember { mutableStateOf<List<Assignment>>(emptyList()) }
     var feedbacks by remember { mutableStateOf<List<PostWorkoutFeedback>>(emptyList()) }
+    var workoutDurations by remember { mutableStateOf<List<WorkoutDuration>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
+
+    // Doctor-set care status: "ON_TRACK" | "NEEDS_ATTENTION" | "" (auto)
+    var careStatus by remember { mutableStateOf("") }
+    var isSavingStatus by remember { mutableStateOf(false) }
 
     // Send-feedback dialog state
     var showFeedbackDialog by remember { mutableStateOf(false) }
@@ -103,9 +124,31 @@ fun PatientProfileScreen(
             patientName = patient.fullName
             patientInitials = "${patient.firstName.firstOrNull() ?: ""}${patient.lastName.firstOrNull() ?: ""}".uppercase()
             patientCondition = patient.injuries.firstOrNull() ?: ""
+            careStatus = patient.careStatus ?: ""
 
             assignments = try { AssignmentRepository.getAssignments(patientId) } catch (_: Exception) { emptyList() }
             feedbacks = try { FeedbackRepository.getPatientFeedbacks(patientId) } catch (_: Exception) { emptyList() }
+
+            // Build completed-workout durations (total = wall-clock incl. rest;
+            // active = total minus the planned rest between sets).
+            val durations = mutableListOf<WorkoutDuration>()
+            assignments.forEach { a ->
+                val sessions = try {
+                    SessionRepository.getAllSessionsForAssignment(patientId, a.id)
+                } catch (_: Exception) { emptyList() }
+                sessions.forEach { s ->
+                    val start = s.startedAtMs
+                    val end = s.completedAtMs
+                    if (s.status == SessionStatus.COMPLETED && start != null && end != null && end > start) {
+                        val total = end - start
+                        val rests = (s.setsCompleted - 1).coerceAtLeast(0)
+                        val restMs = a.restSeconds.toLong() * 1000L * rests
+                        val active = (total - restMs).coerceAtLeast(0)
+                        durations.add(WorkoutDuration(a.id, a.exerciseName, s.sessionDate, end, total, active))
+                    }
+                }
+            }
+            workoutDurations = durations.sortedByDescending { it.completedAtMs }
         } catch (_: Exception) { }
     }
 
@@ -255,6 +298,82 @@ fun PatientProfileScreen(
 
             Spacer(modifier = Modifier.height(DesignTokens.Spacing.XL))
 
+            // ── Care Status (doctor-set override) ─────────────────────────
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = DesignTokens.Spacing.XL),
+                shape = RoundedCornerShape(DesignTokens.Radius.LG),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column(modifier = Modifier.padding(DesignTokens.Spacing.LG)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Care Status", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                        if (isSavingStatus) {
+                            CircularProgressIndicator(modifier = Modifier.size(16.dp), color = DesignTokens.Colors.Primary, strokeWidth = 2.dp)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(DesignTokens.Spacing.XS))
+                    Text(
+                        if (careStatus.isBlank()) "Auto — based on today's workout completion"
+                        else "Manually set — overrides automatic status everywhere",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(DesignTokens.Spacing.MD))
+
+                    fun setStatus(value: String) {
+                        if (isSavingStatus || careStatus == value) return
+                        isSavingStatus = true
+                        scope.launch {
+                            try {
+                                UserRepository.updateUserById(patientId, mapOf("careStatus" to value))
+                                careStatus = value
+                                toast(if (value.isBlank()) "Status set to automatic" else "Status updated")
+                            } catch (e: Exception) {
+                                toast("Failed to update status")
+                            }
+                            isSavingStatus = false
+                        }
+                    }
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.SM)) {
+                        FilterChip(
+                            selected = careStatus == "ON_TRACK",
+                            onClick = { setStatus("ON_TRACK") },
+                            enabled = !isSavingStatus,
+                            label = { Text("On Track") },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = DesignTokens.Colors.Success.copy(alpha = 0.18f),
+                                selectedLabelColor = DesignTokens.Colors.Success
+                            )
+                        )
+                        FilterChip(
+                            selected = careStatus == "NEEDS_ATTENTION",
+                            onClick = { setStatus("NEEDS_ATTENTION") },
+                            enabled = !isSavingStatus,
+                            label = { Text("Needs Attention") },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = DesignTokens.Colors.Warning.copy(alpha = 0.18f),
+                                selectedLabelColor = DesignTokens.Colors.Warning
+                            )
+                        )
+                        FilterChip(
+                            selected = careStatus.isBlank(),
+                            onClick = { setStatus("") },
+                            enabled = !isSavingStatus,
+                            label = { Text("Auto") }
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(DesignTokens.Spacing.XL))
+
             // Metrics / Feedbacks Chart
             if (feedbacks.isNotEmpty()) {
                 Card(
@@ -326,6 +445,49 @@ fun PatientProfileScreen(
             }
 
             Spacer(modifier = Modifier.height(DesignTokens.Spacing.XL))
+
+            // ── Workout Times (with / without rest) ───────────────────────
+            if (workoutDurations.isNotEmpty()) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = DesignTokens.Spacing.XL),
+                    shape = RoundedCornerShape(DesignTokens.Radius.LG),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                ) {
+                    Column(modifier = Modifier.padding(DesignTokens.Spacing.LG)) {
+                        Text("Workout Times", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                        Text(
+                            "Time per completed session — total (with rest) and active (without rest)",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(DesignTokens.Spacing.MD))
+
+                        workoutDurations.take(10).forEach { d ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = DesignTokens.Spacing.XS),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(d.exerciseName, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodyMedium)
+                                    val dateText = runCatching { LocalDate.parse(d.sessionDate).format(ExpiryDateFormat) }.getOrDefault(d.sessionDate)
+                                    Text(dateText, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text("Total ${formatWorkoutDuration(d.totalMs)}", fontWeight = FontWeight.SemiBold, color = DesignTokens.Colors.Primary, style = MaterialTheme.typography.bodyMedium)
+                                    Text("Active ${formatWorkoutDuration(d.activeMs)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(DesignTokens.Spacing.XL))
+            }
 
             // ── Actions ───────────────────────────────────────────────────
             Column(

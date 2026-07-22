@@ -1,6 +1,8 @@
 // DoctorDashboardScreen.kt — Doctor/Admin dashboard with pull-to-refresh and skeleton loading
 package com.srcardiocare.ui.screens.doctor
 
+import android.app.Activity
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -32,6 +34,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -59,6 +62,17 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 enum class UserStatus { ON_TRACK, NEEDS_ATTENTION, INACTIVE }
+
+/**
+ * A doctor's manual care-status override (stored on the patient's user doc as
+ * `careStatus`). Takes precedence over the auto-computed status everywhere it's
+ * shown. Returns null when unset/blank, meaning "fall back to auto-computed".
+ */
+fun careStatusOverride(careStatus: String?): UserStatus? = when (careStatus) {
+    "ON_TRACK" -> UserStatus.ON_TRACK
+    "NEEDS_ATTENTION" -> UserStatus.NEEDS_ATTENTION
+    else -> null
+}
 
 data class UserItem(
     val id: String,
@@ -99,6 +113,11 @@ fun DoctorDashboardScreen(
     val errorMessage = ui.errorMessage
 
     var searchQuery by remember { mutableStateOf("") }
+    val context = LocalContext.current
+
+    // Root destination: after login the start destination is popped, so a plain
+    // back press would leave an empty NavHost. Background the app instead.
+    BackHandler { (context as? Activity)?.moveTaskToBack(true) }
 
     LaunchedEffect(Unit) { viewModel.load() }
 

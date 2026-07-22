@@ -19,8 +19,8 @@ import androidx.compose.ui.unit.sp
 import com.srcardiocare.ui.theme.DesignTokens
 
 /**
- * Global "Powered by SRET-AIDA" attribution badge displayed on every screen.
- * Compact pill at the bottom of the viewport — visible but unobtrusive.
+ * "Powered by SRET-AIDA" attribution badge.
+ * Compact pill — visible but unobtrusive.
  */
 @Composable
 fun PoweredByBadge(modifier: Modifier = Modifier) {

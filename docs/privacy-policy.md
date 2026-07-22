@@ -3,7 +3,7 @@
 **Effective date:** 12 June 2026
 **Last updated:** 12 June 2026
 
-RehabCardia ("the App", "we", "us") is a digital cardiac rehabilitation platform operated by SRET-AIDA. It connects patients recovering from cardiac events with their treating doctors, who assign exercises, monitor progress, and communicate through the App. This policy explains what data we collect, why, and the choices you have.
+RehabCardia ("the App", "we", "us") is a digital cardiac rehabilitation platform that connects patients recovering from cardiac events with their treating doctors, who assign exercises, monitor progress, and communicate through the App. This policy explains what data we collect, why, and the choices you have.
 
 Because RehabCardia handles health information, we hold ourselves to a strict standard: **we collect only what is needed to deliver your rehabilitation program, we never sell your data, and we never use it for advertising.**
 
@@ -76,7 +76,7 @@ We may update this policy from time to time. Material changes will be communicat
 
 ## 11. Contact
 
-**SRET-AIDA — RehabCardia team**
+**RehabCardia support**
 Email: sr.cardiocare@gmail.com
 
 If you believe your data has been handled in a way that does not comply with this policy, please contact us and we will investigate promptly.

@@ -1,6 +1,8 @@
 // AdminDashboardScreen.kt — Admin dashboard with doctor cards and system overview
 package com.srcardiocare.ui.screens.doctor
 
+import android.app.Activity
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -28,6 +30,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -84,6 +87,11 @@ fun AdminDashboardScreen(
     val isLoading = ui.isLoading
     val isRefreshing = ui.isRefreshing
     val errorMessage = ui.errorMessage
+    val context = LocalContext.current
+
+    // Root destination: after login the start destination is popped, so a plain
+    // back press would leave an empty NavHost. Background the app instead.
+    BackHandler { (context as? Activity)?.moveTaskToBack(true) }
 
     LaunchedEffect(Unit) { viewModel.load() }
 

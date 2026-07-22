@@ -245,6 +245,6 @@ private fun formatTime(raw: Any?): String {
         min < 60 -> "${min}m ago"
         hr < 24 -> "${hr}h ago"
         day < 7 -> "${day}d ago"
-        else -> SimpleDateFormat("dd/MM", Locale.getDefault()).format(Date(millis))
+        else -> SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(millis))
     }
 }

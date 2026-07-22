@@ -39,7 +39,13 @@ sealed class NotificationEvent {
     ) : NotificationEvent() {
         override val userId get() = patientId
         override val title get() = "Prescription updated"
-        override val body get() = "\"$exerciseName\" is active until $expiryDate."
+        override val body get(): String {
+            val formattedExpiry = runCatching {
+                java.time.LocalDate.parse(expiryDate)
+                    .format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+            }.getOrDefault(expiryDate)
+            return "\"$exerciseName\" is active until $formattedExpiry."
+        }
         override val type get() = "prescription"
         override val channelId get() = PushChannels.GENERAL
         override val route get() = DeepLink.Routes.EXERCISES

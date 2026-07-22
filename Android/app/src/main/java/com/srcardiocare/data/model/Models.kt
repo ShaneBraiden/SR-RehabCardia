@@ -20,6 +20,8 @@ data class User(
     val isBlocked: Boolean = false,
     val apiAccessBlocked: Boolean = false,
     val blockReason: String? = null,
+    // Doctor-set care status override. "ON_TRACK" | "NEEDS_ATTENTION" | null/blank = auto-computed.
+    val careStatus: String? = null,
     val lastSeenMs: Long? = null,
     val hasCompletedOnboarding: Boolean = false,
     val toursSeen: List<String> = emptyList(),
@@ -85,6 +87,16 @@ data class WorkoutSession(
     val completedAtMs: Long? = null,
     val exercisesCompleted: Int = 0,
     val totalExercises: Int = 0
+)
+
+/** Workout duration for a completed session, split into total (with rest) and active (without rest). */
+data class WorkoutDuration(
+    val assignmentId: String,
+    val exerciseName: String,
+    val sessionDate: String,
+    val completedAtMs: Long,
+    val totalMs: Long,      // wall-clock: completedAt - startedAt (includes rest)
+    val activeMs: Long      // totalMs minus planned rest between sets
 )
 
 data class WorkoutFeedback(
@@ -192,6 +204,8 @@ data class SessionLog(
     val sessionNumber: Int,             // 1, 2, or 3 for that day
     val startedAt: String? = null,      // ISO timestamp
     val completedAt: String? = null,    // ISO timestamp (null if abandoned)
+    val startedAtMs: Long? = null,      // epoch millis (for duration math)
+    val completedAtMs: Long? = null,    // epoch millis (for duration math)
     val setsCompleted: Int = 0,
     val totalSets: Int = 3,
     val setLogs: List<SetLog> = emptyList(),

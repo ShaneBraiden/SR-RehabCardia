@@ -47,6 +47,8 @@ import com.srcardiocare.core.security.ErrorHandler
 import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.data.model.Assignment
 import com.srcardiocare.ui.components.AppLogoWatermark
+import com.srcardiocare.ui.components.FullscreenToggleButton
+import com.srcardiocare.ui.components.FullscreenVideoEffect
 import com.srcardiocare.ui.components.rememberToast
 import com.srcardiocare.ui.components.tutorial.TutorialHelpButton
 import com.srcardiocare.ui.components.tutorial.TutorialHost
@@ -90,6 +92,7 @@ fun AssignmentWorkoutScreen(
     var restRemaining by remember { mutableIntStateOf(restSeconds) }
     var showAbandonDialog by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isVideoFullscreen by remember { mutableStateOf(false) }
 
     // Keep the screen on, and block screenshots / screen recording (anti-piracy) for the session.
     DisposableEffect(Unit) {
@@ -161,6 +164,9 @@ fun AssignmentWorkoutScreen(
         showAbandonDialog = true
     }
 
+    // While fullscreen, Back exits fullscreen instead of leaving the workout.
+    BackHandler(enabled = isVideoFullscreen) { isVideoFullscreen = false }
+
     if (showAbandonDialog) {
         AbandonDialog(
             onConfirm = {
@@ -189,6 +195,7 @@ fun AssignmentWorkoutScreen(
         )
     }
 
+    Box(modifier = Modifier.fillMaxSize()) {
     TutorialHost(tourKey = TutorialKeys.ASSIGNMENT_WORKOUT, steps = TutorialTours.assignmentWorkout) {
     Scaffold(
         topBar = {
@@ -240,6 +247,8 @@ fun AssignmentWorkoutScreen(
                         totalSets = totalSets,
                         reps = reps,
                         instructions = assignment.instructions,
+                        isFullscreen = isVideoFullscreen,
+                        onToggleFullscreen = { isVideoFullscreen = true },
                         videoModifier = Modifier.tutorialTarget(TutorialIds.AW_VIDEO),
                         repModifier = Modifier.tutorialTarget(TutorialIds.AW_REP_TARGET)
                     )
@@ -293,6 +302,28 @@ fun AssignmentWorkoutScreen(
     }
     }
 
+    // Fullscreen video overlay — rotates to match the video and fills the screen.
+    if (isVideoFullscreen) {
+        FullscreenVideoEffect(active = true, isLandscapeVideo = videoAspectRatio >= 1f)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black)
+        ) {
+            VideoSurface(
+                phase = phase,
+                videoUrl = videoUrl,
+                isYoutube = isYoutube,
+                playerHtml = playerHtml,
+                exoPlayer = exoPlayer,
+                isFullscreen = true,
+                onToggleFullscreen = { isVideoFullscreen = false },
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+    }
+    }
+
     errorMessage?.let { msg ->
         Snackbar(
             modifier = Modifier.padding(DesignTokens.Spacing.MD),
@@ -336,6 +367,80 @@ private fun SetProgressBar(currentSet: Int, totalSets: Int, phase: Phase) {
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
+// Video surface — player + corner tag + watermark + fullscreen toggle.
+// Reused inline and inside the fullscreen overlay (only mounted in one at a time,
+// so the shared ExoPlayer/WebView instance hands off without re-buffering).
+// ───────────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun VideoSurface(
+    phase: Phase,
+    videoUrl: String?,
+    isYoutube: Boolean,
+    playerHtml: String,
+    exoPlayer: ExoPlayer?,
+    isFullscreen: Boolean,
+    onToggleFullscreen: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(modifier = modifier.background(Color.Black)) {
+        when {
+            videoUrl.isNullOrBlank() -> NoVideoPlaceholder()
+            isYoutube -> YouTubeWebPlayer(html = playerHtml, modifier = Modifier.fillMaxSize())
+            exoPlayer != null -> AndroidView(
+                factory = { ctx ->
+                    PlayerView(ctx).apply {
+                        useController = false
+                        // Container matches the video's ratio, so FIT fills it with no bars and no crop.
+                        resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+                        player = exoPlayer
+                    }
+                },
+                update = { it.player = exoPlayer },
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+
+        // Tag in corner: "DEMO" vs "GO"
+        val tagText = if (phase == Phase.ACTIVE) "GO" else "DEMO"
+        val tagColor = if (phase == Phase.ACTIVE) DesignTokens.Colors.Success else DesignTokens.Colors.Primary
+        Surface(
+            shape = RoundedCornerShape(50),
+            color = tagColor,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(DesignTokens.Spacing.SM)
+        ) {
+            Text(
+                tagText,
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+            )
+        }
+
+        if (!videoUrl.isNullOrBlank()) {
+            // Fullscreen enter/exit toggle (top-right).
+            FullscreenToggleButton(
+                isFullscreen = isFullscreen,
+                onToggle = onToggleFullscreen,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(DesignTokens.Spacing.SM)
+            )
+
+            // App-logo watermark (branding + anti-piracy deterrent)
+            AppLogoWatermark(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(DesignTokens.Spacing.SM)
+            )
+        }
+    }
+}
+
+// ───────────────────────────────────────────────────────────────────────────────
 // DEMO / ACTIVE stage — looping demo + big rep target
 // ───────────────────────────────────────────────────────────────────────────────
 
@@ -351,6 +456,8 @@ private fun ExerciseStage(
     totalSets: Int,
     reps: Int,
     instructions: String?,
+    isFullscreen: Boolean,
+    onToggleFullscreen: () -> Unit,
     videoModifier: Modifier = Modifier,
     repModifier: Modifier = Modifier
 ) {
@@ -377,50 +484,20 @@ private fun ExerciseStage(
                     .clip(RoundedCornerShape(DesignTokens.Radius.Card))
                     .background(Color.Black)
             ) {
-            when {
-                videoUrl.isNullOrBlank() -> NoVideoPlaceholder()
-                isYoutube -> YouTubeWebPlayer(html = playerHtml, modifier = Modifier.fillMaxSize())
-                exoPlayer != null -> AndroidView(
-                    factory = { ctx ->
-                        PlayerView(ctx).apply {
-                            useController = false
-                            // Container matches the video's ratio, so FIT fills it with no bars and no crop.
-                            resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
-                            player = exoPlayer
-                        }
-                    },
-                    update = { it.player = exoPlayer },
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-
-            // Tag in corner: "DEMO" vs "GO"
-            val tagText = if (phase == Phase.ACTIVE) "GO" else "DEMO"
-            val tagColor = if (phase == Phase.ACTIVE) DesignTokens.Colors.Success else DesignTokens.Colors.Primary
-            Surface(
-                shape = RoundedCornerShape(50),
-                color = tagColor,
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(DesignTokens.Spacing.SM)
-            ) {
-                Text(
-                    tagText,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                )
-            }
-
-            // App-logo watermark (branding + anti-piracy deterrent)
-            if (!videoUrl.isNullOrBlank()) {
-                AppLogoWatermark(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(DesignTokens.Spacing.SM)
-                )
-            }
+                // While fullscreen, the player is hosted by the fullscreen overlay
+                // instead — this inline slot stays an empty black placeholder.
+                if (!isFullscreen) {
+                    VideoSurface(
+                        phase = phase,
+                        videoUrl = videoUrl,
+                        isYoutube = isYoutube,
+                        playerHtml = playerHtml,
+                        exoPlayer = exoPlayer,
+                        isFullscreen = false,
+                        onToggleFullscreen = onToggleFullscreen,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
             }
         }
 

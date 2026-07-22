@@ -99,16 +99,22 @@ class AdminDashboardViewModel : ViewModel() {
 
                 // Compute patient workout status (On Track / Attention / Not Assigned)
                 val today = LocalDate.now().toString()
-                val patientIds = allUsers.filter { it.role.ifBlank { "patient" } == "patient" }.map { it.id }
+                val patients = allUsers.filter { it.role.ifBlank { "patient" } == "patient" }
 
                 var onTrack = 0
                 var attention = 0
                 var notAssigned = 0
                 coroutineScope {
-                    patientIds.map { patientId ->
+                    patients.map { patient ->
                         async {
+                            // Doctor's manual care status (if set) overrides the auto-computed one.
+                            when (careStatusOverride(patient.careStatus)) {
+                                UserStatus.ON_TRACK -> return@async "on_track"
+                                UserStatus.NEEDS_ATTENTION -> return@async "attention"
+                                else -> {}
+                            }
                             try {
-                                val assignments = AssignmentRepository.getAssignments(patientId)
+                                val assignments = AssignmentRepository.getAssignments(patient.id)
                                 if (assignments.isEmpty()) return@async "not_assigned"
                                 val completedAssignmentsToday = assignments.count { assignment ->
                                     val dailyFrequency = assignment.dailyFrequency

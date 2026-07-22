@@ -52,6 +52,8 @@ fun Map<String, Any?>.toSessionLog(id: String): SessionLog {
         sessionNumber = (this["sessionNumber"] as? Number)?.toInt() ?: 1,
         startedAt = (this["startedAt"] as? Timestamp)?.toDate()?.toString(),
         completedAt = (this["completedAt"] as? Timestamp)?.toDate()?.toString(),
+        startedAtMs = (this["startedAt"] as? Timestamp)?.toDate()?.time,
+        completedAtMs = (this["completedAt"] as? Timestamp)?.toDate()?.time,
         setsCompleted = (this["setsCompleted"] as? Number)?.toInt() ?: 0,
         totalSets = (this["totalSets"] as? Number)?.toInt() ?: 3,
         setLogs = setLogs,

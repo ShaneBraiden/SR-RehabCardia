@@ -3,6 +3,8 @@ package com.srcardiocare.navigation
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,10 +18,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavType
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
@@ -116,6 +120,12 @@ fun SRCardiocareNavGraph(
     CurrentUserDocGuard(navController = navController)
     PushDeepLinkHandler(navController = navController)
 
+    // "Powered by" badge floats over every screen except the chat screens.
+    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+    val showPoweredBy = currentRoute != Route.PatientChat.path &&
+        currentRoute != Route.PatientFeedbackChat.path
+
+    Box(modifier = Modifier.fillMaxSize()) {
     NavHost(navController = navController, startDestination = startDestination) {
         composable(Route.Login.path) {
             LoginScreen(
@@ -474,6 +484,16 @@ fun SRCardiocareNavGraph(
                 onBack = { navController.popBackStack() },
                 onSaved = { navController.popBackStack() },
                 onDeleted = { navController.popBackStack() }
+            )
+        }
+    }
+
+        if (showPoweredBy) {
+            com.srcardiocare.ui.components.PoweredByBadge(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .padding(bottom = 8.dp)
             )
         }
     }

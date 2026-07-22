@@ -2,7 +2,7 @@
 
 **Effective date:** 12 June 2026
 
-These Terms govern your use of the RehabCardia mobile application ("the App"), operated by SRET-AIDA ("we", "us").
+These Terms govern your use of the RehabCardia mobile application ("the App").
 
 ## 1. The service
 
@@ -10,7 +10,7 @@ RehabCardia is a digital cardiac rehabilitation platform. It allows healthcare p
 
 ## 2. Medical disclaimer
 
-**The App does not provide medical advice.** Exercise programs, feedback, and messages within the App are provided by your own healthcare provider, not by SRET-AIDA. Always follow the guidance of your doctor. **Stop exercising and seek immediate medical attention if you experience chest pain, severe shortness of breath, dizziness, or any symptom of concern. In an emergency, call your local emergency number — do not use the App to seek emergency help.**
+**The App does not provide medical advice.** Exercise programs, feedback, and messages within the App are provided by your own healthcare provider. Always follow the guidance of your doctor. **Stop exercising and seek immediate medical attention if you experience chest pain, severe shortness of breath, dizziness, or any symptom of concern. In an emergency, call your local emergency number — do not use the App to seek emergency help.**
 
 ## 3. Accounts
 
@@ -34,7 +34,7 @@ We aim to keep the App available at all times but do not guarantee uninterrupted
 
 ## 7. Limitation of liability
 
-To the maximum extent permitted by law, SRET-AIDA is not liable for indirect or consequential loss arising from use of the App. Nothing in these Terms limits liability that cannot be limited by law, including liability arising from negligence causing personal injury where such limitation is prohibited.
+To the maximum extent permitted by law, RehabCardia is not liable for indirect or consequential loss arising from use of the App. Nothing in these Terms limits liability that cannot be limited by law, including liability arising from negligence causing personal injury where such limitation is prohibited.
 
 ## 8. Termination
 
@@ -50,5 +50,5 @@ We may update these Terms from time to time. Continued use of the App after chan
 
 ## 11. Contact
 
-**SRET-AIDA — RehabCardia team**
+**RehabCardia support**
 Email: sr.cardiocare@gmail.com

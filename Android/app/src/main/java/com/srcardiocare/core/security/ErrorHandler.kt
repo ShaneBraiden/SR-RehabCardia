@@ -2,6 +2,7 @@
 package com.srcardiocare.core.security
 
 import android.util.Log
+import com.google.firebase.auth.FirebaseAuthException
 
 /**
  * Handles error message sanitization to prevent leaking implementation details.
@@ -32,6 +33,25 @@ object ErrorHandler {
     )
 
     /**
+     * Android FirebaseAuthException error codes -> user-friendly messages.
+     * The Firebase Android SDK reports codes like "ERROR_WRONG_PASSWORD" (not the
+     * kebab-case web codes), so these are matched first against [FirebaseAuthException.errorCode].
+     */
+    private val authCodeMappings = mapOf(
+        "ERROR_INVALID_EMAIL" to "Please enter a valid email address",
+        "ERROR_WRONG_PASSWORD" to "Incorrect password. Please try again",
+        "ERROR_USER_NOT_FOUND" to "No account found with this email",
+        "ERROR_INVALID_CREDENTIAL" to "Incorrect email or password",
+        "ERROR_USER_DISABLED" to "This account has been disabled",
+        "ERROR_USER_TOKEN_EXPIRED" to "Your session expired. Please log in again",
+        "ERROR_TOO_MANY_REQUESTS" to "Too many attempts. Please try again later",
+        "ERROR_NETWORK_REQUEST_FAILED" to "Network error. Please check your connection",
+        "ERROR_EMAIL_ALREADY_IN_USE" to "An account with this email already exists",
+        "ERROR_WEAK_PASSWORD" to "Password is too weak. Please use a stronger password",
+        "ERROR_REQUIRES_RECENT_LOGIN" to "Please log out and log back in to continue"
+    )
+
+    /**
      * Generic user-friendly messages for different operation types.
      */
     object UserMessages {
@@ -59,6 +79,11 @@ object ErrorHandler {
         Log.e(TAG, "Error during $operationType: ${exception.message}", exception)
 
         val message = exception.message ?: ""
+
+        // Firebase Auth: match the explicit error code first (most reliable on Android).
+        if (exception is FirebaseAuthException) {
+            authCodeMappings[exception.errorCode]?.let { return it }
+        }
 
         // Check for known error patterns
         for ((pattern, userMessage) in errorMappings) {

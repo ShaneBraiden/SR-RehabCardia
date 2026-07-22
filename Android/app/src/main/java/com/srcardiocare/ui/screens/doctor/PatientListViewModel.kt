@@ -89,7 +89,9 @@ class PatientListViewModel : ViewModel() {
 
                     val status = when (r) {
                         "admin", "doctor" -> UserStatus.ON_TRACK
-                        else -> patientStatusMap[user.id] ?: UserStatus.INACTIVE
+                        // Doctor's manual care status (if set) overrides the auto-computed one.
+                        else -> careStatusOverride(user.careStatus)
+                            ?: patientStatusMap[user.id] ?: UserStatus.INACTIVE
                     }
 
                     val subtitle = when (r) {

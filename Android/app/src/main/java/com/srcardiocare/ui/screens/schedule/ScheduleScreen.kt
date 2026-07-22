@@ -353,7 +353,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
                                         com.srcardiocare.core.push.NotificationEvent.AppointmentScheduled(
                                             patientId = patientId,
                                             appointmentType = type,
-                                            whenText = dateTime.format(DateTimeFormatter.ofPattern("h:mm a, dd/MM")),
+                                            whenText = dateTime.format(DateTimeFormatter.ofPattern("h:mm a, dd/MM/yyyy")),
                                             appointmentId = appointmentId
                                         )
                                     )
@@ -375,7 +375,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
                                         com.srcardiocare.core.push.NotificationEvent.AppointmentRequested(
                                             doctorId = doctorId,
                                             appointmentType = type,
-                                            whenText = dateTime.format(DateTimeFormatter.ofPattern("h:mm a, dd/MM")),
+                                            whenText = dateTime.format(DateTimeFormatter.ofPattern("h:mm a, dd/MM/yyyy")),
                                             appointmentId = appointmentId
                                         )
                                     )
@@ -503,7 +503,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
 
             selectedDate?.let {
                 Text(
-                    it.format(DateTimeFormatter.ofPattern("EEEE, dd/MM")),
+                    it.format(DateTimeFormatter.ofPattern("EEEE, dd/MM/yyyy")),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,

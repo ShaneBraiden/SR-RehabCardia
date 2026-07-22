@@ -1,6 +1,8 @@
 // PatientHomeScreen.kt — Patient dashboard with cards for navigation
 package com.srcardiocare.ui.screens.patient
 
+import android.app.Activity
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -65,6 +68,12 @@ fun PatientHomeScreen(
     var onboardingShown by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(true) }
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+    // Home is a root destination. After login the start destination (Login) is
+    // popped off the back stack, so a plain back press would pop Home and leave an
+    // empty NavHost (blank screen). Send the app to the background instead.
+    BackHandler { (context as? Activity)?.moveTaskToBack(true) }
 
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {

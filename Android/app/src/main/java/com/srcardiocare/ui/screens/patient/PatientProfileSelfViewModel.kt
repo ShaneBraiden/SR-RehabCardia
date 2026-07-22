@@ -70,7 +70,6 @@ class PatientProfileSelfViewModel : ViewModel() {
         editFirstName: String,
         editLastName: String,
         editPhone: String,
-        editCondition: String,
         onValidationError: (String) -> Unit,
         onSuccess: () -> Unit,
         onError: (String) -> Unit
@@ -91,21 +90,19 @@ class PatientProfileSelfViewModel : ViewModel() {
         _state.update { it.copy(isSaving = true) }
         viewModelScope.launch {
             try {
-                val trimmedCondition = editCondition.trim()
+                // Condition (injuries) is doctor-managed and intentionally not written here.
                 FirebaseService.updateUser(
                     mapOf(
                         "firstName" to editFirstName.trim(),
                         "lastName" to editLastName.trim(),
-                        "phone" to phoneValidation.sanitizedValue,
-                        "injuries" to if (trimmedCondition.isBlank()) emptyList<String>() else listOf(trimmedCondition)
+                        "phone" to phoneValidation.sanitizedValue
                     )
                 )
                 _state.update {
                     it.copy(
                         firstName = editFirstName.trim(),
                         lastName = editLastName.trim(),
-                        phone = phoneValidation.sanitizedValue,
-                        condition = trimmedCondition
+                        phone = phoneValidation.sanitizedValue
                     )
                 }
                 onSuccess()

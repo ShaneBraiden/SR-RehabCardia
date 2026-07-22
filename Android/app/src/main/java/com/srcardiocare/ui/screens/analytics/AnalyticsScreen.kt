@@ -23,13 +23,18 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.google.firebase.Timestamp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import com.srcardiocare.data.firebase.AssignmentRepository
 import com.srcardiocare.data.firebase.FeedbackRepository
 import com.srcardiocare.data.firebase.FirebaseService
+import com.srcardiocare.data.firebase.SessionRepository
 import com.srcardiocare.data.model.PostWorkoutFeedback
+import com.srcardiocare.data.model.SessionStatus
 import com.srcardiocare.ui.components.SkeletonBarChart
 import com.srcardiocare.ui.components.SkeletonDonutChart
 import com.srcardiocare.ui.components.SkeletonStatsCard
@@ -40,9 +45,8 @@ import com.srcardiocare.ui.components.tutorial.TutorialKeys
 import com.srcardiocare.ui.components.tutorial.TutorialTours
 import com.srcardiocare.ui.components.tutorial.tutorialTarget
 import com.srcardiocare.ui.theme.DesignTokens
-import java.time.Instant
+import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.time.ZoneId
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -76,70 +80,70 @@ fun AnalyticsScreen(onBack: () -> Unit) {
     var totalWorkouts by remember { mutableIntStateOf(0) }
     var selectedSegment by remember { mutableStateOf<DonutSegment?>(null) }
 
-    LaunchedEffect(Unit) {
-        try {
-            val uid = FirebaseService.currentUID ?: return@LaunchedEffect
-            val workouts = FirebaseService.fetchWorkouts(uid)
-            totalWorkouts = workouts.size
-            completedWorkouts = workouts.count { it.second["completedAt"] != null }
-            
-            // Calculate in-progress (started but not completed)
-            inProgressWorkouts = workouts.count { 
-                it.second["startedAt"] != null && it.second["completedAt"] == null 
-            }
-            
-            // Missed = total - completed - in progress
-            missedWorkouts = max(0, totalWorkouts - completedWorkouts - inProgressWorkouts)
-            
-            if (totalWorkouts > 0) {
-                complianceText = "${(completedWorkouts * 100 / totalWorkouts)}%"
-            }
-            streakText = "$completedWorkouts"
+    val scope = rememberCoroutineScope()
 
-            // Build a rolling 7-day chart ending today from workout completion ratio.
+    // Progress is derived from the live `assignments` + `sessionLogs` data (the
+    // legacy `workouts` collection is no longer written, so it is not read here).
+    suspend fun loadData() {
+        try {
+            val uid = FirebaseService.currentUID ?: return
+            val assignments = AssignmentRepository.getAssignments(uid)
+            val allSessions = assignments.flatMap { a ->
+                try { SessionRepository.getAllSessionsForAssignment(uid, a.id) }
+                catch (_: Exception) { emptyList() }
+            }
+
+            val completed = allSessions.count { it.status == SessionStatus.COMPLETED }
+            val inProgress = allSessions.count { it.status == SessionStatus.IN_PROGRESS }
+            val abandoned = allSessions.count { it.status == SessionStatus.ABANDONED }
+
+            completedWorkouts = completed
+            inProgressWorkouts = inProgress
+            missedWorkouts = abandoned
+            totalWorkouts = allSessions.size
+
+            complianceText = if (allSessions.isNotEmpty()) "${completed * 100 / allSessions.size}%" else "--"
+            streakText = "$completed"
+
+            // Rolling 7-day chart: completed sessions vs. expected sessions per day.
             val today = LocalDate.now()
             val startDate = today.minusDays(6)
-            val dayLabels = (0L..6L).map { offset ->
-                startDate.plusDays(offset)
-            }
-            val dayBuckets = MutableList(7) { mutableListOf<Float>() }
+            val completedByDate = allSessions
+                .filter { it.status == SessionStatus.COMPLETED }
+                .groupingBy { it.sessionDate }
+                .eachCount()
 
-            workouts.forEach { (_, data) ->
-                val instant = parseToInstant(data["startedAt"]) ?: parseToInstant(data["completedAt"]) ?: return@forEach
-                val localDate = instant.atZone(ZoneId.systemDefault()).toLocalDate()
-                if (localDate.isBefore(startDate) || localDate.isAfter(today)) return@forEach
-
-                val index = java.time.temporal.ChronoUnit.DAYS.between(startDate, localDate).toInt()
-                if (index !in 0..6) return@forEach
-
-                val totalExercises = (data["totalExercises"] as? Number)?.toFloat() ?: 0f
-                val completedExercises = (data["exercisesCompleted"] as? Number)?.toFloat() ?: 0f
-                val completionRatio = when {
-                    totalExercises > 0f -> (completedExercises / totalExercises).coerceIn(0f, 1f)
-                    data["completedAt"] != null -> 1f
-                    else -> 0f
+            weeklyBars = (0L..6L).map { offset ->
+                val date = startDate.plusDays(offset)
+                val expected = assignments.sumOf { a ->
+                    val s = try { LocalDate.parse(a.startDate) } catch (_: Exception) { return@sumOf 0 }
+                    val e = try { LocalDate.parse(a.endDate) } catch (_: Exception) { return@sumOf 0 }
+                    if (!date.isBefore(s) && !date.isAfter(e)) a.dailyFrequency else 0
                 }
-
-                dayBuckets[index].add(completionRatio)
+                val done = completedByDate[date.toString()] ?: 0
+                val ratio = if (expected > 0) (done.toFloat() / expected).coerceIn(0f, 1f) else 0f
+                BarData(date.dayOfWeek.name.first().toString(), ratio)
             }
 
-            weeklyBars = dayLabels.mapIndexed { i, date ->
-                val avg = if (dayBuckets[i].isNotEmpty()) {
-                    dayBuckets[i].average().toFloat().coerceIn(0f, 1f)
-                } else {
-                    0f
-                }
-                BarData(date.dayOfWeek.name.first().toString(), avg)
-            }
-            
             try {
                 feedbacks = FeedbackRepository.getPatientFeedbacks(uid)
-            } catch (e: Exception) { }
-
+            } catch (_: Exception) { }
         } catch (_: Exception) { }
         isLoading = false
     }
-    
+
+    // Reload whenever the screen resumes so progress reflects just-finished workouts.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                scope.launch { loadData() }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     val segments = listOf(
         DonutSegment("Completed", completedWorkouts, DesignTokens.Colors.Success),
         DonutSegment("In Progress", inProgressWorkouts, DesignTokens.Colors.Warning),
@@ -509,18 +513,6 @@ private fun LegendItem(
             color = if (isSelected) color else MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
         )
-    }
-}
-
-private fun parseToInstant(raw: Any?): Instant? {
-    return when (raw) {
-        is Timestamp -> raw.toDate().toInstant()
-        is String -> try {
-            Instant.parse(raw)
-        } catch (_: Exception) {
-            null
-        }
-        else -> null
     }
 }
 

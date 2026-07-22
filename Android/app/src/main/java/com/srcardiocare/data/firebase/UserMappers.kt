@@ -17,6 +17,7 @@ fun Map<String, Any?>.toUser(id: String): User = User(
     isBlocked = this["isBlocked"] as? Boolean ?: false,
     apiAccessBlocked = this["apiAccessBlocked"] as? Boolean ?: false,
     blockReason = this["blockReason"] as? String,
+    careStatus = this["careStatus"] as? String,
     lastSeenMs = (this["lastSeen"] as? Timestamp)?.toDate()?.time,
     hasCompletedOnboarding = this["hasCompletedOnboarding"] as? Boolean ?: false,
     toursSeen = (this["toursSeen"] as? List<*>)?.mapNotNull { it as? String } ?: emptyList(),

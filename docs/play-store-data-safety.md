@@ -48,4 +48,4 @@ Location, financial info, web browsing, contacts, calendar, SMS/call logs, files
 - **Health apps declaration:** declare as a health app (cardiac rehabilitation / patient management). Not a Covid-19 app. Does not connect to Health Connect.
 - **Login credentials for review:** Google requires reviewer access for login-gated apps. Create a **demo patient account** (and optionally a demo doctor) in Firebase and provide the credentials under *App access* in Play Console. Use seeded demo data, never a real patient.
 - **Ads:** No, the app contains no ads.
-- **Account deletion URL:** point to the privacy policy section 7 (or add a dedicated page later). Because accounts are provisioned by clinics (no in-app self-registration), Play's "account creation → in-app deletion" requirement does not strictly apply, but having the documented email path avoids review friction.
+- **Account deletion URL:** `https://sr-cardiocare.web.app/delete-account.html`. Because accounts are provisioned by clinics (no public self-registration), the page explains the clinic/admin request path, the email request path, deleted data, retained data, and retention caveats.

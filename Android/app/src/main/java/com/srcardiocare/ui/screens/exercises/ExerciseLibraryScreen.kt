@@ -4,6 +4,7 @@ package com.srcardiocare.ui.screens.exercises
 import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -37,9 +38,13 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
+import androidx.media3.common.VideoSize
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import com.srcardiocare.core.security.InputValidator
+import com.srcardiocare.ui.components.FullscreenToggleButton
+import com.srcardiocare.ui.components.FullscreenVideoEffect
 import com.srcardiocare.data.firebase.ExerciseRepository
 import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.data.firebase.UserRepository
@@ -396,6 +401,12 @@ private fun VideoPlayerDialog(
             Box(modifier = Modifier.fillMaxSize()) {
                 val isYoutube = remember(videoUrl) { !extractYoutubeVideoIdLib(videoUrl.orEmpty()).isNullOrBlank() }
 
+                var isFullscreen by remember { mutableStateOf(false) }
+                // Orientation follows the video: detected for direct URLs, 16:9 (landscape) for YouTube.
+                var videoRatio by remember { mutableFloatStateOf(16f / 9f) }
+                FullscreenVideoEffect(active = isFullscreen, isLandscapeVideo = videoRatio >= 1f)
+                BackHandler(enabled = isFullscreen) { isFullscreen = false }
+
                 if (videoUrl.isNullOrBlank()) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
@@ -441,10 +452,11 @@ private fun VideoPlayerDialog(
                                     loadDataWithBaseURL("https://www.youtube.com", html, "text/html", "utf-8", null)
                                 }
                             },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .aspectRatio(16f / 9f)
-                                .align(Alignment.Center)
+                            modifier = if (isFullscreen) {
+                                Modifier.fillMaxSize()
+                            } else {
+                                Modifier.fillMaxWidth().aspectRatio(16f / 9f).align(Alignment.Center)
+                            }
                         )
                     }
                 } else {
@@ -455,6 +467,13 @@ private fun VideoPlayerDialog(
                             setMediaItem(MediaItem.fromUri(videoUrl))
                             prepare()
                             playWhenReady = true
+                            addListener(object : Player.Listener {
+                                override fun onVideoSizeChanged(videoSize: VideoSize) {
+                                    if (videoSize.width > 0 && videoSize.height > 0) {
+                                        videoRatio = videoSize.width.toFloat() / videoSize.height.toFloat()
+                                    }
+                                }
+                            })
                         }
                     }
 
@@ -470,35 +489,49 @@ private fun VideoPlayerDialog(
                             }
                         },
                         update = { it.player = exoPlayer },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(16f / 9f)
-                            .align(Alignment.Center)
+                        modifier = if (isFullscreen) {
+                            Modifier.fillMaxSize()
+                        } else {
+                            Modifier.fillMaxWidth().aspectRatio(16f / 9f).align(Alignment.Center)
+                        }
                     )
                 }
 
-                // Close & title overlay
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .fillMaxWidth()
-                        .background(Color.Black.copy(alpha = 0.5f))
-                        .padding(8.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
+                // Close & title overlay (hidden while fullscreen for an unobstructed view)
+                if (!isFullscreen) {
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .fillMaxWidth()
+                            .background(Color.Black.copy(alpha = 0.5f))
+                            .padding(8.dp)
                     ) {
-                        IconButton(onClick = onDismiss) {
-                            Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            IconButton(onClick = onDismiss) {
+                                Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
+                            }
+                            Text(
+                                exerciseName,
+                                color = Color.White,
+                                fontWeight = FontWeight.SemiBold,
+                                style = MaterialTheme.typography.titleMedium
+                            )
                         }
-                        Text(
-                            exerciseName,
-                            color = Color.White,
-                            fontWeight = FontWeight.SemiBold,
-                            style = MaterialTheme.typography.titleMedium
-                        )
                     }
+                }
+
+                // Fullscreen enter/exit toggle
+                if (!videoUrl.isNullOrBlank()) {
+                    FullscreenToggleButton(
+                        isFullscreen = isFullscreen,
+                        onToggle = { isFullscreen = !isFullscreen },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp)
+                    )
                 }
             }
         }

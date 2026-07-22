@@ -234,15 +234,6 @@ fun LoginScreen(onLoginSuccess: (role: String) -> Unit, onChangePassword: () -> 
                     }
                 }
             }
-            
-            Text(
-                text = "Powered by SRET-AIDA",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = DesignTokens.Spacing.MD)
-            )
         }
     }
 }

@@ -66,10 +66,16 @@ class DoctorDashboardViewModel : ViewModel() {
                 val firstName = currentUser.firstName
                 val lastName = currentUser.lastName
                 val role = currentUser.role
+                val fullName = currentUser.fullName
                 val doctorName = when (role) {
-                    "doctor" -> "Dr. $lastName"
-                    "admin" -> "$firstName $lastName (Admin)"
-                    else -> "$firstName $lastName"
+                    "doctor" -> {
+                        // Prefer "Dr. <last name>", but fall back to first name / full
+                        // name when last name is missing so we never render a bare "Dr.".
+                        val nameForDoctor = lastName.ifBlank { fullName }
+                        if (nameForDoctor.isBlank()) "Doctor" else "Dr. $nameForDoctor"
+                    }
+                    "admin" -> if (fullName.isBlank()) "Admin" else "$fullName (Admin)"
+                    else -> fullName.ifBlank { "User" }
                 }
 
                 // Admin sees ALL users; doctors see only their assigned patients
@@ -128,7 +134,9 @@ class DoctorDashboardViewModel : ViewModel() {
                         else -> injuries.ifBlank { "Patient" }
                     }
 
-                    val status = patientStatusMap[user.id] ?: UserStatus.ON_TRACK
+                    // Doctor's manual care status (if set) overrides the auto-computed one.
+                    val status = careStatusOverride(user.careStatus)
+                        ?: patientStatusMap[user.id] ?: UserStatus.ON_TRACK
 
                     UserItem(
                         id = user.id,

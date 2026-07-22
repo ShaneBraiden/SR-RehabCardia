@@ -25,7 +25,14 @@ service cloud.firestore {
     // ── Users ─────────────────────────────────────────────────────────────
     match /users/{userId} {
       // Own doc, or doctors/admins can list/read all users.
-      allow read: if isAuthenticated() && (uid() == userId || isDoctor() || isAdmin());
+      // Patients may also read the profile of the doctor assigned to them
+      // (so the app can show "Dr. <name>" instead of "Unknown").
+      allow read: if isAuthenticated() && (
+        uid() == userId ||
+        isDoctor() ||
+        isAdmin() ||
+        get(/databases/$(database)/documents/users/$(uid())).data.assignedDoctorId == userId
+      );
 
       // Own profile updates — cannot touch role, isBlocked, assignedDoctorId.
       // Doctors can manage other users' docs but can never change a role

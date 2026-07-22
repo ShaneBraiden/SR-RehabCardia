@@ -314,6 +314,8 @@ private fun PrescriptionConfig(
     Column(
         modifier = modifier
             .fillMaxSize()
+            // Lift the form above the keyboard so the focused field stays visible.
+            .imePadding()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = DesignTokens.Spacing.XL)
     ) {

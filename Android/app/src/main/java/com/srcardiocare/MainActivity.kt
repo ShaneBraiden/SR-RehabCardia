@@ -13,16 +13,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.rememberNavController
@@ -31,8 +27,6 @@ import com.srcardiocare.core.push.PushMessagingService
 import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.navigation.SRCardiocareNavGraph
 import com.srcardiocare.navigation.Route
-import com.srcardiocare.ui.components.PoweredByBadge
-import com.srcardiocare.ui.theme.DesignTokens
 import com.srcardiocare.ui.theme.SRCardiocareTheme
 
 class MainActivity : ComponentActivity() {
@@ -81,27 +75,14 @@ class MainActivity : ComponentActivity() {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(MaterialTheme.colorScheme.background),
-                        contentAlignment = Alignment.BottomCenter
-                    ) {
-                        PoweredByBadge(
-                            modifier = Modifier
-                                .navigationBarsPadding()
-                                .padding(bottom = DesignTokens.Spacing.SM)
-                        )
-                    }
+                            .background(MaterialTheme.colorScheme.background)
+                    )
                 } else {
                     val navController = rememberNavController()
                     Box(modifier = Modifier.fillMaxSize()) {
                         SRCardiocareNavGraph(
                             navController = navController,
                             startDestination = startDest!!
-                        )
-                        PoweredByBadge(
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .navigationBarsPadding()
-                                .imePadding()
                         )
                     }
                 }

@@ -20,10 +20,16 @@ android {
         applicationId = "com.srcardiocare"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 3
+        versionName = "1.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Bundle native debug symbols (from Firestore, Media3, etc.) into the AAB
+        // so Play Console can symbolicate native crash/ANR stack traces.
+        ndk {
+            debugSymbolLevel = "FULL"
+        }
     }
 
     signingConfigs {
