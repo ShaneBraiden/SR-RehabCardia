@@ -49,6 +49,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.srcardiocare.ui.theme.DesignTokens
+import androidx.compose.ui.res.stringResource
+import com.srcardiocare.R
 
 private val BeaconSize = 28.dp
 private val TipCardMaxWidth = 320.dp
@@ -278,9 +280,9 @@ private fun TipCard(
                     horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.XXS)
                 ) {
                     if (isFirst) {
-                        TextButton(onClick = onSkip) { Text("Skip") }
+                        TextButton(onClick = onSkip) { Text(stringResource(R.string.action_skip)) }
                     } else {
-                        TextButton(onClick = onBack) { Text("Back") }
+                        TextButton(onClick = onBack) { Text(stringResource(R.string.action_back)) }
                     }
                     Button(
                         onClick = onNext,
@@ -290,7 +292,7 @@ private fun TipCard(
                         )
                     ) {
                         Text(
-                            text = if (isLast) "Done" else "Next",
+                            text = stringResource(if (isLast) R.string.action_done else R.string.action_next),
                             color = MaterialTheme.colorScheme.onPrimary
                         )
                     }

@@ -1,9 +1,14 @@
 // PasswordValidator.kt — Strong password validation for the app
 package com.srcardiocare.core.security
 
+import com.srcardiocare.R
+import com.srcardiocare.core.locale.LocaleManager
+
 /**
  * Password validation utility enforcing strong password requirements.
  * Requires: 8+ characters, uppercase, lowercase, and digit.
+ *
+ * Messages resolve via [LocaleManager.string] so callers need not pass a Context.
  */
 object PasswordValidator {
 
@@ -27,16 +32,24 @@ object PasswordValidator {
      */
     fun validate(password: String): ValidationResult {
         if (password.length < MIN_LENGTH) {
-            return ValidationResult(false, "Password must be at least $MIN_LENGTH characters")
+            return ValidationResult(
+                false,
+                LocaleManager.appContext()
+                    ?.getString(R.string.password_error_too_short, MIN_LENGTH)
+                    ?: "Password must be at least $MIN_LENGTH characters"
+            )
         }
         if (!password.any { it.isUpperCase() }) {
-            return ValidationResult(false, "Password must contain at least one uppercase letter")
+            return ValidationResult(false, LocaleManager.string(
+                R.string.password_error_uppercase, "Password must contain at least one uppercase letter"))
         }
         if (!password.any { it.isLowerCase() }) {
-            return ValidationResult(false, "Password must contain at least one lowercase letter")
+            return ValidationResult(false, LocaleManager.string(
+                R.string.password_error_lowercase, "Password must contain at least one lowercase letter"))
         }
         if (!password.any { it.isDigit() }) {
-            return ValidationResult(false, "Password must contain at least one number")
+            return ValidationResult(false, LocaleManager.string(
+                R.string.password_error_digit, "Password must contain at least one number"))
         }
         return ValidationResult(true)
     }
@@ -44,6 +57,8 @@ object PasswordValidator {
     /**
      * Returns a human-readable string describing password requirements.
      */
-    fun getRequirementsText(): String =
+    fun getRequirementsText(): String = LocaleManager.string(
+        R.string.password_requirements,
         "Password must be at least 8 characters with uppercase, lowercase, and a number"
+    )
 }

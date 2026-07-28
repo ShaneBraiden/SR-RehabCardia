@@ -15,6 +15,7 @@ import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -28,6 +29,7 @@ import com.srcardiocare.core.push.PushMessagingService
 import com.srcardiocare.core.auth.AuthManager
 import com.srcardiocare.core.security.ErrorHandler
 import com.srcardiocare.data.firebase.FirebaseService
+import com.srcardiocare.ui.components.LanguageToggle
 import com.srcardiocare.ui.theme.DesignTokens
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -51,15 +53,15 @@ fun LoginScreen(onLoginSuccess: (role: String) -> Unit, onChangePassword: () -> 
     if (showPasswordChangeDialog) {
         AlertDialog(
             onDismissRequest = { },
-            title = { Text("Change Password", fontWeight = FontWeight.Bold) },
-            text = { Text("This is your first login. Would you like to change your password now for better security?") },
+            title = { Text(stringResource(R.string.action_change_password), fontWeight = FontWeight.Bold) },
+            text = { Text(stringResource(R.string.login_first_login_message)) },
             confirmButton = {
                 TextButton(onClick = {
                     showPasswordChangeDialog = false
                     // Navigate to change password
                     onChangePassword()
                 }) {
-                    Text("Change Password", color = DesignTokens.Colors.Primary)
+                    Text(stringResource(R.string.action_change_password), color = DesignTokens.Colors.Primary)
                 }
             },
             dismissButton = {
@@ -78,7 +80,7 @@ fun LoginScreen(onLoginSuccess: (role: String) -> Unit, onChangePassword: () -> 
                         onLoginSuccess(pendingRole)
                     }
                 }) {
-                    Text("Skip")
+                    Text(stringResource(R.string.action_skip))
                 }
             }
         )
@@ -92,6 +94,15 @@ fun LoginScreen(onLoginSuccess: (role: String) -> Unit, onChangePassword: () -> 
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
+            // Sits above the form so a Tamil-only patient can switch before
+            // having to read anything.
+            LanguageToggle(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .statusBarsPadding()
+                    .padding(DesignTokens.Spacing.MD)
+            )
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -111,7 +122,7 @@ fun LoginScreen(onLoginSuccess: (role: String) -> Unit, onChangePassword: () -> 
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.sr_logo),
-                        contentDescription = "RehabCardia logo",
+                        contentDescription = stringResource(R.string.login_logo_desc),
                         modifier = Modifier
                             .padding(12.dp)
                             .size(82.dp),
@@ -122,7 +133,7 @@ fun LoginScreen(onLoginSuccess: (role: String) -> Unit, onChangePassword: () -> 
                 Spacer(modifier = Modifier.height(DesignTokens.Spacing.MD))
 
                 Text(
-                    text = "Welcome Back",
+                    text = stringResource(R.string.login_welcome_back),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground
@@ -131,7 +142,7 @@ fun LoginScreen(onLoginSuccess: (role: String) -> Unit, onChangePassword: () -> 
                 Spacer(modifier = Modifier.height(DesignTokens.Spacing.SM))
 
                 Text(
-                    text = "Sign in to continue your cardiac care journey",
+                    text = stringResource(R.string.login_subtitle),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -141,7 +152,7 @@ fun LoginScreen(onLoginSuccess: (role: String) -> Unit, onChangePassword: () -> 
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    label = { Text("Email address") },
+                    label = { Text(stringResource(R.string.login_email_label)) },
                     modifier = Modifier.fillMaxWidth()
                         .semantics { contentType = ContentType.EmailAddress },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
@@ -158,7 +169,7 @@ fun LoginScreen(onLoginSuccess: (role: String) -> Unit, onChangePassword: () -> 
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text("Password") },
+                    label = { Text(stringResource(R.string.login_password_label)) },
                     modifier = Modifier.fillMaxWidth()
                         .semantics { contentType = ContentType.Password },
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -182,11 +193,11 @@ fun LoginScreen(onLoginSuccess: (role: String) -> Unit, onChangePassword: () -> 
                     onClick = {
                         val trimmedEmail = email.trim()
                         if (trimmedEmail.isBlank() || password.isBlank()) {
-                            errorMessage = "Please enter your email and password."
+                            errorMessage = context.getString(R.string.login_error_empty_fields)
                             return@Button
                         }
                         if (!android.util.Patterns.EMAIL_ADDRESS.matcher(trimmedEmail).matches()) {
-                            errorMessage = "Please enter a valid email address."
+                            errorMessage = context.getString(R.string.login_error_invalid_email)
                             return@Button
                         }
                         isLoading = true
@@ -230,7 +241,7 @@ fun LoginScreen(onLoginSuccess: (role: String) -> Unit, onChangePassword: () -> 
                             strokeWidth = DesignTokens.Spacing.XXS
                         )
                     } else {
-                        Text("Sign In", fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(R.string.login_sign_in), fontWeight = FontWeight.SemiBold)
                     }
                 }
             }

@@ -9,6 +9,19 @@ package com.srcardiocare.core.push
  *
  * The sealed-class shape means any new event must be declared here, keeping
  * deep-link wiring centralised instead of scattered across call-sites.
+ *
+ * ## Why this copy is deliberately NOT localised
+ *
+ * [title] and [body] are rendered on the SENDER's device, persisted to Firestore
+ * by NotificationRepository, and then read back on the RECIPIENT's device. The
+ * recipient's language is unknown at send time, and most of these events are
+ * raised by a doctor's action and delivered to a patient. Translating here would
+ * therefore stamp the sender's language onto the recipient's notification and
+ * freeze it there permanently — worse than leaving it English.
+ *
+ * The real fix is to persist [type] plus [params] and render the copy at display
+ * time on the recipient's device. Until that lands, this stays English on
+ * purpose; do not "finish the job" by wrapping these in stringResource.
  */
 sealed class NotificationEvent {
     abstract val userId: String

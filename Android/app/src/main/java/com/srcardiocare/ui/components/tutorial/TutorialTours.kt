@@ -6,6 +6,10 @@
 // `TutorialHost(tourKey = ..., steps = TutorialTours.<key>)`.
 package com.srcardiocare.ui.components.tutorial
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.srcardiocare.R
+
 /** Stable tourKeys — one per screen. Persisted in `users/{uid}.toursSeen`. */
 object TutorialKeys {
     // Patient
@@ -173,76 +177,94 @@ object TutorialIds {
 object TutorialTours {
 
     // ───────────────────────────── Patient ─────────────────────────────
+    //
+    // Patient tours are @Composable getters rather than plain vals so their copy
+    // resolves against the current language. Every call site already reads them
+    // from inside a composable (TutorialHost(steps = ...)). The doctor and admin
+    // tours below stay plain vals with inline English — they are out of scope for
+    // Tamil, which is offered to patients only.
 
-    val patientHome = listOf(
-        TutorialStep(TutorialIds.HOME_START, "Today's session", "Tap here to begin the exercises your care team assigned for today."),
-        TutorialStep(TutorialIds.HOME_SCHEDULE, "Schedule", "View appointments and set reminders so you never miss a session."),
-        TutorialStep(TutorialIds.HOME_PROGRESS, "Your progress", "See trends and charts that show how your recovery is improving."),
-        TutorialStep(TutorialIds.HOME_CHAT, "Message your doctor", "Have a question? Chat directly with your care team here."),
-        TutorialStep(TutorialIds.HOME_NOTIFICATIONS, "Notifications", "Reminders and feedback from your doctor land here."),
-        TutorialStep(TutorialIds.HOME_PROFILE, "Your profile", "Update your details, change your password, or sign out.")
-    )
+    val patientHome: List<TutorialStep>
+        @Composable get() = listOf(
+            TutorialStep(TutorialIds.HOME_START, stringResource(R.string.tour_home_start_title), stringResource(R.string.tour_home_start_text)),
+            TutorialStep(TutorialIds.HOME_SCHEDULE, stringResource(R.string.tour_home_schedule_title), stringResource(R.string.tour_home_schedule_text)),
+            TutorialStep(TutorialIds.HOME_PROGRESS, stringResource(R.string.tour_home_progress_title), stringResource(R.string.tour_home_progress_text)),
+            TutorialStep(TutorialIds.HOME_CHAT, stringResource(R.string.tour_home_chat_title), stringResource(R.string.tour_home_chat_text)),
+            TutorialStep(TutorialIds.HOME_NOTIFICATIONS, stringResource(R.string.tour_home_notifications_title), stringResource(R.string.tour_home_notifications_text)),
+            TutorialStep(TutorialIds.HOME_PROFILE, stringResource(R.string.tour_home_profile_title), stringResource(R.string.tour_home_profile_text))
+        )
 
-    val assignmentList = listOf(
-        TutorialStep(TutorialIds.ASSIGNMENT_CARD, "Your exercises", "Each card is an exercise your doctor assigned, with its sets, reps, and how often to do it."),
-        TutorialStep(TutorialIds.ASSIGNMENT_START, "Start a session", "Tap to begin a guided session for this exercise."),
-        TutorialStep(TutorialIds.ASSIGNMENT_HISTORY, "History", "Review the exercises you've completed over time.")
-    )
+    val assignmentList: List<TutorialStep>
+        @Composable get() = listOf(
+            TutorialStep(TutorialIds.ASSIGNMENT_CARD, stringResource(R.string.tour_assignment_card_title), stringResource(R.string.tour_assignment_card_text)),
+            TutorialStep(TutorialIds.ASSIGNMENT_START, stringResource(R.string.tour_assignment_start_title), stringResource(R.string.tour_assignment_start_text)),
+            TutorialStep(TutorialIds.ASSIGNMENT_HISTORY, stringResource(R.string.tour_assignment_history_title), stringResource(R.string.tour_assignment_history_text))
+        )
 
-    val exerciseList = listOf(
-        TutorialStep(TutorialIds.EXERCISE_ROW, "Your exercises", "Each row is an exercise in today's plan."),
-        TutorialStep(TutorialIds.EXERCISE_START, "Start", "Tap an exercise to open its video and begin.")
-    )
+    val exerciseList: List<TutorialStep>
+        @Composable get() = listOf(
+            TutorialStep(TutorialIds.EXERCISE_ROW, stringResource(R.string.tour_exercise_row_title), stringResource(R.string.tour_exercise_row_text)),
+            TutorialStep(TutorialIds.EXERCISE_START, stringResource(R.string.tour_exercise_start_title), stringResource(R.string.tour_exercise_start_text))
+        )
 
-    val workoutPlayer = listOf(
-        TutorialStep(TutorialIds.PLAYER_VIDEO, "Follow along", "Watch the demonstration and move at your own pace."),
-        TutorialStep(TutorialIds.PLAYER_FULLSCREEN, "Fullscreen", "Tap to enlarge the video for a clearer view."),
-        TutorialStep(TutorialIds.PLAYER_COMPLETE, "Finish the set", "When you've finished, tap here to record it and move on.")
-    )
+    val workoutPlayer: List<TutorialStep>
+        @Composable get() = listOf(
+            TutorialStep(TutorialIds.PLAYER_VIDEO, stringResource(R.string.tour_player_video_title), stringResource(R.string.tour_player_video_text)),
+            TutorialStep(TutorialIds.PLAYER_FULLSCREEN, stringResource(R.string.tour_player_fullscreen_title), stringResource(R.string.tour_player_fullscreen_text)),
+            TutorialStep(TutorialIds.PLAYER_COMPLETE, stringResource(R.string.tour_player_complete_title), stringResource(R.string.tour_player_complete_text))
+        )
 
-    val assignmentWorkout = listOf(
-        TutorialStep(TutorialIds.AW_VIDEO, "Exercise demo", "Watch how the movement is performed before you start."),
-        TutorialStep(TutorialIds.AW_REP_TARGET, "Your target", "This shows the reps and sets to aim for in this session."),
-        TutorialStep(TutorialIds.AW_PRIMARY, "Begin & continue", "Use this button to start the exercise and move through each set.")
-    )
+    val assignmentWorkout: List<TutorialStep>
+        @Composable get() = listOf(
+            TutorialStep(TutorialIds.AW_VIDEO, stringResource(R.string.tour_aw_video_title), stringResource(R.string.tour_aw_video_text)),
+            TutorialStep(TutorialIds.AW_REP_TARGET, stringResource(R.string.tour_aw_target_title), stringResource(R.string.tour_aw_target_text)),
+            TutorialStep(TutorialIds.AW_PRIMARY, stringResource(R.string.tour_aw_primary_title), stringResource(R.string.tour_aw_primary_text))
+        )
 
-    val postWorkoutFeedback = listOf(
-        TutorialStep(TutorialIds.FEEDBACK_PAIN, "Any pain?", "Let us know if you felt pain — and where — during the session."),
-        TutorialStep(TutorialIds.FEEDBACK_BORG, "How it felt", "Rate how hard the effort and breathing felt using these sliders."),
-        TutorialStep(TutorialIds.FEEDBACK_PULSE, "Your pulse", "Enter your heart rate so your doctor can track your response."),
-        TutorialStep(TutorialIds.FEEDBACK_SUBMIT, "Send it", "Submit your feedback to share it with your care team.")
-    )
+    val postWorkoutFeedback: List<TutorialStep>
+        @Composable get() = listOf(
+            TutorialStep(TutorialIds.FEEDBACK_PAIN, stringResource(R.string.tour_feedback_pain_title), stringResource(R.string.tour_feedback_pain_text)),
+            TutorialStep(TutorialIds.FEEDBACK_BORG, stringResource(R.string.tour_feedback_borg_title), stringResource(R.string.tour_feedback_borg_text)),
+            TutorialStep(TutorialIds.FEEDBACK_PULSE, stringResource(R.string.tour_feedback_pulse_title), stringResource(R.string.tour_feedback_pulse_text)),
+            TutorialStep(TutorialIds.FEEDBACK_SUBMIT, stringResource(R.string.tour_feedback_submit_title), stringResource(R.string.tour_feedback_submit_text))
+        )
 
-    val schedule = listOf(
-        TutorialStep(TutorialIds.SCHEDULE_CALENDAR, "Your calendar", "Tap a day to see appointments and reminders."),
-        TutorialStep(TutorialIds.SCHEDULE_ADD, "Add a reminder", "Create reminders so you stay on track with your sessions.")
-    )
+    val schedule: List<TutorialStep>
+        @Composable get() = listOf(
+            TutorialStep(TutorialIds.SCHEDULE_CALENDAR, stringResource(R.string.tour_schedule_calendar_title), stringResource(R.string.tour_schedule_calendar_text)),
+            TutorialStep(TutorialIds.SCHEDULE_ADD, stringResource(R.string.tour_schedule_add_title), stringResource(R.string.tour_schedule_add_text))
+        )
 
-    val analytics = listOf(
-        TutorialStep(TutorialIds.ANALYTICS_RANGE, "Time range", "Switch between week, month, and longer views here."),
-        TutorialStep(TutorialIds.ANALYTICS_CHART, "Your trend", "This chart shows how your activity changes over time."),
-        TutorialStep(TutorialIds.ANALYTICS_METRICS, "Key numbers", "Quick stats summarize your recovery at a glance.")
-    )
+    val analytics: List<TutorialStep>
+        @Composable get() = listOf(
+            TutorialStep(TutorialIds.ANALYTICS_RANGE, stringResource(R.string.tour_analytics_range_title), stringResource(R.string.tour_analytics_range_text)),
+            TutorialStep(TutorialIds.ANALYTICS_CHART, stringResource(R.string.tour_analytics_chart_title), stringResource(R.string.tour_analytics_chart_text)),
+            TutorialStep(TutorialIds.ANALYTICS_METRICS, stringResource(R.string.tour_analytics_metrics_title), stringResource(R.string.tour_analytics_metrics_text))
+        )
 
-    val patientChat = listOf(
-        TutorialStep(TutorialIds.CHAT_FIELD, "Write a message", "Type a message to your care team here."),
-        TutorialStep(TutorialIds.CHAT_SEND, "Send", "Tap to send your message.")
-    )
+    val patientChat: List<TutorialStep>
+        @Composable get() = listOf(
+            TutorialStep(TutorialIds.CHAT_FIELD, stringResource(R.string.tour_chat_field_title), stringResource(R.string.tour_chat_field_text)),
+            TutorialStep(TutorialIds.CHAT_SEND, stringResource(R.string.tour_chat_send_title), stringResource(R.string.tour_chat_send_text))
+        )
 
-    val patientProfile = listOf(
-        TutorialStep(TutorialIds.PROFILE_EDIT, "Edit your profile", "Keep your personal and health details up to date."),
-        TutorialStep(TutorialIds.PROFILE_PASSWORD, "Change password", "Update your password to keep your account secure."),
-        TutorialStep(TutorialIds.PROFILE_LOGOUT, "Sign out", "Tap here when you're ready to log out.")
-    )
+    val patientProfile: List<TutorialStep>
+        @Composable get() = listOf(
+            TutorialStep(TutorialIds.PROFILE_EDIT, stringResource(R.string.tour_profile_edit_title), stringResource(R.string.tour_profile_edit_text)),
+            TutorialStep(TutorialIds.PROFILE_PASSWORD, stringResource(R.string.tour_profile_password_title), stringResource(R.string.tour_profile_password_text)),
+            TutorialStep(TutorialIds.PROFILE_LOGOUT, stringResource(R.string.tour_profile_logout_title), stringResource(R.string.tour_profile_logout_text))
+        )
 
-    val patientHistory = listOf(
-        TutorialStep(TutorialIds.HISTORY_LIST, "Your history", "Review past exercises and how well each was completed.")
-    )
+    val patientHistory: List<TutorialStep>
+        @Composable get() = listOf(
+            TutorialStep(TutorialIds.HISTORY_LIST, stringResource(R.string.tour_history_list_title), stringResource(R.string.tour_history_list_text))
+        )
 
-    val notifications = listOf(
-        TutorialStep(TutorialIds.NOTIFICATION_ITEM, "Notifications", "Tap an item to open what it's about."),
-        TutorialStep(TutorialIds.NOTIFICATION_MARK_READ, "Mark as read", "Clear notifications once you've seen them.")
-    )
+    val notifications: List<TutorialStep>
+        @Composable get() = listOf(
+            TutorialStep(TutorialIds.NOTIFICATION_ITEM, stringResource(R.string.tour_notification_item_title), stringResource(R.string.tour_notification_item_text)),
+            TutorialStep(TutorialIds.NOTIFICATION_MARK_READ, stringResource(R.string.tour_notification_read_title), stringResource(R.string.tour_notification_read_text))
+        )
 
     // ───────────────────────────── Doctor ──────────────────────────────
 

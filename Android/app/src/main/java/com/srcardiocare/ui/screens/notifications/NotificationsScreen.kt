@@ -23,6 +23,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import android.content.Context
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.srcardiocare.R
 import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.data.firebase.NotificationRepository
 import com.srcardiocare.data.model.AppNotification
@@ -46,6 +50,7 @@ fun NotificationsScreen(
     onBack: () -> Unit,
     onOpenRoute: (route: String, params: Map<String, String>) -> Unit
 ) {
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val toast = rememberToast()
     var items by remember { mutableStateOf<List<AppNotification>>(emptyList()) }
@@ -63,10 +68,10 @@ fun NotificationsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Notifications", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.notifications_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
                 actions = {
@@ -77,12 +82,12 @@ fun NotificationsScreen(
                                 scope.launch {
                                     val uid = FirebaseService.currentUID ?: return@launch
                                     runCatching { FirebaseService.markAllNotificationsRead(uid) }
-                                        .onSuccess { toast("All notifications marked read") }
+                                        .onSuccess { toast(context.getString(R.string.notifications_all_marked_read)) }
                                 }
                             },
                             modifier = Modifier.tutorialTarget(TutorialIds.NOTIFICATION_MARK_READ)
                         ) {
-                            Icon(Icons.Default.DoneAll, contentDescription = "Mark all read")
+                            Icon(Icons.Default.DoneAll, contentDescription = stringResource(R.string.notifications_mark_all_read))
                         }
                     }
                     TutorialHelpButton()
@@ -112,7 +117,7 @@ fun NotificationsScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    "You're all caught up.",
+                    stringResource(R.string.notifications_empty),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -184,7 +189,7 @@ private fun NotificationRow(
             }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = notification.title.ifBlank { "Notification" },
+                    text = notification.title.ifBlank { stringResource(R.string.notifications_fallback_title) },
                     fontWeight = if (isRead) FontWeight.Medium else FontWeight.SemiBold,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface
@@ -198,7 +203,7 @@ private fun NotificationRow(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                val timeLabel = formatTime(notification.createdAtMs)
+                val timeLabel = formatTime(LocalContext.current, notification.createdAtMs)
                 if (timeLabel.isNotBlank()) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -228,7 +233,8 @@ private fun iconFor(type: String): Pair<ImageVector, androidx.compose.ui.graphic
     else -> Icons.Default.Notifications to DesignTokens.Colors.Primary
 }
 
-private fun formatTime(raw: Any?): String {
+/** Relative timestamps are whole translated phrases, so this needs a Context. */
+private fun formatTime(context: Context, raw: Any?): String {
     val millis = when (raw) {
         is com.google.firebase.Timestamp -> raw.toDate().time
         is Long -> raw
@@ -241,10 +247,10 @@ private fun formatTime(raw: Any?): String {
     val hr = min / 60
     val day = hr / 24
     return when {
-        sec < 60 -> "Just now"
-        min < 60 -> "${min}m ago"
-        hr < 24 -> "${hr}h ago"
-        day < 7 -> "${day}d ago"
+        sec < 60 -> context.getString(R.string.time_just_now)
+        min < 60 -> context.getString(R.string.time_minutes_ago, min.toInt())
+        hr < 24 -> context.getString(R.string.time_hours_ago, hr.toInt())
+        day < 7 -> context.getString(R.string.time_days_ago, day.toInt())
         else -> SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(millis))
     }
 }

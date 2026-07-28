@@ -1,0 +1,1646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>User Manual — RehabCardia</title>
+<meta name="description" content="Complete user manual for RehabCardia — screen-by-screen guides for patients and doctors using the cardiac rehabilitation app.">
+<link rel="icon" href="/sr_logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════════════════════════════
+   DESIGN TOKENS — mirrors the app's DesignTokens.kt exactly
+   ══════════════════════════════════════════════════════════════════ */
+:root{
+  --primary:#5A9EA6; --primary-dark:#4A8A91; --primary-light:#C5DFE2;
+  --p10:rgba(90,158,166,.10); --p15:rgba(90,158,166,.15); --p20:rgba(90,158,166,.20);
+  --bg:#E8EDEF; --page:#F4F7F8; --surface:#FFFFFF;
+  --text:#2D3738; --sub:#6B7D80; --sec:#7A9295;
+  --neutral:#E3E7E8; --neutral-grey:#D8DFE0;
+  --error:#D95959; --success:#4DA889; --warning:#D9A14A;
+  --slate100:#F1F5F9; --slate400:#94A3B8;
+  --bezel:#222D2F;
+  --r-sm:4px; --r:8px; --r-lg:12px; --r-xl:16px; --r-xxl:24px; --r-full:999px;
+  --shadow-sm:0 1px 3px rgba(45,55,56,.06);
+  --shadow:0 4px 20px rgba(45,55,56,.08);
+  --shadow-lg:0 18px 50px rgba(45,55,56,.16);
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:96px}
+body{font-family:'Inter',-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--text);background:var(--page);line-height:1.65;-webkit-font-smoothing:antialiased}
+img{max-width:100%}
+svg.ic{width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+
+/* ══════════ HEADER ══════════ */
+header{position:sticky;top:0;z-index:200;background:rgba(255,255,255,.9);backdrop-filter:blur(14px);border-bottom:1px solid var(--neutral)}
+.nav{max-width:1240px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit}
+.brand img{width:34px;height:34px;object-fit:contain}
+.brand b{font-size:1.05rem;font-weight:700;display:block;line-height:1.2}
+.brand small{font-size:.68rem;color:var(--sub);font-weight:500}
+.nav-links{display:flex;gap:6px;align-items:center}
+.nav-links a{color:var(--sub);text-decoration:none;font-weight:600;font-size:.85rem;padding:7px 12px;border-radius:var(--r-full);transition:background .2s,color .2s}
+.nav-links a:hover{background:var(--p10);color:var(--primary-dark)}
+.nav-links a.cta{background:var(--primary);color:#fff}
+.nav-links a.cta:hover{background:var(--primary-dark);color:#fff}
+#bar{position:absolute;left:0;bottom:-1px;height:2px;width:0;background:var(--primary);transition:width .1s linear}
+
+/* ══════════ HERO ══════════ */
+.hero{position:relative;overflow:hidden;background:linear-gradient(150deg,#3F7C83 0%,var(--primary) 55%,#7FBCC2 100%);padding:64px 24px 0}
+.hero::before,.hero::after{content:'';position:absolute;border-radius:50%;background:rgba(255,255,255,.07)}
+.hero::before{width:620px;height:620px;top:-300px;right:-160px}
+.hero::after{width:420px;height:420px;bottom:-260px;left:-120px}
+.hero-in{max-width:1240px;margin:0 auto;position:relative;z-index:1;display:grid;grid-template-columns:1fr 300px;gap:48px;align-items:end}
+.hero h1{font-size:clamp(2rem,4.6vw,3rem);font-weight:800;color:#fff;letter-spacing:-1px;line-height:1.15}
+.hero .lede{max-width:540px;margin-top:16px;font-size:1.06rem;color:rgba(255,255,255,.86)}
+.eyebrow{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:.74rem;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;padding:6px 14px;border-radius:var(--r-full);margin-bottom:18px}
+.hero-jump{display:flex;flex-wrap:wrap;gap:10px;margin:26px 0 56px}
+.jump{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);color:#fff;text-decoration:none;font-size:.86rem;font-weight:600;padding:9px 18px;border-radius:var(--r-full);transition:background .2s,transform .2s}
+.jump:hover{background:rgba(255,255,255,.26);transform:translateY(-1px)}
+.jump.solid{background:#fff;color:var(--primary-dark)}
+.jump.solid:hover{background:#fff}
+.hero-phone{transform:translateY(28px);filter:drop-shadow(0 24px 40px rgba(20,50,54,.35))}
+
+/* ══════════ LAYOUT ══════════ */
+.wrap{max-width:1240px;margin:0 auto;padding:0 24px}
+.layout{display:grid;grid-template-columns:238px 1fr;gap:44px;padding:44px 0 64px}
+
+/* sidebar */
+.side{position:sticky;top:88px;align-self:start;max-height:calc(100vh - 110px);overflow-y:auto;padding-right:6px}
+.side::-webkit-scrollbar{width:4px}
+.side::-webkit-scrollbar-thumb{background:var(--neutral-grey);border-radius:4px}
+.side h4{font-size:.7rem;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--sec);margin:18px 0 8px;padding-left:12px}
+.side h4:first-child{margin-top:0}
+.side a{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--r);text-decoration:none;color:var(--sub);font-size:.855rem;font-weight:500;transition:background .18s,color .18s}
+.side a:hover{background:var(--p10);color:var(--primary-dark)}
+.side a.on{background:var(--p15);color:var(--primary-dark);font-weight:700}
+.side a svg{width:15px;height:15px;opacity:.85}
+.side-toggle{display:none}
+
+/* ══════════ SECTIONS ══════════ */
+.sec{padding:16px 0 44px;border-bottom:1px solid var(--neutral)}
+.sec:last-child{border-bottom:none}
+.sec-head{display:flex;align-items:center;gap:14px;margin-bottom:8px}
+.sec-ico{width:44px;height:44px;border-radius:var(--r-lg);background:linear-gradient(140deg,var(--primary),var(--primary-dark));display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;flex-shrink:0;box-shadow:0 4px 12px rgba(90,158,166,.3)}
+.sec-head h2{font-size:1.45rem;font-weight:700;letter-spacing:-.4px}
+.sec-head .sub{font-size:.86rem;color:var(--sub)}
+.lead{font-size:.95rem;color:var(--sub);max-width:70ch;margin-bottom:22px}
+.h3{font-size:1rem;font-weight:700;margin:26px 0 10px}
+
+/* ══════════ DEVICE FRAME ══════════ */
+.phone{width:290px;border:9px solid var(--bezel);border-radius:36px;background:var(--bg);overflow:hidden;position:relative;box-shadow:var(--shadow-lg);flex-shrink:0}
+.hero-phone .phone{box-shadow:none}
+.phone::after{content:'';position:absolute;top:7px;left:50%;transform:translateX(-50%);width:56px;height:5px;border-radius:3px;background:rgba(255,255,255,.35);z-index:5}
+.status{display:flex;justify-content:space-between;align-items:center;padding:6px 16px 2px;font-size:.6rem;font-weight:700;color:var(--sub);background:var(--surface)}
+.status .rt{display:flex;gap:4px;align-items:center}
+.status svg{width:11px;height:11px}
+.appbar{background:var(--surface);padding:8px 12px 10px;display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--neutral)}
+.appbar img{width:28px;height:28px;object-fit:contain}
+.appbar .t{flex:1;min-width:0}
+.appbar .t b{font-size:.8rem;font-weight:700;display:block;line-height:1.25}
+.appbar .t span{font-size:.56rem;color:var(--sub);display:block;line-height:1.3}
+.appbar .help{width:24px;height:24px;border-radius:50%;background:var(--p15);color:var(--primary-dark);display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:800;flex-shrink:0}
+.appbar .back{color:var(--text);font-size:15px;display:flex}
+.screen{background:var(--bg);padding:12px;min-height:150px}
+
+/* hotspot markers */
+.hot{position:absolute;width:19px;height:19px;border-radius:50%;background:var(--primary-dark);color:#fff;font-size:.63rem;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 3px rgba(255,255,255,.9),0 2px 6px rgba(0,0,0,.18);z-index:4}
+.hot.tl{top:-8px;left:-8px}
+.hot.tr{top:-8px;right:-8px}
+.hot.br{bottom:-8px;right:-8px}
+.rel{position:relative}
+
+/* walkthrough layout */
+.walk{display:grid;grid-template-columns:290px 1fr;gap:38px;align-items:start;margin:20px 0 8px}
+.walk.flip{grid-template-columns:1fr 290px}
+.walk.flip .dev{order:2}
+.notes h3{font-size:1.05rem;font-weight:700;margin-bottom:6px}
+.notes>p{font-size:.9rem;color:var(--sub);margin-bottom:14px}
+.steps{list-style:none;counter-reset:s}
+.steps li{position:relative;padding:0 0 14px 34px;font-size:.885rem;color:var(--sub)}
+.steps li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:1px;width:22px;height:22px;border-radius:50%;background:var(--p15);color:var(--primary-dark);font-size:.68rem;font-weight:800;display:flex;align-items:center;justify-content:center}
+.steps li strong{color:var(--text)}
+.steps li:not(:last-child)::after{content:'';position:absolute;left:10.5px;top:26px;bottom:2px;width:1px;background:var(--neutral-grey)}
+.bul{list-style:none;margin-top:6px}
+.bul li{position:relative;padding:5px 0 5px 20px;font-size:.875rem;color:var(--sub)}
+.bul li::before{content:'';position:absolute;left:4px;top:14px;width:6px;height:6px;border-radius:50%;background:var(--primary);opacity:.5}
+.bul li strong{color:var(--text)}
+
+/* callouts */
+.note{display:flex;gap:11px;align-items:flex-start;padding:13px 16px;border-radius:var(--r-lg);font-size:.875rem;margin:16px 0}
+.note svg{width:17px;height:17px;margin-top:3px}
+.note.info{background:var(--p10);border:1px solid var(--primary-light);color:var(--primary-dark)}
+.note.warn{background:rgba(217,161,74,.1);border:1px solid rgba(217,161,74,.35);color:#8A6516}
+.note.ok{background:rgba(77,168,137,.1);border:1px solid rgba(77,168,137,.32);color:#2E7A5C}
+.note.stop{background:rgba(217,89,89,.09);border:1px solid rgba(217,89,89,.32);color:#A63C3C}
+.note b{font-weight:700}
+
+/* role tabs */
+.roles{display:flex;justify-content:center;margin:8px 0 4px}
+.roletabs{display:inline-flex;background:var(--surface);border:1px solid var(--neutral);border-radius:var(--r-full);padding:5px;gap:4px;box-shadow:var(--shadow-sm)}
+.roletabs button{display:flex;align-items:center;gap:8px;padding:10px 26px;border:none;border-radius:var(--r-full);background:0;font-family:inherit;font-size:.9rem;font-weight:600;color:var(--sub);cursor:pointer;transition:all .22s}
+.roletabs button.on{background:var(--primary);color:#fff;box-shadow:0 3px 10px rgba(90,158,166,.32)}
+.roletabs button:not(.on):hover{background:var(--p10);color:var(--primary-dark)}
+.panel{display:none}
+.panel.on{display:block;animation:rise .35s ease}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ══════════════════════════════════════════════════════════════════
+   APP UI ELEMENTS — recreated from the Android app
+   ══════════════════════════════════════════════════════════════════ */
+.card{background:var(--surface);border-radius:var(--r-xl);padding:12px;box-shadow:var(--shadow-sm)}
+.mb8{margin-bottom:8px}.mb10{margin-bottom:10px}.mb12{margin-bottom:12px}
+
+/* login */
+.login{background:var(--bg);padding:26px 18px;text-align:center}
+.login img{width:64px;height:64px;object-fit:contain;margin-bottom:10px}
+.login h4{font-size:1rem;font-weight:700}
+.login p{font-size:.68rem;color:var(--sub);margin-bottom:16px}
+.field{background:var(--surface);border:1px solid var(--neutral);border-radius:var(--r);padding:9px 12px;display:flex;align-items:center;gap:9px;margin-bottom:9px;text-align:left;font-size:.72rem;color:var(--sec)}
+.field svg{width:13px;height:13px;color:var(--sub)}
+.field.filled{color:var(--text)}
+.btn{width:100%;border:none;border-radius:var(--r-xl);padding:11px;font-family:inherit;font-size:.78rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:filter .2s,transform .12s}
+.btn:active{transform:scale(.975)}
+.btn:hover{filter:brightness(1.05)}
+.btn.pri{background:var(--primary);color:#fff}
+.btn.suc{background:var(--success);color:#fff}
+.btn.sec{background:var(--p15);color:var(--primary-dark)}
+.btn.out{background:var(--surface);border:1.5px solid var(--neutral);color:var(--sub)}
+.btn.sm{padding:7px 12px;font-size:.68rem;width:auto;border-radius:var(--r-full)}
+
+/* greeting */
+.greet{padding:2px 2px 10px}
+.greet span{font-size:.68rem;color:var(--sub)}
+.greet b{display:block;font-size:.98rem;font-weight:700}
+
+/* progress ring card */
+.ringcard{background:var(--primary);border-radius:var(--r-xl);padding:14px;display:flex;align-items:center;gap:14px;box-shadow:0 4px 14px rgba(90,158,166,.28)}
+.ring{position:relative;width:64px;height:64px;flex-shrink:0}
+.ring svg{width:64px;height:64px;transform:rotate(-90deg)}
+.ring .trk{fill:none;stroke:rgba(255,255,255,.28);stroke-width:7}
+.ring .bar{fill:none;stroke:#fff;stroke-width:7;stroke-linecap:round;transition:stroke-dashoffset 1.4s cubic-bezier(.4,0,.2,1)}
+.ring .pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:.8rem}
+.ringcard .rx b{color:#fff;font-size:.82rem;font-weight:700;display:block}
+.ringcard .rx span{color:rgba(255,255,255,.8);font-size:.68rem}
+.ringcard .rx em{display:inline-block;margin-top:4px;font-style:normal;font-size:.6rem;font-weight:700;background:rgba(255,255,255,.2);color:#fff;padding:2px 8px;border-radius:var(--r-full)}
+
+/* dashboard grid */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.tile{background:var(--surface);border-radius:var(--r-xl);padding:12px 10px;text-align:center;position:relative;cursor:pointer;transition:transform .18s,box-shadow .18s;box-shadow:var(--shadow-sm)}
+.tile:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(90,158,166,.16)}
+.tile .ti{width:34px;height:34px;border-radius:50%;background:var(--p10);color:var(--primary);display:flex;align-items:center;justify-content:center;margin:0 auto 6px;font-size:16px}
+.tile b{font-size:.75rem;font-weight:700;display:block}
+.tile span{font-size:.62rem;color:var(--sub)}
+.badge{position:absolute;top:8px;right:8px;min-width:17px;height:17px;padding:0 5px;border-radius:var(--r-full);background:var(--error);color:#fff;font-size:.6rem;font-weight:800;display:flex;align-items:center;justify-content:center}
+.badge.ok{background:var(--success)}
+
+/* chips */
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.chip{border:1.5px solid var(--neutral);background:var(--surface);color:var(--sub);font-family:inherit;font-size:.66rem;font-weight:600;padding:5px 12px;border-radius:var(--r-full);cursor:pointer;transition:all .18s}
+.chip.on{background:var(--p15);border-color:var(--primary);color:var(--primary-dark)}
+.chip:hover:not(.on){border-color:var(--primary-light);color:var(--primary-dark)}
+
+/* list row (exercise / patient) */
+.row{background:var(--surface);border-radius:var(--r-xl);padding:11px 12px;display:flex;align-items:center;gap:10px;margin-bottom:8px;box-shadow:var(--shadow-sm);cursor:pointer;transition:transform .18s,box-shadow .18s}
+.row:hover{transform:translateX(2px);box-shadow:0 4px 14px rgba(90,158,166,.14)}
+.av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.68rem;font-weight:800;position:relative}
+.av.tealbg{background:var(--p15);color:var(--primary-dark)}
+.av.okbg{background:rgba(77,168,137,.14);color:var(--success)}
+.av.warnbg{background:rgba(217,161,74,.14);color:var(--warning)}
+.av .online{position:absolute;right:-1px;bottom:-1px;width:9px;height:9px;border-radius:50%;background:var(--success);border:2px solid var(--surface)}
+.rowb{flex:1;min-width:0}
+.rowb b{font-size:.76rem;font-weight:700;display:block}
+.rowb span{font-size:.64rem;color:var(--sub)}
+.pill{padding:3px 9px;border-radius:var(--r-full);font-size:.6rem;font-weight:800;flex-shrink:0}
+.pill.teal{background:var(--p15);color:var(--primary-dark)}
+.pill.ok{background:rgba(77,168,137,.14);color:var(--success)}
+.pill.warn{background:rgba(217,161,74,.16);color:#9C7220}
+.pill.grey{background:var(--slate100);color:var(--slate400)}
+
+/* workout player */
+.video{background:linear-gradient(150deg,#1A2426,#31454A);height:132px;display:flex;align-items:center;justify-content:center;position:relative;border-radius:var(--r-lg) var(--r-lg) 0 0}
+.video .play{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.22);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px}
+.tag{position:absolute;top:9px;left:9px;padding:3px 9px;border-radius:var(--r-sm);font-size:.58rem;font-weight:800;letter-spacing:.6px;color:#fff;background:#3B82F6}
+.tag.go{background:var(--success)}
+.tag.rest{background:var(--primary-dark)}
+.wbody{background:var(--surface);border-radius:0 0 var(--r-lg) var(--r-lg);padding:12px 14px 14px;text-align:center}
+.dots{display:flex;gap:7px;justify-content:center;margin-bottom:8px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--neutral-grey);transition:all .3s}
+.dot.on{background:var(--primary);transform:scale(1.3)}
+.dot.done{background:var(--success)}
+.reps{font-size:2.1rem;font-weight:800;line-height:1.05}
+.reps small{display:block;font-size:.62rem;font-weight:700;letter-spacing:1.5px;color:var(--sub)}
+.setof{font-size:.66rem;color:var(--sub);margin:2px 0 12px}
+.restring{width:82px;height:82px;margin:2px auto 0;position:relative}
+.restring svg{width:82px;height:82px;transform:rotate(-90deg)}
+.restring .rt2{fill:none;stroke:var(--neutral);stroke-width:6}
+.restring .rb2{fill:none;stroke:var(--success);stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset .2s linear}
+.restring .num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.35rem;font-weight:800}
+
+/* sliders */
+.fgroup{margin-bottom:13px}
+.flab{display:flex;justify-content:space-between;align-items:center;font-size:.7rem;font-weight:700;margin-bottom:5px}
+.flab em{font-style:normal;font-weight:800}
+.rng{-webkit-appearance:none;appearance:none;width:100%;height:5px;border-radius:3px;background:var(--neutral);outline:none}
+.rng::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;border-radius:50%;background:#fff;border:3px solid var(--primary);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.18)}
+.rng::-moz-range-thumb{width:17px;height:17px;border-radius:50%;background:#fff;border:3px solid var(--primary);cursor:pointer}
+.ends{display:flex;justify-content:space-between;font-size:.58rem;color:var(--sub);margin-top:3px}
+.ta{width:100%;border:1.5px solid var(--neutral);border-radius:var(--r);padding:8px 11px;font-family:inherit;font-size:.72rem;color:var(--text);resize:vertical;min-height:48px;background:var(--surface)}
+.ta:focus{outline:none;border-color:var(--primary)}
+.ta::placeholder{color:var(--sec)}
+
+/* charts */
+.donut{width:112px;height:112px;position:relative;margin:0 auto}
+.donut svg{width:112px;height:112px;transform:rotate(-90deg)}
+.seg{fill:none;stroke-width:16;transition:opacity .2s}
+.seg:hover{opacity:.7;cursor:pointer}
+.dcen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.dcen b{font-size:1.05rem;font-weight:800;line-height:1}
+.dcen span{font-size:.58rem;color:var(--sub)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;justify-content:center;margin-top:10px}
+.legend div{display:flex;align-items:center;gap:5px;font-size:.62rem;color:var(--sub)}
+.sw{width:8px;height:8px;border-radius:2px}
+.bars{display:flex;align-items:flex-end;gap:7px;height:86px;padding-top:6px}
+.bcol{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
+.bpair{display:flex;gap:2px;align-items:flex-end;height:66px}
+.b{display:block;width:9px;border-radius:3px 3px 0 0;height:0;transition:height .8s cubic-bezier(.4,0,.2,1)}
+.b.a{background:var(--primary)}
+.b.t{background:var(--neutral)}
+.blab{font-size:.55rem;font-weight:700;color:var(--sub)}
+.stats{display:flex;justify-content:space-around;background:var(--primary);border-radius:var(--r-xl);padding:12px 6px;box-shadow:0 4px 14px rgba(90,158,166,.26)}
+.stats div{text-align:center}
+.stats b{display:block;font-size:1.05rem;font-weight:800;color:#fff;line-height:1.2}
+.stats span{font-size:.56rem;color:rgba(255,255,255,.8);font-weight:600}
+
+/* schedule */
+.week{display:flex;gap:4px;justify-content:space-between;margin-bottom:10px}
+.day{flex:1;padding:7px 2px;border-radius:var(--r-lg);text-align:center;cursor:pointer;background:var(--surface);transition:background .18s,color .18s}
+.day:hover{background:var(--p10)}
+.day.today{background:var(--primary);color:#fff}
+.day .dn{font-size:.53rem;font-weight:700;letter-spacing:.4px;color:var(--sub);text-transform:uppercase}
+.day.today .dn{color:rgba(255,255,255,.8)}
+.day .dd{font-size:.82rem;font-weight:800;margin-top:1px}
+.day .dm{width:4px;height:4px;border-radius:50%;background:var(--primary);margin:3px auto 0}
+.day.today .dm{background:rgba(255,255,255,.75)}
+.appt{background:var(--surface);border-radius:var(--r-lg);padding:10px 11px;display:flex;gap:10px;align-items:center;margin-bottom:7px;box-shadow:var(--shadow-sm);border-left:3px solid var(--primary)}
+.appt .tm{font-size:.66rem;font-weight:800;color:var(--primary-dark);min-width:48px}
+.appt .ab{flex:1}
+.appt .ab b{font-size:.72rem;font-weight:700;display:block}
+.appt .ab span{font-size:.6rem;color:var(--sub)}
+
+/* chat */
+.chatwrap{background:var(--surface);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-sm)}
+.chathead{display:flex;align-items:center;gap:9px;padding:9px 11px;border-bottom:1px solid var(--neutral)}
+.chathead b{font-size:.74rem;display:block}
+.chathead span{font-size:.58rem;color:var(--success);font-weight:600}
+.thread{padding:11px;display:flex;flex-direction:column;gap:8px;max-height:190px;overflow-y:auto;background:var(--bg)}
+.thread::-webkit-scrollbar{width:3px}
+.thread::-webkit-scrollbar-thumb{background:var(--neutral-grey);border-radius:3px}
+.msg{max-width:78%;padding:8px 11px;border-radius:14px;font-size:.72rem;line-height:1.45}
+.msg .ts{font-size:.55rem;opacity:.65;margin-top:2px}
+.from-doc{align-self:flex-start;background:var(--slate100);border-bottom-left-radius:4px}
+.from-pat{align-self:flex-end;background:var(--primary);color:#fff;border-bottom-right-radius:4px}
+.from-pat .ts{text-align:right}
+.chatbar{display:flex;gap:7px;align-items:center;padding:8px 10px;border-top:1px solid var(--neutral)}
+.chatbar input{flex:1;border:1px solid var(--neutral);background:var(--bg);border-radius:var(--r-full);padding:7px 12px;font-family:inherit;font-size:.7rem;color:var(--text);outline:none}
+.chatbar input:focus{border-color:var(--primary)}
+.send{width:30px;height:30px;border-radius:50%;border:none;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.send:hover{background:var(--primary-dark)}
+
+/* notifications */
+.nrow{background:var(--surface);border-radius:var(--r-lg);padding:10px 11px;display:flex;gap:10px;align-items:flex-start;margin-bottom:7px;box-shadow:var(--shadow-sm);cursor:pointer}
+.nic{width:28px;height:28px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
+.nrow p{font-size:.71rem;font-weight:600;line-height:1.35}
+.nrow span{font-size:.58rem;color:var(--sub)}
+.ndot{width:7px;height:7px;border-radius:50%;background:#3B82F6;margin-top:5px;flex-shrink:0}
+
+/* exercise library thumbs */
+.thumbs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.thumb{background:var(--surface);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-sm);cursor:pointer;transition:transform .18s}
+.thumb:hover{transform:translateY(-2px)}
+.thumb .tv{height:56px;background:linear-gradient(150deg,#2A3A3D,#41585D);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.85);position:relative;font-size:15px}
+.thumb .lv{position:absolute;top:5px;left:5px;font-size:.52rem;font-weight:800;padding:2px 6px;border-radius:3px;background:rgba(255,255,255,.9);color:var(--primary-dark)}
+.thumb .tb{padding:7px 8px}
+.thumb b{font-size:.66rem;font-weight:700;display:block;line-height:1.3}
+.thumb span{font-size:.56rem;color:var(--sub)}
+
+/* profile */
+.phead{background:var(--surface);border-radius:var(--r-xl);padding:16px;text-align:center;box-shadow:var(--shadow-sm)}
+.phead .pav{width:56px;height:56px;border-radius:50%;background:var(--p15);color:var(--primary-dark);font-size:1.1rem;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 8px}
+.phead b{font-size:.88rem;font-weight:700;display:block}
+.phead span{font-size:.66rem;color:var(--sub)}
+.irow{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--neutral);font-size:.7rem}
+.irow:last-child{border-bottom:none}
+.irow span{color:var(--sub)}
+.irow b{font-weight:700}
+
+/* tabs inside phone */
+.mtabs{display:flex;background:var(--surface);border-radius:var(--r-full);padding:3px;margin-bottom:10px;box-shadow:var(--shadow-sm)}
+.mtabs button{flex:1;border:none;background:0;font-family:inherit;font-size:.68rem;font-weight:700;color:var(--sub);padding:6px;border-radius:var(--r-full);cursor:pointer;transition:all .2s}
+.mtabs button.on{background:var(--primary);color:#fff}
+
+/* metric strip */
+.metrics{display:flex;gap:6px;margin-top:8px}
+.metric{flex:1;background:var(--bg);border-radius:var(--r);padding:6px;text-align:center}
+.metric b{display:block;font-size:.8rem;font-weight:800}
+.metric span{font-size:.53rem;color:var(--sub);font-weight:600}
+
+/* ══════════ FEATURE MATRIX ══════════ */
+.matrix{width:100%;border-collapse:collapse;background:var(--surface);border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow-sm);font-size:.87rem}
+.matrix th,.matrix td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--neutral)}
+.matrix th{background:var(--p10);font-weight:700;font-size:.78rem;letter-spacing:.4px;text-transform:uppercase;color:var(--primary-dark)}
+.matrix td:not(:first-child),.matrix th:not(:first-child){text-align:center;width:100px}
+.matrix tr:last-child td{border-bottom:none}
+.yes{color:var(--success);font-weight:800}
+.no{color:var(--neutral-grey);font-weight:800}
+.scrollx{overflow-x:auto}
+
+/* ══════════ FAQ ══════════ */
+.faq{background:var(--surface);border:1px solid var(--neutral);border-radius:var(--r-lg);margin-bottom:8px;overflow:hidden;transition:border-color .2s,box-shadow .2s}
+.faq:hover{border-color:var(--primary-light)}
+.faq.open{border-color:var(--primary-light);box-shadow:var(--shadow-sm)}
+.faq>button{width:100%;border:none;background:0;font-family:inherit;font-size:.9rem;font-weight:600;color:var(--text);text-align:left;padding:14px 18px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.faq>button:hover{color:var(--primary-dark)}
+.faq .chev{width:17px;height:17px;color:var(--sub);transition:transform .28s}
+.faq.open .chev{transform:rotate(180deg)}
+.faq .ans{max-height:0;overflow:hidden;transition:max-height .3s ease,padding .3s ease;font-size:.875rem;color:var(--sub)}
+.faq.open .ans{max-height:340px;padding:0 18px 15px}
+.faq .ans a{color:var(--primary-dark)}
+
+/* ══════════ HELP BANNER + FOOTER ══════════ */
+.helpbox{background:linear-gradient(140deg,var(--primary-dark),var(--primary));border-radius:var(--r-xxl);padding:34px 32px;color:#fff;display:flex;flex-wrap:wrap;gap:20px;align-items:center;justify-content:space-between;margin:36px 0 8px}
+.helpbox h3{font-size:1.25rem;font-weight:700}
+.helpbox p{font-size:.92rem;color:rgba(255,255,255,.85);max-width:52ch;margin-top:4px}
+.helpbox a{background:#fff;color:var(--primary-dark);text-decoration:none;font-weight:700;font-size:.9rem;padding:12px 24px;border-radius:var(--r-full);white-space:nowrap;display:inline-flex;gap:8px;align-items:center}
+footer{background:var(--surface);border-top:1px solid var(--neutral);padding:30px 0;margin-top:24px}
+.foot{max-width:1240px;margin:0 auto;padding:0 24px;display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:center;font-size:.85rem;color:var(--sub)}
+.foot a{color:var(--primary-dark);text-decoration:none;margin-right:16px}
+.foot a:hover{text-decoration:underline}
+#top{position:fixed;right:22px;bottom:22px;width:42px;height:42px;border-radius:50%;background:var(--primary);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:150}
+#top.show{opacity:1;pointer-events:auto}
+#top:hover{background:var(--primary-dark);transform:translateY(-2px)}
+
+/* ══════════ RESPONSIVE ══════════ */
+@media(max-width:1080px){
+  .hero-in{grid-template-columns:1fr;gap:0}
+  .hero-phone{display:none}
+  .hero-jump{margin-bottom:44px}
+  .layout{grid-template-columns:1fr;gap:0;padding-top:20px}
+  .side{position:static;max-height:none;margin-bottom:24px;background:var(--surface);border:1px solid var(--neutral);border-radius:var(--r-xl);padding:0;overflow:hidden}
+  .side-toggle{display:flex;width:100%;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px;border:none;background:0;font-family:inherit;font-size:.92rem;font-weight:700;color:var(--text);cursor:pointer}
+  .side-toggle .chev{width:17px;height:17px;transition:transform .25s}
+  .side.open .side-toggle .chev{transform:rotate(180deg)}
+  .side-body{display:none;padding:0 12px 14px}
+  .side.open .side-body{display:block}
+  .side h4{padding-left:12px}
+}
+@media(max-width:860px){
+  .walk,.walk.flip{grid-template-columns:1fr;gap:22px;justify-items:center}
+  .walk.flip .dev{order:-1}
+  .notes{width:100%}
+  .helpbox{padding:26px 22px}
+}
+@media(max-width:520px){
+  .nav-links a:not(.cta){display:none}
+  .nav{padding:10px 16px}
+  .wrap{padding:0 16px}
+  .hero{padding-top:44px}
+  .roletabs button{padding:9px 16px;font-size:.84rem}
+  .sec-head h2{font-size:1.2rem}
+  .phone{width:270px}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ ICON SPRITE ═══ -->
+<svg style="display:none" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></symbol>
+  <symbol id="i-dumbbell" viewBox="0 0 24 24"><path d="M6.5 6.5h11M6.5 17.5h11"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="6.5" r="2.5"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="i-useradd" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+  <symbol id="i-checkc" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+  <symbol id="i-skip" viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4" fill="currentColor" stroke="none"/><line x1="19" y1="5" x2="19" y2="19"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></symbol>
+  <symbol id="i-activity" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22 6 12 13 2 6"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+  <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M8.5 16.11a6 6 0 0 1 7 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></symbol>
+  <symbol id="i-batt" viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2"/><line x1="23" y1="11" x2="23" y2="13"/></symbol>
+  <symbol id="i-video" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></symbol>
+</svg>
+
+<!-- ═══ HEADER ═══ -->
+<header>
+  <nav class="nav">
+    <a class="brand" href="/">
+      <img src="/sr_logo.png" alt="RehabCardia logo">
+      <span><b>RehabCardia</b><small>User Manual</small></span>
+    </a>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="#getting-started">Getting Started</a>
+      <a href="#patient-guide">Patient</a>
+      <a href="#doctor-guide">Doctor</a>
+      <a href="#faq">FAQ</a>
+      <a class="cta" href="mailto:sr.cardiocare@gmail.com">Contact</a>
+    </div>
+  </nav>
+  <div id="bar"></div>
+</header>
+
+<!-- ═══ HERO ═══ -->
+<div class="hero">
+  <div class="hero-in">
+    <div>
+      <span class="eyebrow"><svg class="ic"><use href="#i-book"/></svg>Version 1.0 · Android</span>
+      <h1>The RehabCardia<br>User Manual</h1>
+      <p class="lede">A screen-by-screen walkthrough of the app — every card, chart, timer and form you will meet, recreated right here on the page so you know exactly what to expect before you tap it.</p>
+      <div class="hero-jump">
+        <a class="jump solid" href="#getting-started"><svg class="ic"><use href="#i-play"/></svg>Start here</a>
+        <a class="jump" href="#patient-guide"><svg class="ic"><use href="#i-user"/></svg>Patient guide</a>
+        <a class="jump" href="#doctor-guide"><svg class="ic"><use href="#i-activity"/></svg>Doctor guide</a>
+      </div>
+    </div>
+    <div class="hero-phone">
+      <div class="phone">
+        <div class="status"><span>9:41</span><span class="rt"><svg class="ic"><use href="#i-wifi"/></svg><svg class="ic"><use href="#i-batt"/></svg></span></div>
+        <div class="appbar">
+          <img src="/sr_logo.png" alt="">
+          <span class="t"><b>RehabCardia</b><span>A digital health platform for Cardiac rehabilitation</span></span>
+          <span class="help">?</span>
+        </div>
+        <div class="screen">
+          <div class="greet"><span>Good Morning,</span><b>Shane</b></div>
+          <div class="ringcard mb10">
+            <div class="ring">
+              <svg viewBox="0 0 64 64"><circle class="trk" cx="32" cy="32" r="27"/><circle class="bar heroring" cx="32" cy="32" r="27" stroke-dasharray="169.6" stroke-dashoffset="169.6"/></svg>
+              <span class="pct">67%</span>
+            </div>
+            <div class="rx"><b>Today's Progress</b><span>2 of 3 exercises</span><br><em>Expires in 12 days</em></div>
+          </div>
+          <div class="grid2">
+            <div class="tile"><span class="badge">1</span><span class="ti"><svg class="ic"><use href="#i-dumbbell"/></svg></span><b>Exercises</b><span>3 assigned</span></div>
+            <div class="tile"><span class="ti"><svg class="ic"><use href="#i-cal"/></svg></span><b>Schedule</b><span>View appointments</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+<div class="layout">
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside class="side" id="side">
+  <button class="side-toggle" onclick="document.getElementById('side').classList.toggle('open')">
+    Contents <svg class="ic chev"><use href="#i-chev"/></svg>
+  </button>
+  <div class="side-body">
+    <h4>Start</h4>
+    <a href="#getting-started"><svg class="ic"><use href="#i-lock"/></svg>Getting Started</a>
+    <a href="#overview"><svg class="ic"><use href="#i-home"/></svg>What's in the App</a>
+    <h4>Patient Guide</h4>
+    <a href="#patient-guide"><svg class="ic"><use href="#i-home"/></svg>Patient Dashboard</a>
+    <a href="#patient-exercises"><svg class="ic"><use href="#i-dumbbell"/></svg>Exercises &amp; Workouts</a>
+    <a href="#patient-feedback"><svg class="ic"><use href="#i-activity"/></svg>Post-Workout Feedback</a>
+    <a href="#patient-progress"><svg class="ic"><use href="#i-chart"/></svg>Progress &amp; Analytics</a>
+    <a href="#patient-schedule"><svg class="ic"><use href="#i-cal"/></svg>Schedule</a>
+    <a href="#patient-chat"><svg class="ic"><use href="#i-chat"/></svg>Messaging</a>
+    <a href="#patient-profile"><svg class="ic"><use href="#i-user"/></svg>Your Profile</a>
+    <h4>Doctor Guide</h4>
+    <a href="#doctor-guide"><svg class="ic"><use href="#i-activity"/></svg>Doctor Dashboard</a>
+    <a href="#doctor-patients"><svg class="ic"><use href="#i-users"/></svg>Managing Patients</a>
+    <a href="#doctor-exercises"><svg class="ic"><use href="#i-book"/></svg>Exercise Library</a>
+    <a href="#doctor-assign"><svg class="ic"><use href="#i-plus"/></svg>Assigning Exercises</a>
+    <a href="#doctor-feedback"><svg class="ic"><use href="#i-chat"/></svg>Reviewing Feedback</a>
+    <a href="#doctor-schedule"><svg class="ic"><use href="#i-cal"/></svg>Schedule Management</a>
+    <h4>Everyone</h4>
+    <a href="#notifications"><svg class="ic"><use href="#i-bell"/></svg>Notifications</a>
+    <a href="#faq"><svg class="ic"><use href="#i-help"/></svg>FAQ</a>
+  </div>
+</aside>
+
+<!-- ═══ CONTENT ═══ -->
+<main>
+
+<!-- ─── GETTING STARTED ─── -->
+<section class="sec" id="getting-started">
+  <div class="sec-head">
+    <span class="sec-ico"><svg class="ic"><use href="#i-lock"/></svg></span>
+    <div><h2>Getting Started</h2><p class="sub">From clinic credentials to your first sign-in</p></div>
+  </div>
+  <p class="lead">RehabCardia accounts are issued by your clinic — there is no public sign-up. Once your doctor creates your account you will receive an email address and a temporary password to sign in with.</p>
+
+  <div class="walk">
+    <div class="dev">
+      <div class="phone">
+        <div class="status"><span>9:41</span><span class="rt"><svg class="ic"><use href="#i-wifi"/></svg><svg class="ic"><use href="#i-batt"/></svg></span></div>
+        <div class="login">
+          <img src="/sr_logo.png" alt="RehabCardia logo">
+          <h4>RehabCardia</h4>
+          <p>A digital health platform for Cardiac rehabilitation</p>
+          <div class="rel"><span class="hot tl">1</span>
+            <div class="field filled"><svg class="ic"><use href="#i-mail"/></svg>shane.b@example.com</div>
+          </div>
+          <div class="rel"><span class="hot tl">2</span>
+            <div class="field">
+              <svg class="ic"><use href="#i-lock"/></svg>••••••••
+            </div>
+          </div>
+          <div class="rel"><span class="hot tr">3</span>
+            <button class="btn pri">Sign In</button>
+          </div>
+          <p style="margin-top:14px;font-size:.6rem">Accounts are created by your clinic.<br>Contact your doctor for access.</p>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <h3>Signing in for the first time</h3>
+      <p>The login screen is the same for patients and doctors — the app reads your role from your account and opens the right dashboard automatically.</p>
+      <ol class="steps">
+        <li><strong>Enter your email</strong> — use the exact address your clinic registered. It is not case-sensitive.</li>
+        <li><strong>Enter your temporary password</strong> — the one supplied by your doctor or clinic administrator.</li>
+        <li><strong>Tap Sign In</strong> — patients land on the Patient Home screen, doctors on the Doctor Dashboard.</li>
+        <li><strong>Change your password</strong> — open <b>Profile → Change Password</b> straight away and set a private one.</li>
+      </ol>
+      <div class="note info"><svg class="ic"><use href="#i-info"/></svg><span><b>First launch:</b> a guided onboarding tour runs automatically and highlights each part of the screen. You can replay it any time with the <b>?</b> button in the top bar.</span></div>
+      <div class="note warn"><svg class="ic"><use href="#i-alert"/></svg><span><b>Requirements:</b> RehabCardia runs on Android 8.0 and above, and needs an internet connection to sync your exercises, feedback and messages.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── OVERVIEW ─── -->
+<section class="sec" id="overview">
+  <div class="sec-head">
+    <span class="sec-ico"><svg class="ic"><use href="#i-home"/></svg></span>
+    <div><h2>What's in the App</h2><p class="sub">Which features belong to which role</p></div>
+  </div>
+  <p class="lead">Both roles share one app. What you can see and do depends on whether your account is a patient account or a doctor account.</p>
+  <div class="scrollx">
+    <table class="matrix">
+      <thead><tr><th>Feature</th><th>Patient</th><th>Doctor</th></tr></thead>
+      <tbody>
+        <tr><td>Guided video workouts with sets, reps and rest timers</td><td class="yes">✓</td><td class="no">—</td></tr>
+        <tr><td>Post-workout feedback (pain, Borg scales, pulse, notes)</td><td class="yes">Submit</td><td class="yes">Review</td></tr>
+        <tr><td>Progress charts and session history</td><td class="yes">Own data</td><td class="yes">All patients</td></tr>
+        <tr><td>Exercise library with video previews</td><td class="no">—</td><td class="yes">✓</td></tr>
+        <tr><td>Creating and editing assignments</td><td class="no">—</td><td class="yes">✓</td></tr>
+        <tr><td>Appointments</td><td class="yes">Request</td><td class="yes">Create &amp; approve</td></tr>
+        <tr><td>Secure in-app messaging</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr><td>Push notifications &amp; reminders</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══ ROLE TABS ═══ -->
+<div class="roles" style="padding-top:26px">
+  <div class="roletabs">
+    <button class="on" data-role="patient" onclick="setRole('patient')"><svg class="ic"><use href="#i-user"/></svg>Patient Guide</button>
+    <button data-role="doctor" onclick="setRole('doctor')"><svg class="ic"><use href="#i-activity"/></svg>Doctor Guide</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     PATIENT PANEL
+     ══════════════════════════════════════════════════════════════ -->
+<div class="panel on" id="p-patient">
+
+<!-- Dashboard -->
+<section class="sec" id="patient-guide">
+  <div class="sec-head">
+    <span class="sec-ico"><svg class="ic"><use href="#i-home"/></svg></span>
+    <div><h2>Patient Dashboard</h2><p class="sub">Your home screen and daily starting point</p></div>
+  </div>
+  <p class="lead">After signing in you land on Patient Home. It greets you by name, shows how much of today's programme you have finished, and gives you six shortcuts to the rest of the app.</p>
+
+  <div class="walk">
+    <div class="dev">
+      <div class="phone">
+        <div class="status"><span>9:41</span><span class="rt"><svg class="ic"><use href="#i-wifi"/></svg><svg class="ic"><use href="#i-batt"/></svg></span></div>
+        <div class="appbar rel"><span class="hot tr">3</span>
+          <img src="/sr_logo.png" alt="">
+          <span class="t"><b>RehabCardia</b><span>A digital health platform for Cardiac rehabilitation</span></span>
+          <span class="help">?</span>
+        </div>
+        <div class="screen">
+          <div class="greet"><span>Good Morning,</span><b>Shane</b></div>
+          <div class="ringcard mb10 rel" id="ringDemo"><span class="hot tl">1</span>
+            <div class="ring">
+              <svg viewBox="0 0 64 64"><circle class="trk" cx="32" cy="32" r="27"/><circle class="bar" id="mainRing" cx="32" cy="32" r="27" stroke-dasharray="169.6" stroke-dashoffset="169.6"/></svg>
+              <span class="pct">67%</span>
+            </div>
+            <div class="rx"><b>Today's Progress</b><span>2 of 3 exercises</span><br><em>Expires in 12 days</em></div>
+          </div>
+          <div class="grid2">
+            <div class="tile rel"><span class="hot tl">2</span><span class="badge">1</span><span class="ti"><svg class="ic"><use href="#i-dumbbell"/></svg></span><b>Exercises</b><span>3 assigned</span></div>
+            <div class="tile"><span class="ti"><svg class="ic"><use href="#i-cal"/></svg></span><b>Schedule</b><span>View appointments</span></div>
+            <div class="tile"><span class="ti"><svg class="ic"><use href="#i-chart"/></svg></span><b>Progress</b><span>Track your stats</span></div>
+            <div class="tile"><span class="ti"><svg class="ic"><use href="#i-chat"/></svg></span><b>Messages</b><span>Chat with doctor</span></div>
+            <div class="tile"><span class="ti"><svg class="ic"><use href="#i-bell"/></svg></span><b>Notifications</b><span>View alerts</span></div>
+            <div class="tile"><span class="ti"><svg class="ic"><use href="#i-user"/></svg></span><b>Profile</b><span>Your account</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <h3>Reading your home screen</h3>
+      <ol class="steps">
+        <li><strong>Today's Progress ring</strong> — the teal card fills as you complete each assignment for the day. The caption counts completed exercises, and the pill underneath warns you when your current plan is about to expire.</li>
+        <li><strong>Navigation cards</strong> — six shortcuts: Exercises, Schedule, Progress, Messages, Notifications and Profile. The red badge on <b>Exercises</b> is the number still outstanding today; it disappears once everything is done.</li>
+        <li><strong>Help button</strong> — the <b>?</b> in the top bar replays the guided tour for whichever screen you are on.</li>
+      </ol>
+      <div class="note ok"><svg class="ic"><use href="#i-checkc"/></svg><span><b>Pull down to refresh.</b> The home screen also refreshes itself whenever you return to it from another screen, so progress is always current.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- Exercises -->
+<section class="sec" id="patient-exercises">
+  <div class="sec-head">
+    <span class="sec-ico"><svg class="ic"><use href="#i-dumbbell"/></svg></span>
+    <div><h2>Exercises &amp; Workouts</h2><p class="sub">Your assignments and the guided workout player</p></div>
+  </div>
+  <p class="lead">Tap <b>Exercises</b> to see everything your doctor has prescribed. Each card shows the exercise name, its sets and reps, its category, and how many of today's sessions you have already completed.</p>
+
+  <div class="walk">
+    <div class="dev">
+      <div class="phone">
+        <div class="status"><span>9:41</span><span class="rt"><svg class="ic"><use href="#i-wifi"/></svg><svg class="ic"><use href="#i-batt"/></svg></span></div>
+        <div class="appbar"><span class="back"><svg class="ic"><use href="#i-back"/></svg></span><span class="t"><b>My Exercises</b><span>3 active assignments</span></span><span class="help">?</span></div>
+        <div class="screen">
+          <div class="chips rel"><span class="hot tl">1</span>
+            <button class="chip on">All</button><button class="chip">Cardio</button><button class="chip">Stretching</button><button class="chip">Strength</button>
+          </div>
+          <div class="row rel"><span class="hot tl">2</span>
+            <span class="av tealbg"><svg class="ic" style="color:var(--primary)"><use href="#i-play"/></svg></span>
+            <span class="rowb"><b>Wall Push-Ups</b><span>3 sets · 10 reps · Cardio</span></span>
+            <span class="pill teal">1/3</span>
+          </div>
+          <div class="row">
+            <span class="av tealbg"><svg class="ic" style="color:var(--primary)"><use href="#i-play"/></svg></span>
+            <span class="rowb"><b>Seated Arm Raises</b><span>3 sets · 12 reps · Stretching</span></span>
+            <span class="pill teal">0/2</span>
+          </div>
+          <div class="row rel"><span class="hot tl">3</span>
+            <span class="av okbg"><svg class="ic"><use href="#i-checkc"/></svg></span>
+            <span class="rowb"><b>Ankle Pumps</b><span>2 sets · 15 reps · Beginner</span></span>
+            <span class="pill ok">DONE</span>
+          </div>
+          <div class="card" style="margin-top:10px;text-align:center">
+            <p style="font-size:.66rem;color:var(--sub)">Plan period<br><b style="color:var(--text);font-size:.72rem">12 Jul — 08 Aug 2026</b></p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <h3>Your assignment list</h3>
+      <ol class="steps">
+        <li><strong>Category filters</strong> — narrow the list down to one type of exercise when you have several assignments running.</li>
+        <li><strong>Session counter</strong> — <b>1/3</b> means you have finished one of the three sessions prescribed for today. Tap the card to start the next one.</li>
+        <li><strong>Completed today</strong> — a green tick and a <b>DONE</b> pill mean this assignment is finished for the day. It resets automatically tomorrow.</li>
+      </ol>
+      <div class="note info"><svg class="ic"><use href="#i-info"/></svg><span>Assignments only appear between the start and end dates your doctor set. If a plan expires, ask your doctor to extend or replace it.</span></div>
+    </div>
+  </div>
+
+  <h3 class="h3">The workout player</h3>
+  <p class="lead">Starting an exercise opens the guided player. It loops through three phases for every set — <b>DEMO</b>, <b>GO</b> and <b>REST</b> — so you always know what to do next. Try it below: the buttons work exactly like the app.</p>
+
+  <div class="walk flip">
+    <div class="notes">
+      <h3>How a session runs</h3>
+      <ol class="steps">
+        <li><strong>DEMO</strong> — the blue tag marks the demonstration phase. Watch the video your doctor attached, then tap <b>I'm Ready</b>.</li>
+        <li><strong>GO</strong> — the tag turns green. Perform the reps at your own pace and tap <b>Set Done</b> when you finish.</li>
+        <li><strong>REST</strong> — a countdown runs for the rest period your doctor prescribed, with audio cues in the last three seconds. Tap <b>Skip Rest</b> to move on early.</li>
+        <li><strong>Repeat</strong> — the dots above the rep counter fill in as each set completes. After the last set the session is saved and the feedback form opens.</li>
+      </ol>
+      <div class="note warn"><svg class="ic"><use href="#i-alert"/></svg><span>Closing the player mid-session asks <b>"End workout?"</b>. Choosing <b>End</b> abandons the session and it will not count towards today's progress.</span></div>
+    </div>
+    <div class="dev">
+      <div class="phone">
+        <div class="status"><span>9:41</span><span class="rt"><svg class="ic"><use href="#i-wifi"/></svg><svg class="ic"><use href="#i-batt"/></svg></span></div>
+        <div class="appbar"><span class="back"><svg class="ic"><use href="#i-back"/></svg></span><span class="t"><b>Wall Push-Ups</b><span>Session 2 of 3</span></span></div>
+        <div class="screen">
+          <div id="wPlay">
+            <div class="video">
+              <span class="tag" id="wTag">DEMO</span>
+              <span class="play"><svg class="ic"><use href="#i-play"/></svg></span>
+            </div>
+            <div class="wbody">
+              <div class="dots" id="wDots"><span class="dot done"></span><span class="dot on"></span><span class="dot"></span></div>
+              <div class="reps" id="wReps">10<small>REPS</small></div>
+              <div class="setof" id="wSet">Set 2 of 3</div>
+              <button class="btn pri" id="wBtn" onclick="wNext()"><svg class="ic"><use href="#i-play"/></svg><span id="wBtnT">I'm Ready</span></button>
+            </div>
+          </div>
+          <div id="wRest" style="display:none">
+            <div class="video" style="height:132px;flex-direction:column;gap:6px">
+              <span class="tag rest">REST</span>
+              <div class="restring">
+                <svg viewBox="0 0 82 82"><circle class="rt2" cx="41" cy="41" r="36"/><circle class="rb2" id="rBar" cx="41" cy="41" r="36" stroke-dasharray="226.2" stroke-dashoffset="0"/></svg>
+                <span class="num" style="color:#fff" id="rNum">45</span>
+              </div>
+            </div>
+            <div class="wbody">
+              <div class="setof" style="margin:0 0 4px">Up next</div>
+              <div style="font-size:.86rem;font-weight:800;margin-bottom:12px" id="rNext">Set 3 of 3</div>
+              <button class="btn suc" onclick="skipRest()"><svg class="ic"><use href="#i-skip"/></svg>Skip Rest</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Feedback -->
+<section class="sec" id="patient-feedback">
+  <div class="sec-head">
+    <span class="sec-ico"><svg class="ic"><use href="#i-activity"/></svg></span>
+    <div><h2>Post-Workout Feedback</h2><p class="sub">Tell your care team how the session felt</p></div>
+  </div>
+  <p class="lead">As soon as the last set is done, the feedback form opens. It takes under a minute and goes straight to your doctor — it is the main way they know whether your programme is working. The form below is live; try it.</p>
+
+  <div class="walk">
+    <div class="dev">
+      <div class="phone">
+        <div class="status"><span>9:41</span><span class="rt"><svg class="ic"><use href="#i-wifi"/></svg><svg class="ic"><use href="#i-batt"/></svg></span></div>
+        <div class="appbar"><span class="t" style="padding-left:2px"><b>Post-Workout Feedback</b><span>Wall Push-Ups · Session 2</span></span></div>
+        <div class="screen">
+          <div class="card mb8 rel"><span class="hot tl">1</span>
+            <div class="flab"><span>Did you experience any pain?</span></div>
+            <div class="chips" style="margin:6px 0 0">
+              <button class="chip" onclick="painPick(this,true)">Yes</button>
+              <button class="chip on" onclick="painPick(this,false)">No</button>
+            </div>
+            <div id="painLoc" style="display:none;margin-top:10px">
+              <div class="flab"><span>Where is the pain?</span></div>
+              <div class="chips" style="margin:6px 0 0">
+                <button class="chip" onclick="pick(this)">Left Arm</button>
+                <button class="chip" onclick="pick(this)">Right Arm</button>
+                <button class="chip" onclick="pick(this)">Chest</button>
+                <button class="chip" onclick="pick(this)">Head</button>
+                <button class="chip" onclick="pick(this)">Other</button>
+              </div>
+            </div>
+          </div>
+          <div class="card mb8 rel"><span class="hot tl">2</span>
+            <div class="fgroup" style="margin-bottom:10px">
+              <div class="flab"><span>Pain intensity (Borg scale)</span><em id="painV" style="color:var(--success)">0</em></div>
+              <input type="range" class="rng" min="0" max="10" value="0" oninput="borg(this,'painV')">
+              <div class="ends"><span>No pain (0)</span><span>Worst (10)</span></div>
+            </div>
+            <div class="fgroup" style="margin-bottom:0">
+              <div class="flab"><span>Respiration (Borg scale)</span><em id="respV" style="color:var(--success)">0</em></div>
+              <input type="range" class="rng" min="0" max="10" value="0" oninput="borg(this,'respV')">
+              <div class="ends"><span>Easy (0)</span><span>Severe (10)</span></div>
+            </div>
+          </div>
+          <div class="card mb8 rel"><span class="hot tl">3</span>
+            <div class="flab"><span>Pulse rate</span></div>
+            <input class="ta" style="min-height:auto;padding:8px 11px" type="number" min="30" max="250" placeholder="Beats per minute (bpm)">
+          </div>
+          <div class="card mb8">
+            <div class="flab"><span>Typed feedback / notes</span></div>
+            <textarea class="ta" placeholder="Sent to your doctor — how did it feel?"></textarea>
+          </div>
+          <button class="btn pri" onclick="this.textContent='Feedback Submitted ✓';this.classList.remove('pri');this.classList.add('suc')">Submit Feedback</button>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <h3>What each field means</h3>
+      <ol class="steps">
+        <li><strong>Pain — yes or no</strong>. Answering <b>Yes</b> reveals the location chips so you can point your doctor at exactly where it hurt.</li>
+        <li><strong>Borg scales</strong> — two 0–10 sliders. The first rates how much it hurt, the second how hard your breathing was. The number changes colour as it climbs: green, amber, then red.</li>
+        <li><strong>Pulse rate</strong> — optional but useful. Measure your pulse right after the session; the app accepts 30–250 bpm.</li>
+      </ol>
+      <p style="font-size:.885rem;color:var(--sub);margin-top:4px">Notes are free text and go into the same feedback thread your doctor reads, so anything unusual — dizziness, an ache the next day, a missed session — belongs here.</p>
+      <div class="note stop"><svg class="ic"><use href="#i-alert"/></svg><span><b>Stop and get help immediately</b> if you have chest pain, severe breathlessness, fainting or dizziness during or after exercise. Call your local emergency number — do not wait for a reply in the app.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- Progress -->
+<section class="sec" id="patient-progress">
+  <div class="sec-head">
+    <span class="sec-ico"><svg class="ic"><use href="#i-chart"/></svg></span>
+    <div><h2>Progress &amp; Analytics</h2><p class="sub">See your recovery build up over time</p></div>
+  </div>
+  <p class="lead">The Progress screen turns every completed session into a picture: an overall compliance donut, a week-by-week comparison against target, and a running total of the work you have put in.</p>
+
+  <div class="walk">
+    <div class="dev">
+      <div class="phone">
+        <div class="status"><span>9:41</span><span class="rt"><svg class="ic"><use href="#i-wifi"/></svg><svg class="ic"><use href="#i-batt"/></svg></span></div>
+        <div class="appbar"><span class="back"><svg class="ic"><use href="#i-back"/></svg></span><span class="t"><b>My Progress</b><span>Last 7 days</span></span><span class="help">?</span></div>
+        <div class="screen">
+          <div class="stats mb10">
+            <div><b>24</b><span>SESSIONS</span></div>
+            <div><b>70%</b><span>COMPLIANCE</span></div>
+            <div><b>5</b><span>DAY STREAK</span></div>
+          </div>
+          <div class="card mb8 rel"><span class="hot tl">1</span>
+            <div class="flab" style="margin-bottom:8px"><span>Completion overview</span></div>
+            <div class="donut">
+              <svg viewBox="0 0 112 112">
+                <circle class="seg" cx="56" cy="56" r="44" stroke="#4DA889" stroke-dasharray="193.5 82.9"/>
+                <circle class="seg" cx="56" cy="56" r="44" stroke="#D9A14A" stroke-dasharray="55.3 221.1" stroke-dashoffset="-193.5"/>
+                <circle class="seg" cx="56" cy="56" r="44" stroke="#D95959" stroke-dasharray="27.6 248.8" stroke-dashoffset="-248.8"/>
+              </svg>
+              <span class="dcen"><b>70%</b><span>Compliance</span></span>
+            </div>
+            <div class="legend">
+              <div><span class="sw" style="background:#4DA889"></span>Completed 70%</div>
+              <div><span class="sw" style="background:#D9A14A"></span>Partial 20%</div>
+              <div><span class="sw" style="background:#D95959"></span>Missed 10%</div>
+            </div>
+          </div>
+          <div class="card rel"><span class="hot tl">2</span>
+            <div class="flab" style="margin-bottom:2px"><span>This week</span></div>
+            <div class="bars" id="barChart">
+              <div class="bcol"><div class="bpair"><i class="b a" data-h="65"></i><i class="b t" data-h="80"></i></div><span class="blab">M</span></div>
+              <div class="bcol"><div class="bpair"><i class="b a" data-h="80"></i><i class="b t" data-h="80"></i></div><span class="blab">T</span></div>
+              <div class="bcol"><div class="bpair"><i class="b a" data-h="50"></i><i class="b t" data-h="80"></i></div><span class="blab">W</span></div>
+              <div class="bcol"><div class="bpair"><i class="b a" data-h="80"></i><i class="b t" data-h="80"></i></div><span class="blab">T</span></div>
+              <div class="bcol"><div class="bpair"><i class="b a" data-h="72"></i><i class="b t" data-h="80"></i></div><span class="blab">F</span></div>
+              <div class="bcol"><div class="bpair"><i class="b a" data-h="40"></i><i class="b t" data-h="80"></i></div><span class="blab">S</span></div>
+              <div class="bcol"><div class="bpair"><i class="b a" data-h="6"></i><i class="b t" data-h="80"></i></div><span class="blab">S</span></div>
+            </div>
+            <div class="legend" style="margin-top:4px">
+              <div><span class="sw" style="background:var(--primary)"></span>Completed</div>
+              <div><span class="sw" style="background:var(--neutral)"></span>Target</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <h3>Reading your charts</h3>
+      <ol class="steps">
+        <li><strong>Completion donut</strong> — the share of prescribed sessions you finished, partly finished, or missed over the selected period. Compliance is the number your doctor watches most.</li>
+        <li><strong>Weekly bars</strong> — teal is what you actually completed, grey is the target set by your assignment. A short teal bar next to a full grey one marks a day worth catching up on.</li>
+      </ol>
+      <ul class="bul">
+        <li><strong>Session history</strong> — every workout is logged with its date, the exercise, sets completed, and both total and active duration.</li>
+        <li><strong>Health metrics</strong> — your Borg pain and respiration scores are plotted over time so improvements are easy to see.</li>
+        <li><strong>Streaks</strong> — consecutive days with all assignments completed.</li>
+      </ul>
+      <div class="note info"><svg class="ic"><use href="#i-info"/></svg><span>Your doctor sees these same charts from their side, which is why honest feedback after each session matters more than a perfect-looking score.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- Schedule -->
+<section class="sec" id="patient-schedule">
+  <div class="sec-head">
+    <span class="sec-ico"><svg class="ic"><use href="#i-cal"/></svg></span>
+    <div><h2>Schedule &amp; Appointments</h2><p class="sub">Clinic visits and consultations</p></div>
+  </div>
+
+  <div class="walk">
+    <div class="dev">
+      <div class="phone">
+        <div class="status"><span>9:41</span><span class="rt"><svg class="ic"><use href="#i-wifi"/></svg><svg class="ic"><use href="#i-batt"/></svg></span></div>
+        <div class="appbar"><span class="back"><svg class="ic"><use href="#i-back"/></svg></span><span class="t"><b>Schedule</b><span>2 appointments today</span></span><span class="help">?</span></div>
+        <div class="screen">
+          <div class="rel" style="margin-bottom:2px"><span class="hot tl">1</span>
+            <div class="week" id="weekStrip"></div>
+          </div>
+          <div class="rel"><span class="hot tl">2</span>
+            <div class="appt">
+              <span class="tm">10:30 AM</span>
+              <span class="ab"><b>Follow-up Consultation</b><span>Dr. Ajith Kumar · Room 204</span></span>
+              <span class="pill ok">Confirmed</span>
+            </div>
+          </div>
+          <div class="appt">
+            <span class="tm">2:00 PM</span>
+            <span class="ab"><b>Exercise Review</b><span>Dr. Ajith Kumar · Rehab Centre</span></span>
+            <span class="pill warn">Pending</span>
+          </div>
+          <button class="btn sec rel" style="margin-top:10px"><span class="hot tl">3</span><svg class="ic"><use href="#i-plus"/></svg>Request Appointment</button>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <h3>Booking and tracking visits</h3>
+      <ol class="steps">
+        <li><strong>Week strip</strong> — tap any day to see its appointments. A small dot underneath a date means something is booked that day.</li>
+        <li><strong>Appointment cards</strong> — time, purpose, doctor and location, plus a status pill: <b>Pending</b>, <b>Confirmed</b>, <b>Scheduled</b>, <b>Completed</b> or <b>Cancelled</b>.</li>
+        <li><strong>Request an appointment</strong> — pick a date and time and add a short reason. Your request arrives as <b>Pending</b> until your doctor accepts or declines it, and you get a push notification either way.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- Chat -->
+<section class="sec" id="patient-chat">
+  <div class="sec-head">
+    <span class="sec-ico"><svg class="ic"><use href="#i-chat"/></svg></span>
+    <div><h2>Messaging Your Doctor</h2><p class="sub">Secure, in-app, non-urgent conversation</p></div>
+  </div>
+  <p class="lead">Messages sit in one continuous thread with your assigned doctor. They see it alongside your feedback and session history, so you rarely need to explain the context.</p>
+
+  <div class="walk flip">
+    <div class="notes">
+      <h3>Using the chat</h3>
+      <ul class="bul">
+        <li><strong>One thread per patient</strong> — everything stays in the same conversation, so nothing gets lost between visits.</li>
+        <li><strong>Delivered in real time</strong> — new messages arrive as push notifications even when the app is closed.</li>
+        <li><strong>Green dot</strong> beside your doctor's name means they are currently active in the app.</li>
+        <li><strong>Good things to send:</strong> questions about an exercise, a change in symptoms, a session you had to skip and why.</li>
+      </ul>
+      <div class="note warn"><svg class="ic"><use href="#i-alert"/></svg><span>Chat is <b>not monitored around the clock</b>. For anything urgent, contact your clinic by phone or call your local emergency number.</span></div>
+      <p style="font-size:.885rem;color:var(--sub)">Type into the demo and press Enter — your message is added to the thread exactly as it would appear in the app.</p>
+    </div>
+    <div class="dev">
+      <div class="phone">
+        <div class="status"><span>9:41</span><span class="rt"><svg class="ic"><use href="#i-wifi"/></svg><svg class="ic"><use href="#i-batt"/></svg></span></div>
+        <div class="appbar"><span class="back"><svg class="ic"><use href="#i-back"/></svg></span><span class="t"><b>Messages</b><span>Your care team</span></span></div>
+        <div class="screen" style="padding:10px">
+          <div class="chatwrap">
+            <div class="chathead">
+              <span class="av tealbg">AK<span class="online"></span></span>
+              <span><b>Dr. Ajith Kumar</b><span>Online</span></span>
+            </div>
+            <div class="thread" id="thread">
+              <div class="msg from-doc">How did yesterday's session feel?<div class="ts">10:32 AM</div></div>
+              <div class="msg from-pat">Much better — the arm raises are getting easier.<div class="ts">10:34 AM</div></div>
+              <div class="msg from-doc">Good. I'll move you to 3 sets from Monday.<div class="ts">10:36 AM</div></div>
+            </div>
+            <div class="chatbar">
+              <input id="chatIn" placeholder="Type a message…" onkeydown="if(event.key==='Enter')sendMsg()">
+              <button class="send" onclick="sendMsg()"><svg class="ic"><use href="#i-send"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Profile -->
+<section class="sec" id="patient-profile">
+  <div class="sec-head">
+    <span class="sec-ico"><svg class="ic"><use href="#i-user"/></svg></span>
+    <div><h2>Your Profile</h2><p class="sub">Account details and security</p></div>
+  </div>
+
+  <div class="walk">
+    <div class="dev">
+      <div class="phone">
+        <div class="status"><span>9:41</span><span class="rt"><svg class="ic"><use href="#i-wifi"/></svg><svg class="ic"><use href="#i-batt"/></svg></span></div>
+        <div class="appbar"><span class="back"><svg class="ic"><use href="#i-back"/></svg></span><span class="t"><b>Profile</b><span>Your account</span></span></div>
+        <div class="screen">
+          <div class="phead mb10">
+            <div class="pav">PN</div>
+            <b>Shane Braiden</b><span>shane.b@example.com</span>
+          </div>
+          <div class="card mb8 rel"><span class="hot tl">1</span>
+            <div class="irow"><span>Phone</span><b>+91 98••• ••210</b></div>
+            <div class="irow"><span>Condition</span><b>Post-MI rehab</b></div>
+            <div class="irow"><span>Assigned doctor</span><b>Dr. Ajith Kumar</b></div>
+            <div class="irow"><span>Member since</span><b>12 Jul 2026</b></div>
+          </div>
+          <button class="btn out mb8 rel"><span class="hot tl">2</span><svg class="ic"><use href="#i-edit"/></svg>Edit Profile</button>
+          <button class="btn out mb8 rel"><span class="hot tl">3</span><svg class="ic"><use href="#i-lock"/></svg>Change Password</button>
+          <button class="btn out" style="color:var(--error);border-color:rgba(217,89,89,.35)">Sign Out</button>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <h3>Managing your account</h3>
+      <ol class="steps">
+        <li><strong>Personal information</strong> — name, email, phone, medical condition and the doctor you are assigned to.</li>
+        <li><strong>Edit Profile</strong> — change your first name, last name and phone number. Your email and assigned doctor are managed by the clinic.</li>
+        <li><strong>Change Password</strong> — do this on day one, and any time you suspect someone else knows it.</li>
+      </ol>
+      <div class="note info"><svg class="ic"><use href="#i-shield"/></svg><span>Need your account removed? Follow the steps on our <a href="/delete-account.html" style="color:inherit;font-weight:700">account deletion page</a> or email <a href="mailto:sr.cardiocare@gmail.com" style="color:inherit;font-weight:700">sr.cardiocare@gmail.com</a>.</span></div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /patient panel -->
+
+<!-- ══════════════════════════════════════════════════════════════
+     DOCTOR PANEL
+     ══════════════════════════════════════════════════════════════ -->
+<div class="panel" id="p-doctor">
+
+<!-- Doctor dashboard -->
+<section class="sec" id="doctor-guide">
+  <div class="sec-head">
+    <span class="sec-ico"><svg class="ic"><use href="#i-activity"/></svg></span>
+    <div><h2>Doctor Dashboard</h2><p class="sub">Your whole caseload at a glance</p></div>
+  </div>
+  <p class="lead">The doctor home screen opens on a live summary of your patients: how many you are treating, how many are keeping up, and how many need a nudge — followed by shortcuts into every clinical tool.</p>
+
+  <div class="walk">
+    <div class="dev">
+      <div class="phone">
+        <div class="status"><span>9:41</span><span class="rt"><svg class="ic"><use href="#i-wifi"/></svg><svg class="ic"><use href="#i-batt"/></svg></span></div>
+        <div class="appbar">
+          <img src="/sr_logo.png" alt="">
+          <span class="t"><b>RehabCardia</b><span>A digital health platform for Cardiac rehabilitation</span></span>
+          <span class="help">?</span>
+        </div>
+        <div class="screen">
+          <div class="greet"><span>Welcome back,</span><b>Dr. Ajith Kumar</b></div>
+          <div class="stats mb10 rel"><span class="hot tl">1</span>
+            <div><b>12</b><span>PATIENTS</span></div>
+            <div><b>8</b><span>ON TRACK</span></div>
+            <div><b>3</b><span>ATTENTION</span></div>
+            <div><b>1</b><span>NOT ASSIGNED</span></div>
+          </div>
+          <div class="card mb10 rel"><span class="hot tl">2</span>
+            <div class="flab" style="margin-bottom:8px"><span>Workout completion today</span></div>
+            <div class="donut">
+              <svg viewBox="0 0 112 112">
+                <circle class="seg" cx="56" cy="56" r="44" stroke="#4DA889" stroke-dasharray="110.6 165.9"/>
+                <circle class="seg" cx="56" cy="56" r="44" stroke="#5A9EA6" stroke-dasharray="82.9 193.5" stroke-dashoffset="-110.6"/>
+                <circle class="seg" cx="56" cy="56" r="44" stroke="#D9A14A" stroke-dasharray="55.3 221.1" stroke-dashoffset="-193.5"/>
+                <circle class="seg" cx="56" cy="56" r="44" stroke="#C4CDD0" stroke-dasharray="27.6 248.8" stroke-dashoffset="-248.8"/>
+              </svg>
+              <span class="dcen"><b>12</b><span>Patients</span></span>
+            </div>
+            <div class="legend">
+              <div><span class="sw" style="background:#4DA889"></span>Completed</div>
+              <div><span class="sw" style="background:#5A9EA6"></span>In progress</div>
+              <div><span class="sw" style="background:#D9A14A"></span>Partial</div>
+              <div><span class="sw" style="background:#C4CDD0"></span>Not started</div>
+            </div>
+          </div>
+          <div class="grid2">
+            <div class="tile rel"><span class="hot tl">3</span><span class="badge ok">3</span><span class="ti"><svg class="ic"><use href="#i-users"/></svg></span><b>Patients</b><span>12 patients</span></div>
+            <div class="tile"><span class="ti"><svg class="ic"><use href="#i-dumbbell"/></svg></span><b>Exercises</b><span>Exercise library</span></div>
+            <div class="tile"><span class="ti"><svg class="ic"><use href="#i-chat"/></svg></span><b>Feedbacks</b><span>Patient responses</span></div>
+            <div class="tile"><span class="ti"><svg class="ic"><use href="#i-cal"/></svg></span><b>Schedule</b><span>Appointments</span></div>
+            <div class="tile"><span class="ti"><svg class="ic"><use href="#i-user"/></svg></span><b>Profile</b><span>Your account</span></div>
+            <div class="tile"><span class="ti"><svg class="ic"><use href="#i-useradd"/></svg></span><b>Add Patient</b><span>Create new patient</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <h3>What the dashboard tells you</h3>
+      <ol class="steps">
+        <li><strong>Stat strip</strong> — total patients, how many are on track, how many need attention, and how many have no active assignment yet. Tapping through takes you to a filtered patient list.</li>
+        <li><strong>Completion donut</strong> — today's workout status across your whole caseload, split into completed, in progress, partial and not started.</li>
+        <li><strong>Tool cards</strong> — Patients, Exercises, Feedbacks, Schedule, Profile and Add Patient. The green badge counts patients flagged for attention.</li>
+      </ol>
+      <div class="note ok"><svg class="ic"><use href="#i-checkc"/></svg><span><b>Pull to refresh</b> to recalculate every figure on this screen against live data.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- Patients -->
+<section class="sec" id="doctor-patients">
+  <div class="sec-head">
+    <span class="sec-ico"><svg class="ic"><use href="#i-users"/></svg></span>
+    <div><h2>Managing Patients</h2><p class="sub">Adding, monitoring and triaging your caseload</p></div>
+  </div>
+
+  <div class="walk">
+    <div class="dev">
+      <div class="phone">
+        <div class="status"><span>9:41</span><span class="rt"><svg class="ic"><use href="#i-wifi"/></svg><svg class="ic"><use href="#i-batt"/></svg></span></div>
+        <div class="appbar"><span class="back"><svg class="ic"><use href="#i-back"/></svg></span><span class="t"><b>Patients</b><span>12 under your care</span></span><span class="help">?</span></div>
+        <div class="screen">
+          <div class="field mb8"><svg class="ic"><use href="#i-search"/></svg>Search by name or condition</div>
+          <div class="chips rel"><span class="hot tl">1</span>
+            <button class="chip on">All</button><button class="chip">On Track</button><button class="chip">Attention</button><button class="chip">Not Assigned</button>
+          </div>
+          <div class="row rel"><span class="hot tl">2</span>
+            <span class="av tealbg">PN<span class="online"></span></span>
+            <span class="rowb"><b>Shane Braiden</b><span>Post-MI rehab · 70% compliance</span></span>
+            <span class="pill ok">On Track</span>
+          </div>
+          <div class="row">
+            <span class="av warnbg">RM</span>
+            <span class="rowb"><b>Ravi Menon</b><span>Angina · 3 sessions missed</span></span>
+            <span class="pill warn">Attention</span>
+          </div>
+          <div class="row">
+            <span class="av tealbg">SK</span>
+            <span class="rowb"><b>Sunita Krishnan</b><span>No active assignment</span></span>
+            <span class="pill grey">Not Assigned</span>
+          </div>
+          <button class="btn sec rel" style="margin-top:8px"><span class="hot tl">3</span><svg class="ic"><use href="#i-bell"/></svg>Remind All Needing Attention</button>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <h3>The patient list</h3>
+      <ol class="steps">
+        <li><strong>Search and filter</strong> — find a patient by name or condition, or filter straight to the group you want to work through.</li>
+        <li><strong>Status at a glance</strong> — <b>On Track</b>, <b>Needs Attention</b> or <b>Not Assigned</b>, calculated from recent adherence. A green dot on the avatar means the patient is in the app right now.</li>
+        <li><strong>Remind All</strong> — sends a nudge notification to every patient currently flagged for attention, in one tap.</li>
+      </ol>
+      <h3 style="margin-top:18px">Inside a patient profile</h3>
+      <ul class="bul">
+        <li><strong>Assignments</strong> — every active prescription with live completion progress; edit or delete any of them.</li>
+        <li><strong>Session history</strong> — each workout with sets completed, total duration and active duration.</li>
+        <li><strong>Health metrics</strong> — Borg pain and respiration trends charted over the programme.</li>
+        <li><strong>Care status override</strong> — force <b>On Track</b> or <b>Needs Attention</b>, or leave it on <b>Auto</b>.</li>
+        <li><strong>Open chat</strong> — message the patient without leaving their record.</li>
+      </ul>
+      <div class="note info"><svg class="ic"><use href="#i-useradd"/></svg><span><b>Adding a patient:</b> fill in name, email, age, gender, phone and condition. A temporary password is generated automatically and the patient is assigned to you — pass those credentials on securely.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- Library -->
+<section class="sec" id="doctor-exercises">
+  <div class="sec-head">
+    <span class="sec-ico"><svg class="ic"><use href="#i-book"/></svg></span>
+    <div><h2>Exercise Library</h2><p class="sub">The catalogue you prescribe from</p></div>
+  </div>
+
+  <div class="walk flip">
+    <div class="notes">
+      <h3>Browsing and building the catalogue</h3>
+      <ul class="bul">
+        <li><strong>Search and category chips</strong> — filter by cardio, stretching, strength, balance and so on.</li>
+        <li><strong>Difficulty badges</strong> — Beginner, Intermediate or Advanced, shown on each thumbnail.</li>
+        <li><strong>Preview before prescribing</strong> — tap any exercise to open the video in a modal player; MP4, MOV and YouTube links are all supported.</li>
+        <li><strong>Upload your own</strong> — add a name, video file (up to 500 MB), category, difficulty, duration and instructions.</li>
+        <li><strong>Delete</strong> — remove exercises you uploaded that are no longer in use.</li>
+      </ul>
+      <div class="note warn"><svg class="ic"><use href="#i-video"/></svg><span>Uploads happen in the background but large files still need a solid connection. Keep clips short and clearly framed — patients watch them on a phone before every set.</span></div>
+    </div>
+    <div class="dev">
+      <div class="phone">
+        <div class="status"><span>9:41</span><span class="rt"><svg class="ic"><use href="#i-wifi"/></svg><svg class="ic"><use href="#i-batt"/></svg></span></div>
+        <div class="appbar"><span class="back"><svg class="ic"><use href="#i-back"/></svg></span><span class="t"><b>Exercise Library</b><span>28 exercises</span></span><span class="help">?</span></div>
+        <div class="screen">
+          <div class="field mb8"><svg class="ic"><use href="#i-search"/></svg>Search exercises</div>
+          <div class="chips"><button class="chip on">All</button><button class="chip">Cardio</button><button class="chip">Strength</button><button class="chip">Balance</button></div>
+          <div class="thumbs">
+            <div class="thumb"><div class="tv"><span class="lv">BEGINNER</span><svg class="ic"><use href="#i-play"/></svg></div><div class="tb"><b>Wall Push-Ups</b><span>Cardio · 2 min</span></div></div>
+            <div class="thumb"><div class="tv"><span class="lv">BEGINNER</span><svg class="ic"><use href="#i-play"/></svg></div><div class="tb"><b>Ankle Pumps</b><span>Mobility · 1 min</span></div></div>
+            <div class="thumb"><div class="tv"><span class="lv">MEDIUM</span><svg class="ic"><use href="#i-play"/></svg></div><div class="tb"><b>Seated Arm Raises</b><span>Stretching · 3 min</span></div></div>
+            <div class="thumb"><div class="tv"><span class="lv">MEDIUM</span><svg class="ic"><use href="#i-play"/></svg></div><div class="tb"><b>Step Touch</b><span>Cardio · 4 min</span></div></div>
+          </div>
+          <button class="btn pri" style="margin-top:10px"><svg class="ic"><use href="#i-down"/></svg>Upload New Exercise</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Assign -->
+<section class="sec" id="doctor-assign">
+  <div class="sec-head">
+    <span class="sec-ico"><svg class="ic"><use href="#i-plus"/></svg></span>
+    <div><h2>Assigning Exercises</h2><p class="sub">Turning a library exercise into a patient's programme</p></div>
+  </div>
+  <p class="lead">Assignments are what the patient actually sees. Open a patient, pick an exercise, then set the dose — sets, reps, how many sessions a day, how long to rest, and the date range the plan runs for. The controls below behave like the real form.</p>
+
+  <div class="walk">
+    <div class="dev">
+      <div class="phone">
+        <div class="status"><span>9:41</span><span class="rt"><svg class="ic"><use href="#i-wifi"/></svg><svg class="ic"><use href="#i-batt"/></svg></span></div>
+        <div class="appbar"><span class="back"><svg class="ic"><use href="#i-back"/></svg></span><span class="t"><b>Assign Exercise</b><span>Shane Braiden · Wall Push-Ups</span></span></div>
+        <div class="screen">
+          <div class="card mb8 rel"><span class="hot tl">1</span>
+            <div class="fgroup" style="margin-bottom:10px">
+              <div class="flab"><span>Sets per session</span><em id="setsV">3</em></div>
+              <input type="range" class="rng" min="1" max="10" value="3" oninput="setTxt('setsV',this.value)">
+            </div>
+            <div class="fgroup" style="margin-bottom:0">
+              <div class="flab"><span>Reps per set</span><em id="repsV">10</em></div>
+              <input type="range" class="rng" min="1" max="30" value="10" oninput="setTxt('repsV',this.value)">
+            </div>
+          </div>
+          <div class="card mb8 rel"><span class="hot tl">2</span>
+            <div class="flab"><span>Sessions per day</span></div>
+            <div class="chips" style="margin:6px 0 10px"><button class="chip" onclick="pick(this)">1×</button><button class="chip on" onclick="pick(this)">2×</button><button class="chip" onclick="pick(this)">3×</button></div>
+            <div class="flab"><span>Rest between sets</span></div>
+            <div class="chips" style="margin:6px 0 0"><button class="chip" onclick="pick(this)">15s</button><button class="chip" onclick="pick(this)">30s</button><button class="chip on" onclick="pick(this)">45s</button><button class="chip" onclick="pick(this)">60s</button><button class="chip" onclick="pick(this)">90s</button><button class="chip" onclick="pick(this)">120s</button></div>
+          </div>
+          <div class="card mb8 rel"><span class="hot tl">3</span>
+            <div class="flab"><span>Plan period</span></div>
+            <div style="display:flex;gap:6px;margin-top:6px">
+              <div class="field" style="flex:1;margin:0"><svg class="ic"><use href="#i-cal"/></svg>12 Jul</div>
+              <div class="field" style="flex:1;margin:0"><svg class="ic"><use href="#i-cal"/></svg>08 Aug</div>
+            </div>
+          </div>
+          <div class="card mb8">
+            <div class="flab"><span>Instructions for patient</span></div>
+            <textarea class="ta" placeholder="Keep elbows soft, breathe steadily, stop if chest tightens…"></textarea>
+          </div>
+          <button class="btn pri" onclick="this.textContent='Assigned ✓ Patient notified';this.classList.remove('pri');this.classList.add('suc')"><svg class="ic"><use href="#i-check"/></svg>Assign Exercise</button>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <h3>Setting the dose</h3>
+      <ol class="steps">
+        <li><strong>Sets and reps</strong> — what the patient performs in a single session. These drive the set dots and rep counter in the workout player.</li>
+        <li><strong>Sessions per day and rest</strong> — up to three sessions daily, with a fixed rest countdown between sets. The patient's progress ring only fills once every session for the day is done.</li>
+        <li><strong>Plan period</strong> — the assignment appears in the patient's list only between these dates, and the app warns them as the end date approaches.</li>
+      </ol>
+      <p style="font-size:.885rem;color:var(--sub)">Instructions are shown with the exercise, so use them for form cues and stopping rules rather than general advice.</p>
+      <div class="note ok"><svg class="ic"><use href="#i-checkc"/></svg><span>Saving sends the patient a push notification immediately. Editing or deleting an assignment later takes effect on their next refresh.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- Feedback review -->
+<section class="sec" id="doctor-feedback">
+  <div class="sec-head">
+    <span class="sec-ico"><svg class="ic"><use href="#i-chat"/></svg></span>
+    <div><h2>Reviewing Feedback</h2><p class="sub">Where clinical signal arrives</p></div>
+  </div>
+
+  <div class="walk flip">
+    <div class="notes">
+      <h3>Feedback and chat, side by side</h3>
+      <ol class="steps">
+        <li><strong>Feedback tab</strong> — a reverse-chronological timeline of post-workout submissions. Each entry carries pain yes/no, pain location, Borg pain and respiration scores, pulse rate and any notes typed by the patient.</li>
+        <li><strong>Chat tab</strong> — the same thread the patient sees, so you can respond to a worrying entry without switching screens.</li>
+        <li><strong>Session history</strong> — the objective counterpart: date, exercise, sets completed, total and active duration.</li>
+      </ol>
+      <p style="font-size:.885rem;color:var(--sub)">The Feedbacks card on the dashboard lists patients by most recent submission, so the newest clinical information is always at the top.</p>
+      <div class="note stop"><svg class="ic"><use href="#i-alert"/></svg><span>Entries reporting chest pain or a high respiration score deserve a same-day response. The app records feedback — it does not triage it.</span></div>
+    </div>
+    <div class="dev">
+      <div class="phone">
+        <div class="status"><span>9:41</span><span class="rt"><svg class="ic"><use href="#i-wifi"/></svg><svg class="ic"><use href="#i-batt"/></svg></span></div>
+        <div class="appbar"><span class="back"><svg class="ic"><use href="#i-back"/></svg></span><span class="t"><b>Shane Braiden</b><span>Post-MI rehab</span></span></div>
+        <div class="screen">
+          <div class="mtabs"><button class="on" onclick="tab(this,'fbList','fbChat')">Feedback</button><button onclick="tab(this,'fbChat','fbList')">Chat</button></div>
+          <div id="fbList">
+            <div class="card mb8">
+              <div class="flab"><span>Today · 08:20 AM</span><em class="pill ok">No pain</em></div>
+              <p style="font-size:.68rem;color:var(--sub);margin-top:4px">"Felt strong today, finished all three sets."</p>
+              <div class="metrics">
+                <div class="metric"><b>0</b><span>PAIN</span></div>
+                <div class="metric"><b>3</b><span>RESP</span></div>
+                <div class="metric"><b>78</b><span>BPM</span></div>
+              </div>
+            </div>
+            <div class="card mb8">
+              <div class="flab"><span>Yesterday · 07:55 AM</span><em class="pill warn">Chest</em></div>
+              <p style="font-size:.68rem;color:var(--sub);margin-top:4px">"Slight tightness on the last set, eased after resting."</p>
+              <div class="metrics">
+                <div class="metric"><b style="color:var(--warning)">4</b><span>PAIN</span></div>
+                <div class="metric"><b style="color:var(--warning)">6</b><span>RESP</span></div>
+                <div class="metric"><b>96</b><span>BPM</span></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="flab"><span>23 Jul · 09:10 AM</span><em class="pill ok">No pain</em></div>
+              <div class="metrics">
+                <div class="metric"><b>1</b><span>PAIN</span></div>
+                <div class="metric"><b>2</b><span>RESP</span></div>
+                <div class="metric"><b>74</b><span>BPM</span></div>
+              </div>
+            </div>
+          </div>
+          <div id="fbChat" style="display:none">
+            <div class="chatwrap">
+              <div class="thread" style="max-height:230px">
+                <div class="msg from-pat">Slight tightness yesterday on the last set.<div class="ts">08:02 AM</div></div>
+                <div class="msg from-doc">Thanks for flagging it. Drop to 2 sets today and let me know how it goes.<div class="ts">08:40 AM</div></div>
+                <div class="msg from-pat">Will do, thank you doctor.<div class="ts">08:41 AM</div></div>
+              </div>
+              <div class="chatbar"><input placeholder="Reply to Shane…"><button class="send"><svg class="ic"><use href="#i-send"/></svg></button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Doctor schedule -->
+<section class="sec" id="doctor-schedule">
+  <div class="sec-head">
+    <span class="sec-ico"><svg class="ic"><use href="#i-cal"/></svg></span>
+    <div><h2>Schedule Management</h2><p class="sub">Clinic appointments and patient requests</p></div>
+  </div>
+
+  <div class="walk">
+    <div class="dev">
+      <div class="phone">
+        <div class="status"><span>9:41</span><span class="rt"><svg class="ic"><use href="#i-wifi"/></svg><svg class="ic"><use href="#i-batt"/></svg></span></div>
+        <div class="appbar"><span class="back"><svg class="ic"><use href="#i-back"/></svg></span><span class="t"><b>Schedule</b><span>1 request awaiting review</span></span><span class="help">?</span></div>
+        <div class="screen">
+          <div class="week" id="weekStrip2"></div>
+          <div class="card mb8 rel" style="border-left:3px solid var(--warning)"><span class="hot tl">1</span>
+            <div class="flab"><span>Request · Ravi Menon</span><em class="pill warn">Pending</em></div>
+            <p style="font-size:.66rem;color:var(--sub);margin:2px 0 8px">Tomorrow, 11:00 AM — "Would like to review my exercise plan."</p>
+            <div style="display:flex;gap:6px">
+              <button class="btn suc sm" style="flex:1"><svg class="ic"><use href="#i-check"/></svg>Accept</button>
+              <button class="btn out sm" style="flex:1;color:var(--error);border-color:rgba(217,89,89,.35)">Decline</button>
+            </div>
+          </div>
+          <div class="appt"><span class="tm">10:30 AM</span><span class="ab"><b>Follow-up · Shane Braiden</b><span>Room 204</span></span><span class="pill ok">Confirmed</span></div>
+          <div class="appt"><span class="tm">2:00 PM</span><span class="ab"><b>Exercise Review · Ravi Menon</b><span>Rehab Centre</span></span><span class="pill teal">Scheduled</span></div>
+          <button class="btn pri rel" style="margin-top:8px"><span class="hot tl">2</span><svg class="ic"><use href="#i-plus"/></svg>New Appointment</button>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <h3>Running your calendar</h3>
+      <ol class="steps">
+        <li><strong>Approve requests</strong> — patient requests arrive as <b>Pending</b>. Accept or decline in one tap; the patient is notified either way.</li>
+        <li><strong>Create appointments</strong> — choose a patient, set date, time and notes, and save. It appears instantly in their Schedule screen.</li>
+      </ol>
+      <ul class="bul">
+        <li><strong>Weekly strip</strong> — browse day by day; dates carrying appointments are marked.</li>
+        <li><strong>Statuses</strong> — Scheduled, Pending, Confirmed, Cancelled and Completed.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</div><!-- /doctor panel -->
+
+<!-- ─── NOTIFICATIONS ─── -->
+<section class="sec" id="notifications">
+  <div class="sec-head">
+    <span class="sec-ico"><svg class="ic"><use href="#i-bell"/></svg></span>
+    <div><h2>Notifications</h2><p class="sub">Shared by patients and doctors</p></div>
+  </div>
+  <p class="lead">Push notifications keep both sides of the programme in sync. Everything that is pushed to your device is also kept in the in-app Notifications list, so nothing is lost if you miss the banner.</p>
+
+  <div class="walk">
+    <div class="dev">
+      <div class="phone">
+        <div class="status"><span>9:41</span><span class="rt"><svg class="ic"><use href="#i-wifi"/></svg><svg class="ic"><use href="#i-batt"/></svg></span></div>
+        <div class="appbar"><span class="back"><svg class="ic"><use href="#i-back"/></svg></span><span class="t"><b>Notifications</b><span>2 unread</span></span></div>
+        <div class="screen">
+          <div class="nrow" onclick="this.querySelector('.ndot')?.remove()">
+            <span class="nic" style="background:var(--p15);color:var(--primary-dark)"><svg class="ic"><use href="#i-dumbbell"/></svg></span>
+            <div style="flex:1"><p>New exercise assigned: Wall Push-Ups</p><span>2 hours ago</span></div>
+            <span class="ndot"></span>
+          </div>
+          <div class="nrow" onclick="this.querySelector('.ndot')?.remove()">
+            <span class="nic" style="background:rgba(77,168,137,.14);color:var(--success)"><svg class="ic"><use href="#i-checkc"/></svg></span>
+            <div style="flex:1"><p>Appointment confirmed — 28 Jul, 10:30 AM</p><span>Yesterday</span></div>
+            <span class="ndot"></span>
+          </div>
+          <div class="nrow">
+            <span class="nic" style="background:var(--p15);color:var(--primary-dark)"><svg class="ic"><use href="#i-chat"/></svg></span>
+            <div style="flex:1"><p>Dr. Ajith Kumar sent you a message</p><span>2 days ago</span></div>
+          </div>
+          <div class="nrow">
+            <span class="nic" style="background:rgba(217,161,74,.14);color:var(--warning)"><svg class="ic"><use href="#i-clock"/></svg></span>
+            <div style="flex:1"><p>Reminder: 1 exercise still pending today</p><span>3 days ago</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <h3>What you'll be told about</h3>
+      <ul class="bul">
+        <li><strong>Patients</strong> — new or edited assignments, exercise reminders, appointment confirmations and changes, and new messages.</li>
+        <li><strong>Doctors</strong> — new appointment requests, new post-workout feedback, and new patient messages.</li>
+      </ul>
+      <p style="font-size:.885rem;color:var(--sub);margin-top:6px">Tapping a notification opens the screen it refers to, and marks it read. The blue dot marks anything you have not opened yet.</p>
+      <div class="note info"><svg class="ic"><use href="#i-info"/></svg><span><b>Turning them down:</b> notifications are controlled by Android, not the app. Go to <b>Settings → Apps → RehabCardia → Notifications</b> to change or silence them.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FAQ ─── -->
+<section class="sec" id="faq">
+  <div class="sec-head">
+    <span class="sec-ico"><svg class="ic"><use href="#i-help"/></svg></span>
+    <div><h2>Frequently Asked Questions</h2><p class="sub">Quick answers to the common ones</p></div>
+  </div>
+
+  <div class="faq"><button onclick="this.parentElement.classList.toggle('open')">How do I get my login credentials?<svg class="ic chev"><use href="#i-chev"/></svg></button><div class="ans">Your clinic or doctor creates your account — there is no self-registration. Contact your healthcare provider for your email address and temporary password.</div></div>
+
+  <div class="faq"><button onclick="this.parentElement.classList.toggle('open')">I forgot my password — what now?<svg class="ic chev"><use href="#i-chev"/></svg></button><div class="ans">Ask your clinic or doctor to reset it, or write to <a href="mailto:sr.cardiocare@gmail.com">sr.cardiocare@gmail.com</a> and we will help you get back in.</div></div>
+
+  <div class="faq"><button onclick="this.parentElement.classList.toggle('open')">Is there an iOS or desktop version?<svg class="ic chev"><use href="#i-chev"/></svg></button><div class="ans">RehabCardia is currently Android only (8.0 and above). There is no desktop version at this time.</div></div>
+
+  <div class="faq"><button onclick="this.parentElement.classList.toggle('open')">How many exercise sessions should I do a day?<svg class="ic chev"><use href="#i-chev"/></svg></button><div class="ans">Exactly what your assignment says — up to three sessions per assignment per day. Do not add extra sessions without speaking to your doctor first.</div></div>
+
+  <div class="faq"><button onclick="this.parentElement.classList.toggle('open')">What happens if I miss a workout?<svg class="ic chev"><use href="#i-chev"/></svg></button><div class="ans">Missed sessions are recorded and visible to you and your doctor, and your compliance figure drops. Your doctor may message you to check in. Consistency matters more than intensity in cardiac rehab.</div></div>
+
+  <div class="faq"><button onclick="this.parentElement.classList.toggle('open')">Can I stop a workout halfway through?<svg class="ic chev"><use href="#i-chev"/></svg></button><div class="ans">Yes — close the player and confirm <b>End</b>. The session is abandoned rather than saved, so it will not count towards the day. Stopping is always the right call if you feel unwell.</div></div>
+
+  <div class="faq"><button onclick="this.parentElement.classList.toggle('open')">Is my health data secure?<svg class="ic chev"><use href="#i-chev"/></svg></button><div class="ans">Yes. Data is encrypted in transit (HTTPS/TLS) and at rest, and role-based access means patients see only their own records while doctors see only their own patients. Your data is never sold or used for advertising — see the full <a href="/privacy-policy.html">Privacy Policy</a>.</div></div>
+
+  <div class="faq"><button onclick="this.parentElement.classList.toggle('open')">How do I delete my account?<svg class="ic chev"><use href="#i-chev"/></svg></button><div class="ans">Follow the steps on our <a href="/delete-account.html">account deletion page</a>, or email <a href="mailto:sr.cardiocare@gmail.com">sr.cardiocare@gmail.com</a>.</div></div>
+
+  <div class="faq"><button onclick="this.parentElement.classList.toggle('open')">What does "Needs Attention" mean?<svg class="ic chev"><use href="#i-chev"/></svg></button><div class="ans">It is calculated from recent adherence, or set manually by the doctor. It flags a patient who may need a check-in or a change to their programme — it is not a medical alert.</div></div>
+
+  <div class="faq"><button onclick="this.parentElement.classList.toggle('open')">What is the "?" button in the top bar?<svg class="ic chev"><use href="#i-chev"/></svg></button><div class="ans">It replays the interactive tour for the screen you are on, highlighting each element with a short description. The tour runs automatically the first time you sign in.</div></div>
+</section>
+
+<!-- ─── HELP BANNER ─── -->
+<div class="helpbox">
+  <div>
+    <h3>Still stuck on something?</h3>
+    <p>Your clinic is the fastest route for anything about your treatment. For app problems, bugs or account access, write to us directly.</p>
+  </div>
+  <a href="mailto:sr.cardiocare@gmail.com"><svg class="ic"><use href="#i-mail"/></svg>Email support</a>
+</div>
+
+</main>
+</div><!-- /layout -->
+</div><!-- /wrap -->
+
+<footer>
+  <div class="foot">
+    <span>© 2026 RehabCardia. Powered by SRET-AIDA.</span>
+    <span>
+      <a href="/">Home</a>
+      <a href="/privacy-policy.html">Privacy Policy</a>
+      <a href="/terms-of-service.html">Terms of Service</a>
+      <a href="mailto:sr.cardiocare@gmail.com">sr.cardiocare@gmail.com</a>
+    </span>
+  </div>
+</footer>
+
+<button id="top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Back to top"><svg class="ic"><use href="#i-up"/></svg></button>
+
+<script>
+/* ── Role panels ─────────────────────────────────────────────── */
+function setRole(r){
+  document.querySelectorAll('.roletabs button').forEach(b=>b.classList.toggle('on',b.dataset.role===r));
+  document.getElementById('p-patient').classList.toggle('on',r==='patient');
+  document.getElementById('p-doctor').classList.toggle('on',r==='doctor');
+}
+document.querySelectorAll('a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',()=>{
+    const id=a.getAttribute('href').slice(1);
+    if(id.startsWith('doctor'))setRole('doctor');
+    else if(id.startsWith('patient'))setRole('patient');
+    document.getElementById('side').classList.remove('open');
+  });
+});
+if(location.hash.startsWith('#doctor'))setRole('doctor');
+
+/* ── Scroll progress + back to top + active nav ──────────────── */
+const bar=document.getElementById('bar'),topBtn=document.getElementById('top');
+const links=[...document.querySelectorAll('.side-body a')];
+addEventListener('scroll',()=>{
+  const h=document.documentElement;
+  bar.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';
+  topBtn.classList.toggle('show',h.scrollTop>600);
+},{passive:true});
+
+const secObs=new IntersectionObserver(es=>{
+  es.forEach(e=>{
+    if(!e.isIntersecting)return;
+    links.forEach(l=>l.classList.toggle('on',l.getAttribute('href')==='#'+e.target.id));
+  });
+},{rootMargin:'-90px 0px -70% 0px'});
+document.querySelectorAll('section.sec[id]').forEach(s=>secObs.observe(s));
+
+/* ── Progress rings ──────────────────────────────────────────── */
+function fillRing(el,pct,circ){el.style.strokeDashoffset=circ*(1-pct)}
+const ringObs=new IntersectionObserver(es=>{
+  es.forEach(e=>{
+    if(!e.isIntersecting)return;
+    const r=document.getElementById('mainRing');
+    if(r)setTimeout(()=>fillRing(r,.67,169.6),120);
+    ringObs.unobserve(e.target);
+  });
+},{threshold:.35});
+const rd=document.getElementById('ringDemo');if(rd)ringObs.observe(rd);
+document.querySelectorAll('.heroring').forEach(r=>setTimeout(()=>fillRing(r,.67,169.6),400));
+
+/* ── Bar chart ───────────────────────────────────────────────── */
+const barObs=new IntersectionObserver(es=>{
+  es.forEach(e=>{
+    if(!e.isIntersecting)return;
+    e.target.querySelectorAll('.b').forEach((b,i)=>setTimeout(()=>b.style.height=b.dataset.h+'%',60*i));
+    barObs.unobserve(e.target);
+  });
+},{threshold:.3});
+const bc=document.getElementById('barChart');if(bc)barObs.observe(bc);
+
+/* ── Workout player state machine ────────────────────────────── */
+const TOTAL=3, REST=45;
+let set=2, phase='demo', restT=null;
+const $=id=>document.getElementById(id);
+function render(){
+  $('wSet').textContent='Set '+set+' of '+TOTAL;
+  $('wDots').innerHTML=Array.from({length:TOTAL},(_,i)=>
+    '<span class="dot '+(i<set-1?'done':i===set-1?'on':'')+'"></span>').join('');
+  if(phase==='demo'){
+    $('wTag').textContent='DEMO';$('wTag').className='tag';
+    $('wBtnT').textContent="I'm Ready";$('wBtn').className='btn pri';
+  }else{
+    $('wTag').textContent='GO';$('wTag').className='tag go';
+    $('wBtnT').textContent='Set Done';$('wBtn').className='btn suc';
+  }
+}
+function wNext(){
+  if(phase==='demo'){phase='active';render();return}
+  // set finished
+  if(set>=TOTAL){
+    set=1;phase='demo';render();
+    $('wBtnT').textContent="Workout Complete ✓";
+    setTimeout(render,1400);
+    return;
+  }
+  set++;phase='demo';render();
+  startRest();
+}
+function startRest(){
+  $('wPlay').style.display='none';$('wRest').style.display='block';
+  $('rNext').textContent='Set '+set+' of '+TOTAL;
+  let t=REST;const full=226.2;
+  $('rNum').textContent=t;$('rBar').style.strokeDashoffset=0;
+  clearInterval(restT);
+  restT=setInterval(()=>{
+    t--;$('rNum').textContent=t;
+    $('rBar').style.strokeDashoffset=full*(1-t/REST);
+    if(t<=0)skipRest();
+  },120);// accelerated for the demo
+}
+function skipRest(){
+  clearInterval(restT);restT=null;
+  $('wRest').style.display='none';$('wPlay').style.display='block';
+  render();
+}
+render();
+
+/* ── Chips, sliders, tabs ────────────────────────────────────── */
+function pick(el){el.parentElement.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));el.classList.add('on')}
+function painPick(el,show){pick(el);$('painLoc').style.display=show?'block':'none'}
+function borg(el,id){
+  const v=+el.value,l=$(id);
+  l.textContent=v;
+  const c=v<=3?'var(--success)':v<=6?'var(--warning)':'var(--error)';
+  l.style.color=c;
+  el.style.background='linear-gradient(to right,'+c+' '+(v*10)+'%,var(--neutral) '+(v*10)+'%)';
+}
+function setTxt(id,v){$(id).textContent=v}
+function tab(btn,show,hide){
+  btn.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  $(show).style.display='block';$(hide).style.display='none';
+}
+
+/* ── Chat demo ───────────────────────────────────────────────── */
+function sendMsg(){
+  const i=$('chatIn'),t=$('thread');
+  if(!i.value.trim())return;
+  const d=new Date(),h=d.getHours()%12||12,m=String(d.getMinutes()).padStart(2,'0');
+  const el=document.createElement('div');
+  el.className='msg from-pat';
+  el.textContent=i.value.trim();
+  const ts=document.createElement('div');ts.className='ts';
+  ts.textContent=h+':'+m+' '+(d.getHours()>=12?'PM':'AM');
+  el.appendChild(ts);t.appendChild(el);i.value='';
+  t.scrollTop=t.scrollHeight;
+}
+
+/* ── Week strips ─────────────────────────────────────────────── */
+(function(){
+  const names=['SUN','MON','TUE','WED','THU','FRI','SAT'],now=new Date();
+  ['weekStrip','weekStrip2'].forEach(id=>{
+    const s=document.getElementById(id);if(!s)return;
+    for(let i=-3;i<=3;i++){
+      const d=new Date(now);d.setDate(now.getDate()+i);
+      const el=document.createElement('div');
+      el.className='day'+(i===0?' today':'');
+      el.innerHTML='<div class="dn">'+names[d.getDay()]+'</div><div class="dd">'+d.getDate()+'</div>'+((i===0||i===1)?'<div class="dm"></div>':'');
+      el.onclick=()=>{s.querySelectorAll('.day').forEach(x=>x.classList.remove('today'));el.classList.add('today')};
+      s.appendChild(el);
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

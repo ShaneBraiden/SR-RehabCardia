@@ -22,6 +22,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import com.srcardiocare.core.security.InputValidator
+import androidx.compose.ui.res.stringResource
+import com.srcardiocare.R
 import com.srcardiocare.data.firebase.ChatRepository
 import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.data.firebase.UserRepository
@@ -76,10 +78,10 @@ fun PatientChatScreen(onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Chat with Doctor", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.chat_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
                 actions = { TutorialHelpButton() },
@@ -161,7 +163,7 @@ fun PatientChatScreen(onBack: () -> Unit) {
                     value = inputText,
                     onValueChange = { inputText = InputValidator.limitLength(it, InputValidator.MaxLength.CHAT_MESSAGE) },
                     modifier = Modifier.weight(1f).tutorialTarget(TutorialIds.CHAT_FIELD),
-                    placeholder = { Text("Type a message...") },
+                    placeholder = { Text(stringResource(R.string.chat_input_hint)) },
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = MaterialTheme.colorScheme.background,
                         unfocusedContainerColor = MaterialTheme.colorScheme.background,
@@ -190,7 +192,7 @@ fun PatientChatScreen(onBack: () -> Unit) {
                     shape = CircleShape,
                     modifier = Modifier.size(48.dp).tutorialTarget(TutorialIds.CHAT_SEND)
                 ) {
-                    Icon(Icons.Default.Send, contentDescription = "Send", modifier = Modifier.size(24.dp))
+                    Icon(Icons.Default.Send, contentDescription = stringResource(R.string.action_send), modifier = Modifier.size(24.dp))
                 }
             }
         }

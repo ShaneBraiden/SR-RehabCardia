@@ -29,6 +29,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.compose.ui.res.stringResource
+import com.srcardiocare.R
 import com.srcardiocare.data.firebase.AssignmentRepository
 import com.srcardiocare.data.firebase.FeedbackRepository
 import com.srcardiocare.data.firebase.FirebaseService
@@ -145,19 +147,19 @@ fun AnalyticsScreen(onBack: () -> Unit) {
     }
 
     val segments = listOf(
-        DonutSegment("Completed", completedWorkouts, DesignTokens.Colors.Success),
-        DonutSegment("In Progress", inProgressWorkouts, DesignTokens.Colors.Warning),
-        DonutSegment("Missed", missedWorkouts, DesignTokens.Colors.Error)
+        DonutSegment(stringResource(R.string.status_completed), completedWorkouts, DesignTokens.Colors.Success),
+        DonutSegment(stringResource(R.string.assignments_in_progress), inProgressWorkouts, DesignTokens.Colors.Warning),
+        DonutSegment(stringResource(R.string.status_missed), missedWorkouts, DesignTokens.Colors.Error)
     ).filter { it.value > 0 }
     
     TutorialHost(tourKey = TutorialKeys.ANALYTICS, steps = TutorialTours.analytics) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("My Progress", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.analytics_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
                 actions = {
@@ -165,7 +167,7 @@ fun AnalyticsScreen(onBack: () -> Unit) {
                         onClick = {},
                         modifier = Modifier.tutorialTarget(TutorialIds.ANALYTICS_RANGE)
                     ) {
-                        Text("This Week ▾", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(R.string.analytics_this_week), color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold)
                     }
                     TutorialHelpButton()
                 },
@@ -182,7 +184,7 @@ fun AnalyticsScreen(onBack: () -> Unit) {
                 .padding(horizontal = DesignTokens.Spacing.XL)
         ) {
             Text(
-                "Track your recovery journey",
+                stringResource(R.string.analytics_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -208,7 +210,7 @@ fun AnalyticsScreen(onBack: () -> Unit) {
                     modifier = Modifier.padding(DesignTokens.Spacing.XL),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("Workout Overview", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                    Text(stringResource(R.string.analytics_workout_overview), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                     Spacer(modifier = Modifier.height(DesignTokens.Spacing.XL))
 
                     // Donut chart with click interaction
@@ -252,8 +254,8 @@ fun AnalyticsScreen(onBack: () -> Unit) {
                     .tutorialTarget(TutorialIds.ANALYTICS_METRICS),
                 horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.MD)
             ) {
-                StatCard(complianceText, "Compliance", DesignTokens.Colors.Primary, Modifier.weight(1f))
-                StatCard(streakText, "Workouts", DesignTokens.Colors.Warning, Modifier.weight(1f))
+                StatCard(complianceText, stringResource(R.string.analytics_compliance), DesignTokens.Colors.Primary, Modifier.weight(1f))
+                StatCard(streakText, stringResource(R.string.analytics_workouts), DesignTokens.Colors.Warning, Modifier.weight(1f))
             }
 
             Spacer(modifier = Modifier.height(DesignTokens.Spacing.XL))
@@ -264,7 +266,7 @@ fun AnalyticsScreen(onBack: () -> Unit) {
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(modifier = Modifier.padding(DesignTokens.Spacing.XL)) {
-                    Text("Weekly Performance", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                    Text(stringResource(R.string.analytics_weekly_performance), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                     Spacer(modifier = Modifier.height(DesignTokens.Spacing.XL))
 
                     // Bar chart
@@ -320,7 +322,7 @@ fun AnalyticsScreen(onBack: () -> Unit) {
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                 ) {
                     Column(modifier = Modifier.padding(DesignTokens.Spacing.XL)) {
-                        Text("Recent Health Metrics", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                        Text(stringResource(R.string.analytics_health_metrics), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                         Spacer(modifier = Modifier.height(DesignTokens.Spacing.MD))
                         
                         // Recent up to 7 feedbacks
@@ -353,7 +355,7 @@ fun AnalyticsScreen(onBack: () -> Unit) {
                         }
                         Spacer(modifier = Modifier.height(DesignTokens.Spacing.SM))
                         Text(
-                            "Respiration (0-10); orange = pain reported, red = severe pain",
+                            stringResource(R.string.analytics_metrics_legend),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center,
@@ -371,7 +373,7 @@ fun AnalyticsScreen(onBack: () -> Unit) {
                         modifier = Modifier.fillMaxWidth().padding(DesignTokens.Spacing.LG),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text("No feedback data available yet.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.analytics_no_feedback), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
@@ -476,7 +478,7 @@ private fun DonutChart(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    "Total",
+                    stringResource(R.string.analytics_total),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

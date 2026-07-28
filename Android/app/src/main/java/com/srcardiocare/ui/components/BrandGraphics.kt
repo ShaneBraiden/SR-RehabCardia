@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.srcardiocare.R
 import com.srcardiocare.ui.theme.DesignTokens
+import androidx.compose.ui.res.stringResource
 
 private val HeartRed = Color(0xFFEF4C43)
 private val PulseBlue = Color(0xFF0E7CC3)
@@ -91,13 +92,13 @@ fun BrandDashboardBanner(modifier: Modifier = Modifier) {
         BrandHeartLogo(modifier = Modifier.size(58.dp))
         Column {
             Text(
-                text = "RehabCardia",
+                text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = BrandTextBlue
             )
             Text(
-                text = "A digital health platform for cardiac rehabilitation",
+                text = stringResource(R.string.brand_tagline),
                 style = MaterialTheme.typography.bodySmall,
                 color = BrandTextBlue.copy(alpha = 0.85f)
             )

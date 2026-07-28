@@ -16,6 +16,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.srcardiocare.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -24,6 +26,7 @@ import com.srcardiocare.core.auth.AuthManager
 import com.srcardiocare.core.security.InputValidator
 import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.ui.components.InitialsAvatar
+import com.srcardiocare.ui.components.LanguageSettingRow
 import com.srcardiocare.ui.components.LegalLinksRow
 import com.srcardiocare.ui.components.LogoutConfirmDialog
 import com.srcardiocare.ui.components.ProfileFormSkeleton
@@ -52,6 +55,16 @@ fun PatientProfileSelfScreen(
     val toast = rememberToast()
 
     val ui by viewModel.state.collectAsStateWithLifecycle()
+
+    // "Not assigned" / "Unknown" are UI copy, so they are resolved here rather
+    // than baked into the ViewModel, which has no Context and no locale.
+    val assignedDoctorLabel = when (val doctor = ui.assignedDoctor) {
+        is PatientProfileSelfViewModel.AssignedDoctor.Named -> doctor.name
+        PatientProfileSelfViewModel.AssignedDoctor.Unknown ->
+            stringResource(R.string.profile_doctor_unknown)
+        PatientProfileSelfViewModel.AssignedDoctor.NotAssigned ->
+            stringResource(R.string.profile_doctor_not_assigned)
+    }
 
     var isEditing by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
@@ -85,13 +98,22 @@ fun PatientProfileSelfScreen(
             editFirstName = editFirstName,
             editLastName = editLastName,
             editPhone = editPhone,
-            onValidationError = { msg -> scope.launch { snackbarHostState.showSnackbar(msg) } },
+            nameFieldLabel = context.getString(R.string.profile_name_field_label),
+            onValidationError = { field, msg ->
+                val text = msg ?: context.getString(
+                    when (field) {
+                        PatientProfileSelfViewModel.ProfileField.NAME -> R.string.profile_invalid_name
+                        PatientProfileSelfViewModel.ProfileField.PHONE -> R.string.profile_invalid_phone
+                    }
+                )
+                scope.launch { snackbarHostState.showSnackbar(text) }
+            },
             onSuccess = {
                 isEditing = false
-                toast("Profile updated")
+                toast(context.getString(R.string.profile_updated))
             },
             onError = { msg ->
-                toast("Failed to update profile")
+                toast(context.getString(R.string.profile_update_failed))
                 scope.launch { snackbarHostState.showSnackbar(msg) }
             }
         )
@@ -101,10 +123,10 @@ fun PatientProfileSelfScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("My Profile", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.profile_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
                 actions = {
@@ -113,7 +135,7 @@ fun PatientProfileSelfScreen(
                             onClick = { beginEdit() },
                             modifier = Modifier.tutorialTarget(TutorialIds.PROFILE_EDIT)
                         ) {
-                            Icon(Icons.Default.Edit, contentDescription = "Edit profile")
+                            Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.profile_edit))
                         }
                     }
                     TutorialHelpButton()
@@ -149,7 +171,8 @@ fun PatientProfileSelfScreen(
 
                 Spacer(modifier = Modifier.height(DesignTokens.Spacing.MD))
                 Text(
-                    "${ui.firstName} ${ui.lastName}".trim().ifBlank { "Patient" },
+                    "${ui.firstName} ${ui.lastName}".trim()
+                        .ifBlank { stringResource(R.string.feedback_patient_fallback) },
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground
@@ -170,7 +193,7 @@ fun PatientProfileSelfScreen(
                             OutlinedTextField(
                                 value = editFirstName,
                                 onValueChange = { editFirstName = InputValidator.limitLength(it, InputValidator.MaxLength.NAME) },
-                                label = { Text("First Name") },
+                                label = { Text(stringResource(R.string.profile_first_name)) },
                                 modifier = Modifier.fillMaxWidth(),
                                 singleLine = true
                             )
@@ -178,7 +201,7 @@ fun PatientProfileSelfScreen(
                             OutlinedTextField(
                                 value = editLastName,
                                 onValueChange = { editLastName = InputValidator.limitLength(it, InputValidator.MaxLength.NAME) },
-                                label = { Text("Last Name (optional)") },
+                                label = { Text(stringResource(R.string.profile_last_name_optional)) },
                                 modifier = Modifier.fillMaxWidth(),
                                 singleLine = true
                             )
@@ -186,22 +209,35 @@ fun PatientProfileSelfScreen(
                             OutlinedTextField(
                                 value = editPhone,
                                 onValueChange = { editPhone = InputValidator.limitLength(it, InputValidator.MaxLength.PHONE) },
-                                label = { Text("Phone") },
+                                label = { Text(stringResource(R.string.profile_phone)) },
                                 modifier = Modifier.fillMaxWidth(),
                                 singleLine = true
                             )
                             Spacer(modifier = Modifier.height(DesignTokens.Spacing.SM))
                             // Condition is set by the doctor and is not patient-editable.
-                            ProfileInfoRow(label = "Condition (set by your doctor)", value = ui.condition.ifBlank { "None listed" })
-                            ProfileInfoRow(label = "Email (not editable)", value = ui.email)
-                            ProfileInfoRow(label = "Assigned Doctor", value = ui.assignedDoctor, showDivider = false)
+                            ProfileInfoRow(
+                                label = stringResource(R.string.profile_condition_readonly),
+                                value = ui.condition.ifBlank { stringResource(R.string.profile_none_listed) }
+                            )
+                            ProfileInfoRow(label = stringResource(R.string.profile_email_readonly), value = ui.email)
+                            ProfileInfoRow(
+                                label = stringResource(R.string.profile_assigned_doctor),
+                                value = assignedDoctorLabel,
+                                showDivider = false
+                            )
                         } else {
-                            ProfileInfoRow(label = "First Name", value = ui.firstName)
-                            ProfileInfoRow(label = "Last Name", value = ui.lastName)
-                            ProfileInfoRow(label = "Phone", value = ui.phone.ifBlank { "—" })
-                            ProfileInfoRow(label = "Condition", value = ui.condition.ifBlank { "None listed" })
-                            ProfileInfoRow(label = "Assigned Doctor", value = ui.assignedDoctor)
-                            ProfileInfoRow(label = "Email", value = ui.email, showDivider = false)
+                            ProfileInfoRow(label = stringResource(R.string.profile_first_name), value = ui.firstName)
+                            ProfileInfoRow(label = stringResource(R.string.profile_last_name), value = ui.lastName)
+                            ProfileInfoRow(
+                                label = stringResource(R.string.profile_phone),
+                                value = ui.phone.ifBlank { stringResource(R.string.profile_empty_value) }
+                            )
+                            ProfileInfoRow(
+                                label = stringResource(R.string.profile_condition),
+                                value = ui.condition.ifBlank { stringResource(R.string.profile_none_listed) }
+                            )
+                            ProfileInfoRow(label = stringResource(R.string.profile_assigned_doctor), value = assignedDoctorLabel)
+                            ProfileInfoRow(label = stringResource(R.string.profile_email), value = ui.email, showDivider = false)
                         }
                     }
                 }
@@ -220,7 +256,7 @@ fun PatientProfileSelfScreen(
                             modifier = Modifier.weight(1f).height(52.dp),
                             shape = RoundedCornerShape(DesignTokens.Radius.Base),
                             enabled = !ui.isSaving
-                        ) { Text("Cancel") }
+                        ) { Text(stringResource(R.string.action_cancel)) }
 
                         Button(
                             onClick = { saveEdits() },
@@ -230,11 +266,17 @@ fun PatientProfileSelfScreen(
                             enabled = !ui.isSaving
                         ) {
                             if (ui.isSaving) CircularProgressIndicator(modifier = Modifier.size(22.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
-                            else Text("Save", fontWeight = FontWeight.SemiBold)
+                            else Text(stringResource(R.string.action_save), fontWeight = FontWeight.SemiBold)
                         }
                     }
                     Spacer(modifier = Modifier.height(DesignTokens.Spacing.MD))
                 }
+
+                LanguageSettingRow(
+                    modifier = Modifier.padding(horizontal = DesignTokens.Spacing.XL)
+                )
+
+                Spacer(modifier = Modifier.height(DesignTokens.Spacing.SM))
 
                 Button(
                     onClick = onChangePassword,
@@ -246,7 +288,7 @@ fun PatientProfileSelfScreen(
                     shape = RoundedCornerShape(DesignTokens.Radius.Base),
                     colors = ButtonDefaults.buttonColors(containerColor = DesignTokens.Colors.Primary)
                 ) {
-                    Text("Change Password", fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.action_change_password), fontWeight = FontWeight.SemiBold)
                 }
 
                 Spacer(modifier = Modifier.height(DesignTokens.Spacing.MD))
@@ -264,7 +306,7 @@ fun PatientProfileSelfScreen(
                         contentColor = DesignTokens.Colors.Error
                     )
                 ) {
-                    Text("Sign Out", fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.action_sign_out), fontWeight = FontWeight.SemiBold)
                 }
 
                 Spacer(modifier = Modifier.height(DesignTokens.Spacing.SM))

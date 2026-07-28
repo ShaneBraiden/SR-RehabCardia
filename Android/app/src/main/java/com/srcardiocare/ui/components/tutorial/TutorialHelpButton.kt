@@ -8,6 +8,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import com.srcardiocare.R
 
 /**
  * A help "?" button that (re)starts the ambient [TutorialController]'s tour.
@@ -28,7 +30,7 @@ fun TutorialHelpButton(
     ) {
         Icon(
             imageVector = Icons.AutoMirrored.Outlined.HelpOutline,
-            contentDescription = "Show tutorial",
+            contentDescription = stringResource(R.string.tutorial_show),
             tint = tint
         )
     }

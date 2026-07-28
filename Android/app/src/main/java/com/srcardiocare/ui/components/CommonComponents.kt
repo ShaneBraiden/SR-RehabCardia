@@ -17,6 +17,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.srcardiocare.ui.theme.DesignTokens
+import androidx.compose.ui.res.stringResource
+import com.srcardiocare.R
 
 /**
  * "Powered by SRET-AIDA" attribution badge.
@@ -32,7 +34,7 @@ fun PoweredByBadge(modifier: Modifier = Modifier) {
         shadowElevation = 1.dp
     ) {
         Text(
-            text = "Powered by SRET-AIDA",
+            text = stringResource(R.string.powered_by),
             style = MaterialTheme.typography.labelSmall.copy(
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Medium,
@@ -67,7 +69,7 @@ fun LegalLinksRow(modifier: Modifier = Modifier) {
     ) {
         TextButton(onClick = { open("https://sr-cardiocare.web.app/privacy-policy.html") }) {
             Text(
-                "Privacy Policy",
+                stringResource(R.string.privacy_policy),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -79,7 +81,7 @@ fun LegalLinksRow(modifier: Modifier = Modifier) {
         )
         TextButton(onClick = { open("https://sr-cardiocare.web.app/terms-of-service.html") }) {
             Text(
-                "Terms of Service",
+                stringResource(R.string.terms_of_service),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -191,16 +193,16 @@ fun LogoutConfirmDialog(
     if (show) {
         AlertDialog(
             onDismissRequest = onDismiss,
-            title = { Text("Sign Out", fontWeight = FontWeight.Bold) },
-            text = { Text("Are you sure you want to sign out?") },
+            title = { Text(stringResource(R.string.action_sign_out), fontWeight = FontWeight.Bold) },
+            text = { Text(stringResource(R.string.sign_out_confirm_message)) },
             confirmButton = {
                 TextButton(onClick = onConfirm) {
-                    Text("Sign Out", color = DesignTokens.Colors.Error)
+                    Text(stringResource(R.string.action_sign_out), color = DesignTokens.Colors.Error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = onDismiss) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.action_cancel))
                 }
             }
         )

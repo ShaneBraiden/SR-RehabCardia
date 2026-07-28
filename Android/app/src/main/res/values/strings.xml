@@ -1,4 +1,432 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">RehabCardia</string>
+    <!--
+      Patient-facing strings only. Doctor and Admin screens are English-only and
+      keep their inline literals — see docs/i18n/tamil-glossary.md for the agreed
+      Tamil terminology behind values-ta/strings.xml.
+    -->
+
+    <!-- Brand — never translated -->
+    <string name="app_name" translatable="false">RehabCardia</string>
+    <string name="brand_tagline">A digital health platform for cardiac rehabilitation</string>
+    <string name="powered_by" translatable="false">Powered by SRET-AIDA</string>
+
+    <!-- Language switcher -->
+    <string name="language">Language</string>
+    <string name="language_english" translatable="false">English</string>
+    <string name="language_tamil" translatable="false">தமிழ்</string>
+
+    <!-- ===== Common actions (reused across screens) ===== -->
+    <string name="action_back">Back</string>
+    <string name="action_next">Next</string>
+    <string name="action_skip">Skip</string>
+    <string name="action_done">Done</string>
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_close">Close</string>
+    <string name="action_ok">OK</string>
+    <string name="action_send">Send</string>
+    <string name="action_yes">Yes</string>
+    <string name="action_no">No</string>
+    <string name="action_retry">Retry</string>
+    <string name="action_show">Show</string>
+    <string name="action_hide">Hide</string>
+    <string name="action_change_password">Change Password</string>
+    <string name="action_sign_out">Sign Out</string>
+
+    <!-- ===== Login ===== -->
+    <string name="login_logo_desc">RehabCardia logo</string>
+    <string name="login_welcome_back">Welcome Back</string>
+    <string name="login_subtitle">Sign in to continue your cardiac care journey</string>
+    <string name="login_email_label">Email address</string>
+    <string name="login_password_label">Password</string>
+    <string name="login_sign_in">Sign In</string>
+    <string name="login_error_empty_fields">Please enter your email and password.</string>
+    <string name="login_error_invalid_email">Please enter a valid email address.</string>
+    <string name="login_first_login_message">This is your first login. Would you like to change your password now for better security?</string>
+
+    <!-- ===== Change password ===== -->
+    <string name="change_password_heading">Update Your Password</string>
+    <string name="change_password_subtitle">Enter your current password and choose a new one.</string>
+    <string name="change_password_current_label">Current Password</string>
+    <string name="change_password_new_label">New Password</string>
+    <string name="change_password_confirm_label">Confirm New Password</string>
+    <string name="change_password_error_current_blank">Please enter your current password.</string>
+    <string name="change_password_error_current_wrong">Current password is incorrect.</string>
+    <string name="change_password_error_mismatch">New passwords do not match.</string>
+    <string name="change_password_error_same">New password must be different from current password.</string>
+    <string name="change_password_success">Password changed successfully!</string>
+
+    <!-- ===== Onboarding (shown once on first patient login) ===== -->
+    <string name="onboarding_1_title">Welcome to RehabCardia</string>
+    <string name="onboarding_1_body">Your personal companion for cardiac rehabilitation — built around a recovery plan created just for you by your care team.</string>
+    <string name="onboarding_2_title">Exercises Made for You</string>
+    <string name="onboarding_2_body">Your doctor assigns video-guided exercises matched to your recovery stage. Follow along at your own pace, one session at a time.</string>
+    <string name="onboarding_3_title">Watch Your Recovery Grow</string>
+    <string name="onboarding_3_body">Daily progress rings and history charts show how far you\'ve come — every completed session counts toward your recovery.</string>
+    <string name="onboarding_4_title">Your Care Team, One Tap Away</string>
+    <string name="onboarding_4_body">Message your doctor, receive feedback on your sessions, and never miss an appointment with built-in reminders.</string>
+    <string name="onboarding_get_started">Get Started</string>
+
+    <!-- ===== Patient home ===== -->
+    <string name="greeting_morning">Good Morning</string>
+    <string name="greeting_afternoon">Good Afternoon</string>
+    <string name="greeting_evening">Good Evening</string>
+    <string name="loading">Loading…</string>
+    <string name="home_todays_progress">Today\'s Progress</string>
+    <string name="home_progress_count">%1$d of %2$d exercises</string>
+    <string name="home_dashboard">Dashboard</string>
+    <string name="home_plan_expired">Plan Expired</string>
+    <string name="home_expires_today">Expires Today</string>
+    <plurals name="home_expires_in_days">
+        <item quantity="one">Expires in %d day</item>
+        <item quantity="other">Expires in %d days</item>
+    </plurals>
+    <string name="home_card_exercises">Exercises</string>
+    <string name="home_card_exercises_sub">%d assigned</string>
+    <string name="home_card_schedule">Schedule</string>
+    <string name="home_card_schedule_sub">View appointments</string>
+    <string name="home_card_progress">Progress</string>
+    <string name="home_card_progress_sub">Track your stats</string>
+    <string name="home_card_messages">Messages</string>
+    <string name="home_card_messages_sub">Chat with doctor</string>
+    <string name="home_card_notifications">Notifications</string>
+    <string name="home_card_notifications_sub">View alerts</string>
+    <string name="home_card_profile">Profile</string>
+    <string name="home_card_profile_sub">Your account</string>
+
+    <!--
+      ===== Workout player =====
+      Terminology is fixed by docs/i18n/tamil-glossary.md §4: session = அமர்வு,
+      set = சுற்று, rep = முறை. These are three distinct clinical concepts.
+      The phase tags and rep label render at very large type — keep Tamil short.
+    -->
+    <string name="workout_header">Session %1$d  •  Set %2$d of %3$d</string>
+    <string name="workout_end_desc">End workout</string>
+    <string name="workout_tag_go">GO</string>
+    <string name="workout_tag_demo">DEMO</string>
+    <string name="workout_tag_rest">REST</string>
+    <string name="workout_rep_singular">REP</string>
+    <string name="workout_rep_plural">REPS</string>
+    <string name="workout_set_of">Set %1$d of %2$d</string>
+    <string name="workout_no_demo_video">No demo video</string>
+    <string name="workout_rest_seconds_suffix">sec</string>
+    <string name="workout_up_next">Up next</string>
+    <string name="workout_action_ready">I\'m Ready</string>
+    <string name="workout_action_set_done">Set Done</string>
+    <string name="workout_action_skip_rest">Skip Rest</string>
+    <string name="workout_action_finishing">Finishing…</string>
+    <string name="workout_abandon_title">End workout?</string>
+    <string name="workout_abandon_message">Your progress so far will be saved as incomplete. You can start a new session later today.</string>
+    <string name="workout_abandon_confirm">End</string>
+    <string name="workout_abandon_dismiss">Keep going</string>
+    <string name="workout_abandoned_toast">Workout abandoned</string>
+    <string name="workout_completed_toast">Workout completed</string>
+    <string name="workout_complete_title">Workout Complete</string>
+    <string name="workout_session_done">Session %1$d done</string>
+
+    <!-- ===== Post-workout feedback ===== -->
+    <string name="feedback_title">Workout Complete!</string>
+    <string name="feedback_subtitle">Great job! Let us know how you felt.</string>
+    <string name="feedback_patient_fallback">Patient</string>
+    <string name="feedback_pain_question">Did you experience any pain?</string>
+    <string name="feedback_pain_where">Where is the pain?</string>
+    <string name="feedback_select_location">Select location</string>
+    <string name="feedback_pain_intensity">Pain intensity (Borg scale)</string>
+    <string name="feedback_pain_none">No pain (0)</string>
+    <string name="feedback_pain_worst">Worst (10)</string>
+    <string name="feedback_respiration">Respiration (Borg scale)</string>
+    <string name="feedback_respiration_easy">Easy (0)</string>
+    <string name="feedback_respiration_severe">Severe (10)</string>
+    <string name="feedback_pulse_rate">Pulse Rate</string>
+    <string name="feedback_pulse_hint">Beats per minute (bpm)</string>
+    <string name="feedback_pulse_error">Enter a value between 30 and 250</string>
+    <string name="feedback_notes_label">Typed Feedback / Notes (Sent to Doctor)</string>
+    <string name="feedback_submit">Submit Feedback</string>
+    <string name="feedback_submitted">Feedback submitted</string>
+    <string name="feedback_submit_failed">Failed to submit feedback</string>
+
+    <!--
+      Pain-location LABELS only. The canonical English value in
+      PostWorkoutFeedbackScreen.PAIN_LOCATIONS is what gets written to Firestore,
+      so the doctor's view and stored data stay English regardless of app language.
+    -->
+    <string name="pain_location_left_arm">Left Arm</string>
+    <string name="pain_location_right_arm">Right Arm</string>
+    <string name="pain_location_left_leg">Left Leg</string>
+    <string name="pain_location_right_leg">Right Leg</string>
+    <string name="pain_location_left_chest">Left Chest</string>
+    <string name="pain_location_right_chest">Right Chest</string>
+    <string name="pain_location_head">Head</string>
+    <string name="pain_location_other">Other</string>
+
+    <!-- ===== Daily exercises (assignment list) ===== -->
+    <string name="assignments_title">Daily Exercises</string>
+    <string name="assignments_today">Today\'s Exercises</string>
+    <string name="assignments_history">History</string>
+    <string name="assignments_empty_title">No exercises assigned</string>
+    <string name="assignments_empty_subtitle">Your doctor will assign exercises for you</string>
+    <string name="assignments_sets_reps">%1$d Sets • %2$d Reps</string>
+    <string name="assignments_start">Start</string>
+    <string name="assignments_in_progress">In Progress</string>
+    <string name="assignments_session_resume">Session in progress - tap to continue</string>
+    <string name="assignments_expires_today">Expires today</string>
+    <string name="assignments_expires_tomorrow">Expires tomorrow</string>
+    <plurals name="assignments_expires_in_days">
+        <item quantity="one">Expires in %d day</item>
+        <item quantity="other">Expires in %d days</item>
+    </plurals>
+    <string name="assignments_expires_on">Expires %1$s</string>
+    <string name="status_completed">Completed</string>
+    <string name="status_partial">Partial</string>
+    <string name="status_missed">Missed</string>
+
+    <!-- ===== Workout history ===== -->
+    <string name="history_title">Workout History</string>
+    <string name="history_empty">No history available.</string>
+    <string name="history_sessions_done">%1$d/%2$d Done</string>
+
+    <!-- ===== Chat with doctor ===== -->
+    <string name="chat_title">Chat with Doctor</string>
+    <string name="chat_input_hint">Type a message...</string>
+
+    <!-- ===== Patient profile ===== -->
+    <string name="profile_title">My Profile</string>
+    <string name="profile_edit">Edit profile</string>
+    <string name="profile_first_name">First Name</string>
+    <string name="profile_last_name">Last Name</string>
+    <string name="profile_last_name_optional">Last Name (optional)</string>
+    <string name="profile_phone">Phone</string>
+    <string name="profile_email">Email</string>
+    <string name="profile_email_readonly">Email (not editable)</string>
+    <string name="profile_condition">Condition</string>
+    <string name="profile_condition_readonly">Condition (set by your doctor)</string>
+    <string name="profile_assigned_doctor">Assigned Doctor</string>
+    <string name="profile_none_listed">None listed</string>
+    <string name="profile_empty_value">—</string>
+    <string name="profile_doctor_not_assigned">Not assigned</string>
+    <string name="profile_doctor_unknown">Unknown</string>
+    <string name="profile_name_field_label">Name</string>
+    <string name="profile_invalid_name">Invalid name</string>
+    <string name="profile_invalid_phone">Invalid phone</string>
+    <string name="profile_updated">Profile updated</string>
+    <string name="profile_update_failed">Failed to update profile</string>
+
+    <!-- ===== Notifications ===== -->
+    <string name="notifications_title">Notifications</string>
+    <string name="notifications_mark_all_read">Mark all read</string>
+    <string name="notifications_all_marked_read">All notifications marked read</string>
+    <string name="notifications_empty">You\'re all caught up.</string>
+    <string name="notifications_fallback_title">Notification</string>
+    <string name="time_just_now">Just now</string>
+    <string name="time_minutes_ago">%1$dm ago</string>
+    <string name="time_hours_ago">%1$dh ago</string>
+    <string name="time_days_ago">%1$dd ago</string>
+
+    <!-- ===== Analytics / progress ===== -->
+    <string name="analytics_title">My Progress</string>
+    <string name="analytics_subtitle">Track your recovery journey</string>
+    <string name="analytics_this_week">This Week ▾</string>
+    <string name="analytics_workout_overview">Workout Overview</string>
+    <string name="analytics_weekly_performance">Weekly Performance</string>
+    <string name="analytics_compliance">Compliance</string>
+    <string name="analytics_workouts">Workouts</string>
+    <string name="analytics_total">Total</string>
+    <string name="analytics_health_metrics">Recent Health Metrics</string>
+    <string name="analytics_metrics_legend">Respiration (0-10); orange = pain reported, red = severe pain</string>
+    <string name="analytics_no_feedback">No feedback data available yet.</string>
+
+    <!-- ===== Exercise library ===== -->
+    <string name="exercise_library_title">Exercise Library</string>
+    <string name="exercise_library_search">Search exercises…</string>
+    <string name="filter_all">All</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_play">Play</string>
+    <string name="exercise_video">Video</string>
+    <string name="exercise_upload_video">Upload Video</string>
+    <string name="exercise_delete_title">Delete Exercise</string>
+    <string name="exercise_delete_message">Are you sure you want to delete \'%1$s\'? This action cannot be undone.</string>
+    <string name="exercise_removed">Exercise removed</string>
+    <string name="exercise_remove_failed">Failed to remove exercise</string>
+    <string name="exercise_no_video">No video available</string>
+    <string name="exercise_invalid_video">Invalid video URL</string>
+
+    <!-- ===== Schedule / appointments ===== -->
+    <string name="schedule_title">Schedule</string>
+    <string name="schedule_today">Today</string>
+    <string name="schedule_new_appointment">New Appointment</string>
+    <string name="schedule_new_appointment_desc">New appointment</string>
+    <string name="schedule_patient">Patient</string>
+    <string name="schedule_select_patient">Select patient</string>
+    <string name="schedule_no_patients">No patients available. Add a patient first.</string>
+    <string name="schedule_time">Time</string>
+    <string name="schedule_hour" translatable="false">HH</string>
+    <string name="schedule_minute" translatable="false">MM</string>
+    <string name="schedule_notes_optional">Notes (optional)</string>
+    <string name="schedule_create">Create</string>
+    <string name="schedule_load_error">Could not load schedule</string>
+    <string name="schedule_empty">No appointments for this day</string>
+    <string name="schedule_empty_hint">Tap + to create one</string>
+    <string name="schedule_appointment_created">Appointment created</string>
+    <string name="schedule_request_sent">Request sent. Waiting for doctor approval</string>
+    <string name="schedule_select_patient_error">Please select a patient</string>
+    <string name="schedule_no_doctor_error">No assigned doctor found</string>
+    <string name="schedule_not_signed_in">Not signed in</string>
+    <string name="schedule_missing_target_user">Missing target user</string>
+    <string name="schedule_accept">Accept</string>
+    <string name="schedule_decline">Decline</string>
+    <string name="schedule_cancel_request">Cancel Request</string>
+    <string name="schedule_appointment_accepted">Appointment accepted</string>
+    <string name="schedule_appointment_declined">Appointment declined</string>
+    <string name="schedule_request_cancelled">Request cancelled</string>
+    <!-- Display label for the appointment type; the value stored in Firestore
+         stays "Consultation" so the doctor's view and notifications match. -->
+    <string name="appointment_type_consultation">Consultation</string>
+    <!-- Status LABELS. The stored value is the lowercase key, never translated. -->
+    <string name="appt_status_pending">Pending</string>
+    <string name="appt_status_confirmed">Confirmed</string>
+    <string name="appt_status_scheduled">Scheduled</string>
+    <string name="appt_status_completed">Completed</string>
+    <string name="appt_status_cancelled">Cancelled</string>
+    <string name="appt_status_accepted">Accepted</string>
+    <string name="appt_status_declined">Declined</string>
+    <string name="appt_status_unknown">Unknown</string>
+
+    <!--
+      ===== Shared error catalogue (core/security/ErrorHandler.kt) =====
+      Reused across every screen. Tone stays calm and non-alarming — patients
+      read these while unwell.
+    -->
+    <string name="error_invalid_credentials">Invalid email or password</string>
+    <string name="error_wrong_password">Incorrect password. Please try again</string>
+    <string name="error_no_account">No account found with this email</string>
+    <string name="error_email_in_use">An account with this email already exists</string>
+    <string name="error_weak_password">Password is too weak. Please use a stronger password</string>
+    <string name="error_network">Network error. Please check your connection</string>
+    <string name="error_too_many_requests">Too many attempts. Please try again later</string>
+    <string name="error_account_disabled">This account has been disabled</string>
+    <string name="error_account_blocked">Your account has been blocked by admin</string>
+    <string name="error_invalid_email">Please enter a valid email address</string>
+    <string name="error_permission_denied">You don\'t have permission to perform this action</string>
+    <string name="error_service_unavailable">Service temporarily unavailable. Please try again</string>
+    <string name="error_requires_recent_login">Please log out and log back in to continue</string>
+    <string name="error_credential_in_use">This credential is already associated with another account</string>
+    <string name="error_session_expired">Your session expired. Please log in again</string>
+    <string name="error_login_failed">Login failed. Please try again</string>
+    <string name="error_registration_failed">Registration failed. Please try again</string>
+    <string name="error_save_failed">Failed to save. Please try again</string>
+    <string name="error_load_failed">Failed to load data. Please try again</string>
+    <string name="error_delete_failed">Failed to delete. Please try again</string>
+    <string name="error_upload_failed">Upload failed. Please try again</string>
+    <string name="error_generic">An error occurred. Please try again</string>
+    <string name="error_password_change_failed">Failed to change password. Please try again</string>
+
+    <!-- ===== Shared components ===== -->
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="terms_of_service">Terms of Service</string>
+    <string name="sign_out_confirm_message">Are you sure you want to sign out?</string>
+    <string name="fullscreen_enter">Fullscreen</string>
+    <string name="fullscreen_exit">Exit fullscreen</string>
+    <string name="tutorial_show">Show tutorial</string>
+
+    <!-- ===== Password rules ===== -->
+    <string name="password_error_too_short">Password must be at least %1$d characters</string>
+    <string name="password_error_uppercase">Password must contain at least one uppercase letter</string>
+    <string name="password_error_lowercase">Password must contain at least one lowercase letter</string>
+    <string name="password_error_digit">Password must contain at least one number</string>
+    <string name="password_requirements">Password must be at least 8 characters with uppercase, lowercase, and a number</string>
+
+    <!-- ===== Notification channels (shown in Android system settings) ===== -->
+    <string name="channel_general_name">General alerts</string>
+    <string name="channel_general_desc">Plan updates, feedback and general reminders</string>
+    <string name="channel_chat_name">Messages</string>
+    <string name="channel_chat_desc">Direct messages between you and your care team</string>
+    <string name="channel_appointments_name">Appointments</string>
+    <string name="channel_appointments_desc">Appointment requests, confirmations and changes</string>
+
+    <string name="exercise_not_found">Exercise not found</string>
+
+    <!--
+      ===== Guided tour copy (patient tours only) =====
+      Doctor and admin tours in TutorialTours.kt stay as inline English literals.
+    -->
+    <string name="tour_home_start_title">Today\'s session</string>
+    <string name="tour_home_start_text">Tap here to begin the exercises your care team assigned for today.</string>
+    <string name="tour_home_schedule_title">Schedule</string>
+    <string name="tour_home_schedule_text">View appointments and set reminders so you never miss a session.</string>
+    <string name="tour_home_progress_title">Your progress</string>
+    <string name="tour_home_progress_text">See trends and charts that show how your recovery is improving.</string>
+    <string name="tour_home_chat_title">Message your doctor</string>
+    <string name="tour_home_chat_text">Have a question? Chat directly with your care team here.</string>
+    <string name="tour_home_notifications_title">Notifications</string>
+    <string name="tour_home_notifications_text">Reminders and feedback from your doctor land here.</string>
+    <string name="tour_home_profile_title">Your profile</string>
+    <string name="tour_home_profile_text">Update your details, change your password, or sign out.</string>
+
+    <string name="tour_assignment_card_title">Your exercises</string>
+    <string name="tour_assignment_card_text">Each card is an exercise your doctor assigned, with its sets, reps, and how often to do it.</string>
+    <string name="tour_assignment_start_title">Start a session</string>
+    <string name="tour_assignment_start_text">Tap to begin a guided session for this exercise.</string>
+    <string name="tour_assignment_history_title">History</string>
+    <string name="tour_assignment_history_text">Review the exercises you\'ve completed over time.</string>
+
+    <string name="tour_exercise_row_title">Your exercises</string>
+    <string name="tour_exercise_row_text">Each row is an exercise in today\'s plan.</string>
+    <string name="tour_exercise_start_title">Start</string>
+    <string name="tour_exercise_start_text">Tap an exercise to open its video and begin.</string>
+
+    <string name="tour_player_video_title">Follow along</string>
+    <string name="tour_player_video_text">Watch the demonstration and move at your own pace.</string>
+    <string name="tour_player_fullscreen_title">Fullscreen</string>
+    <string name="tour_player_fullscreen_text">Tap to enlarge the video for a clearer view.</string>
+    <string name="tour_player_complete_title">Finish the set</string>
+    <string name="tour_player_complete_text">When you\'ve finished, tap here to record it and move on.</string>
+
+    <string name="tour_aw_video_title">Exercise demo</string>
+    <string name="tour_aw_video_text">Watch how the movement is performed before you start.</string>
+    <string name="tour_aw_target_title">Your target</string>
+    <string name="tour_aw_target_text">This shows the reps and sets to aim for in this session.</string>
+    <string name="tour_aw_primary_title">Begin &amp; continue</string>
+    <string name="tour_aw_primary_text">Use this button to start the exercise and move through each set.</string>
+
+    <string name="tour_feedback_pain_title">Any pain?</string>
+    <string name="tour_feedback_pain_text">Let us know if you felt pain — and where — during the session.</string>
+    <string name="tour_feedback_borg_title">How it felt</string>
+    <string name="tour_feedback_borg_text">Rate how hard the effort and breathing felt using these sliders.</string>
+    <string name="tour_feedback_pulse_title">Your pulse</string>
+    <string name="tour_feedback_pulse_text">Enter your heart rate so your doctor can track your response.</string>
+    <string name="tour_feedback_submit_title">Send it</string>
+    <string name="tour_feedback_submit_text">Submit your feedback to share it with your care team.</string>
+
+    <string name="tour_schedule_calendar_title">Your calendar</string>
+    <string name="tour_schedule_calendar_text">Tap a day to see appointments and reminders.</string>
+    <string name="tour_schedule_add_title">Add a reminder</string>
+    <string name="tour_schedule_add_text">Create reminders so you stay on track with your sessions.</string>
+
+    <string name="tour_analytics_range_title">Time range</string>
+    <string name="tour_analytics_range_text">Switch between week, month, and longer views here.</string>
+    <string name="tour_analytics_chart_title">Your trend</string>
+    <string name="tour_analytics_chart_text">This chart shows how your activity changes over time.</string>
+    <string name="tour_analytics_metrics_title">Key numbers</string>
+    <string name="tour_analytics_metrics_text">Quick stats summarize your recovery at a glance.</string>
+
+    <string name="tour_chat_field_title">Write a message</string>
+    <string name="tour_chat_field_text">Type a message to your care team here.</string>
+    <string name="tour_chat_send_title">Send</string>
+    <string name="tour_chat_send_text">Tap to send your message.</string>
+
+    <string name="tour_profile_edit_title">Edit your profile</string>
+    <string name="tour_profile_edit_text">Keep your personal and health details up to date.</string>
+    <string name="tour_profile_password_title">Change password</string>
+    <string name="tour_profile_password_text">Update your password to keep your account secure.</string>
+    <string name="tour_profile_logout_title">Sign out</string>
+    <string name="tour_profile_logout_text">Tap here when you\'re ready to log out.</string>
+
+    <string name="tour_history_list_title">Your history</string>
+    <string name="tour_history_list_text">Review past exercises and how well each was completed.</string>
+
+    <string name="tour_notification_item_title">Notifications</string>
+    <string name="tour_notification_item_text">Tap an item to open what it\'s about.</string>
+    <string name="tour_notification_read_title">Mark as read</string>
+    <string name="tour_notification_read_text">Clear notifications once you\'ve seen them.</string>
 </resources>

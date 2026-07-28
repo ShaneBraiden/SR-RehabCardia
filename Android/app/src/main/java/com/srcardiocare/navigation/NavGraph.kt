@@ -440,7 +440,7 @@ fun SRCardiocareNavGraph(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("Exercise not found")
+                    Text(androidx.compose.ui.res.stringResource(com.srcardiocare.R.string.exercise_not_found))
                 }
             }
         }

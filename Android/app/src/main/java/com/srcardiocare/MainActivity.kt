@@ -1,6 +1,7 @@
 package com.srcardiocare
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -22,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.rememberNavController
+import com.srcardiocare.core.locale.LocaleManager
 import com.srcardiocare.core.push.PendingRoute
 import com.srcardiocare.core.push.PushMessagingService
 import com.srcardiocare.data.firebase.FirebaseService
@@ -30,6 +32,12 @@ import com.srcardiocare.navigation.Route
 import com.srcardiocare.ui.theme.SRCardiocareTheme
 
 class MainActivity : ComponentActivity() {
+
+    /** Applies the patient's chosen language before any resource is resolved. */
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(LocaleManager.wrap(newBase))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()

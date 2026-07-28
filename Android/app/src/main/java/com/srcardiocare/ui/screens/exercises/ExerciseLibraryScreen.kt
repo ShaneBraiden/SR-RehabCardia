@@ -42,6 +42,9 @@ import androidx.media3.common.Player
 import androidx.media3.common.VideoSize
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.srcardiocare.R
 import com.srcardiocare.core.security.InputValidator
 import com.srcardiocare.ui.components.FullscreenToggleButton
 import com.srcardiocare.ui.components.FullscreenVideoEffect
@@ -73,9 +76,12 @@ private data class ExLibItem(
 @Composable
 fun ExerciseLibraryScreen(onBack: () -> Unit, onUpload: () -> Unit) {
     var searchQuery by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableStateOf("All") }
+    // null = "All". A translated sentinel would break the equality check below,
+    // and the real category values are doctor-authored Firestore data that must
+    // stay exactly as written.
+    var selectedCategory by remember { mutableStateOf<String?>(null) }
     var allExercises by remember { mutableStateOf<List<ExLibItem>>(emptyList()) }
-    var categories by remember { mutableStateOf(listOf("All")) }
+    var categories by remember { mutableStateOf<List<String>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
     var currentUserId by remember { mutableStateOf("") }
@@ -83,6 +89,7 @@ fun ExerciseLibraryScreen(onBack: () -> Unit, onUpload: () -> Unit) {
     var showDeleteDialogFor by remember { mutableStateOf<ExLibItem?>(null) }
     var isDeleting by remember { mutableStateOf(false) }
     var playingVideo by remember { mutableStateOf<ExLibItem?>(null) }
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val toast = rememberToast()
 
@@ -103,14 +110,13 @@ fun ExerciseLibraryScreen(onBack: () -> Unit, onUpload: () -> Unit) {
                 val duration = if (secs > 0) "$mins:${secs.toString().padStart(2, '0')}" else "$mins:00"
                 ExLibItem(exercise.id, exercise.name, exercise.category, difficulty, duration, exercise.uploadedBy, exercise.videoUrl)
             }
-            val cats = allExercises.map { it.category }.distinct().sorted()
-            categories = listOf("All") + cats
+            categories = allExercises.map { it.category }.distinct().sorted()
         } catch (_: Exception) { }
         isLoading = false
     }
 
     val filtered = allExercises.filter { ex ->
-        val matchesCat = selectedCategory == "All" || ex.category == selectedCategory
+        val matchesCat = selectedCategory == null || ex.category == selectedCategory
         val matchesSearch = searchQuery.isBlank() || ex.name.contains(searchQuery, ignoreCase = true)
         matchesCat && matchesSearch
     }
@@ -128,10 +134,10 @@ fun ExerciseLibraryScreen(onBack: () -> Unit, onUpload: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Exercise Library", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.exercise_library_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
                 actions = { TutorialHelpButton() },
@@ -146,7 +152,7 @@ fun ExerciseLibraryScreen(onBack: () -> Unit, onUpload: () -> Unit) {
                     contentColor = Color.White,
                     modifier = Modifier.tutorialTarget(TutorialIds.LIBRARY_UPLOAD)
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Upload Video")
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.exercise_upload_video))
                 }
             }
         },
@@ -156,8 +162,8 @@ fun ExerciseLibraryScreen(onBack: () -> Unit, onUpload: () -> Unit) {
             val ex = showDeleteDialogFor!!
             AlertDialog(
                 onDismissRequest = { if (!isDeleting) showDeleteDialogFor = null },
-                title = { Text("Delete Exercise", color = DesignTokens.Colors.Error) },
-                text = { Text("Are you sure you want to delete '${ex.name}'? This action cannot be undone.") },
+                title = { Text(stringResource(R.string.exercise_delete_title), color = DesignTokens.Colors.Error) },
+                text = { Text(stringResource(R.string.exercise_delete_message, ex.name)) },
                 confirmButton = {
                     TextButton(
                         onClick = {
@@ -166,10 +172,10 @@ fun ExerciseLibraryScreen(onBack: () -> Unit, onUpload: () -> Unit) {
                                 try {
                                     FirebaseService.deleteExercise(ex.id, ex.videoUrl)
                                     allExercises = allExercises.filter { it.id != ex.id }
-                                    toast("Exercise removed")
+                                    toast(context.getString(R.string.exercise_removed))
                                     showDeleteDialogFor = null
                                 } catch (e: Exception) {
-                                    toast("Failed to remove exercise")
+                                    toast(context.getString(R.string.exercise_remove_failed))
                                     showDeleteDialogFor = null
                                 } finally {
                                     isDeleting = false
@@ -181,13 +187,13 @@ fun ExerciseLibraryScreen(onBack: () -> Unit, onUpload: () -> Unit) {
                         if (isDeleting) {
                             CircularProgressIndicator(modifier = Modifier.size(16.dp), color = DesignTokens.Colors.Error, strokeWidth = 2.dp)
                         } else {
-                            Text("Delete", color = DesignTokens.Colors.Error, fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.action_delete), color = DesignTokens.Colors.Error, fontWeight = FontWeight.Bold)
                         }
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showDeleteDialogFor = null }, enabled = !isDeleting) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.action_cancel))
                     }
                 }
             )
@@ -202,7 +208,7 @@ fun ExerciseLibraryScreen(onBack: () -> Unit, onUpload: () -> Unit) {
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = InputValidator.limitLength(it, InputValidator.MaxLength.TEXT_FIELD) },
-                placeholder = { Text("Search exercises…") },
+                placeholder = { Text(stringResource(R.string.exercise_library_search)) },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -223,12 +229,12 @@ fun ExerciseLibraryScreen(onBack: () -> Unit, onUpload: () -> Unit) {
                 horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.SM),
                 contentPadding = PaddingValues(horizontal = DesignTokens.Spacing.XL)
             ) {
-                items(categories) { cat ->
-                    val selected = cat == selectedCategory
+                // null is the "All" chip; the rest are Firestore category values.
+                items(listOf<String?>(null) + categories) { cat ->
                     FilterChip(
-                        selected = selected,
+                        selected = cat == selectedCategory,
                         onClick = { selectedCategory = cat },
-                        label = { Text(cat) },
+                        label = { Text(cat ?: stringResource(R.string.filter_all)) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = DesignTokens.Colors.Primary,
                             selectedLabelColor = MaterialTheme.colorScheme.onPrimary
@@ -320,13 +326,13 @@ fun ExerciseLibraryScreen(onBack: () -> Unit, onUpload: () -> Unit) {
                                     ) {
                                         Icon(
                                             Icons.Default.PlayArrow,
-                                            contentDescription = "Play",
+                                            contentDescription = stringResource(R.string.action_play),
                                             tint = Color.White,
                                             modifier = Modifier.size(24.dp)
                                         )
                                     }
                                 } else {
-                                    Icon(Icons.Default.Movie, contentDescription = "Video", modifier = Modifier.size(32.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Icon(Icons.Default.Movie, contentDescription = stringResource(R.string.exercise_video), modifier = Modifier.size(32.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
 
                                 // Delete button for authorized users
@@ -336,7 +342,7 @@ fun ExerciseLibraryScreen(onBack: () -> Unit, onUpload: () -> Unit) {
                                         onClick = { showDeleteDialogFor = ex },
                                         modifier = Modifier.align(Alignment.TopEnd).padding(2.dp).size(28.dp)
                                     ) {
-                                        Icon(Icons.Default.Delete, contentDescription = "Delete", tint = DesignTokens.Colors.Error)
+                                        Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.action_delete), tint = DesignTokens.Colors.Error)
                                     }
                                 }
 
@@ -412,7 +418,7 @@ private fun VideoPlayerDialog(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("No video available", color = Color.White)
+                        Text(stringResource(R.string.exercise_no_video), color = Color.White)
                     }
                 } else if (isYoutube) {
                     val videoId = remember(videoUrl) { extractYoutubeVideoIdLib(videoUrl) }
@@ -422,7 +428,7 @@ private fun VideoPlayerDialog(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("Invalid video URL", color = Color.White)
+                            Text(stringResource(R.string.exercise_invalid_video), color = Color.White)
                         }
                     } else {
                         val html = """
@@ -511,7 +517,7 @@ private fun VideoPlayerDialog(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             IconButton(onClick = onDismiss) {
-                                Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
+                                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.action_close), tint = Color.White)
                             }
                             Text(
                                 exerciseName,

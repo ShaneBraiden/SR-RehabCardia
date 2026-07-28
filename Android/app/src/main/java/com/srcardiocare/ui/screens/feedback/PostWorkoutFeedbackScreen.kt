@@ -1,6 +1,7 @@
 // PostWorkoutFeedbackScreen.kt — Feedback form after workout with Firestore save
 package com.srcardiocare.ui.screens.feedback
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,9 +19,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.srcardiocare.R
 import com.srcardiocare.core.security.ErrorHandler
 import com.srcardiocare.core.security.InputValidator
 import com.srcardiocare.data.firebase.FirebaseService
@@ -35,12 +39,25 @@ import com.srcardiocare.ui.components.tutorial.tutorialTarget
 import com.srcardiocare.ui.theme.DesignTokens
 import kotlinx.coroutines.launch
 
-/** Body locations offered when a patient reports pain. */
+/**
+ * Body locations offered when a patient reports pain.
+ *
+ * [value] is the canonical English string persisted to Firestore as
+ * `painLocation`; [labelRes] is only what the patient sees. Keeping the two
+ * separate means the doctor's view and any stored history stay English no
+ * matter which language the patient's app is running in.
+ */
+private data class PainLocation(val value: String, @StringRes val labelRes: Int)
+
 private val PAIN_LOCATIONS = listOf(
-    "Left Arm", "Right Arm",
-    "Left Leg", "Right Leg",
-    "Left Chest", "Right Chest",
-    "Head", "Other"
+    PainLocation("Left Arm", R.string.pain_location_left_arm),
+    PainLocation("Right Arm", R.string.pain_location_right_arm),
+    PainLocation("Left Leg", R.string.pain_location_left_leg),
+    PainLocation("Right Leg", R.string.pain_location_right_leg),
+    PainLocation("Left Chest", R.string.pain_location_left_chest),
+    PainLocation("Right Chest", R.string.pain_location_right_chest),
+    PainLocation("Head", R.string.pain_location_head),
+    PainLocation("Other", R.string.pain_location_other)
 )
 
 /** Colour for a Borg 0-10 rating: green (mild) -> orange (moderate) -> red (severe). */
@@ -64,7 +81,8 @@ fun PostWorkoutFeedbackScreen(
     var notes by remember { mutableStateOf("") }
     var isSubmitting by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    var patientName by remember { mutableStateOf("Patient") }
+    val context = LocalContext.current
+    var patientName by remember { mutableStateOf(context.getString(R.string.feedback_patient_fallback)) }
 
     val scope = rememberCoroutineScope()
     val toast = rememberToast()
@@ -72,7 +90,7 @@ fun PostWorkoutFeedbackScreen(
     LaunchedEffect(Unit) {
         val uid = FirebaseService.currentUID ?: return@LaunchedEffect
         try {
-            patientName = UserRepository.getUser(uid).fullName.ifBlank { "Patient" }
+            patientName = UserRepository.getUser(uid).fullName.ifBlank { context.getString(R.string.feedback_patient_fallback) }
         } catch (_: Exception) {}
     }
 
@@ -121,13 +139,13 @@ fun PostWorkoutFeedbackScreen(
             Spacer(modifier = Modifier.height(DesignTokens.Spacing.MD))
 
             Text(
-                "Workout Complete!",
+                stringResource(R.string.feedback_title),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
             )
             Text(
-                "Great job! Let us know how you felt.",
+                stringResource(R.string.feedback_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -141,7 +159,7 @@ fun PostWorkoutFeedbackScreen(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(modifier = Modifier.padding(DesignTokens.Spacing.MD)) {
-                    Text("Did you experience any pain?", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+                    Text(stringResource(R.string.feedback_pain_question), fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
                     Spacer(modifier = Modifier.height(DesignTokens.Spacing.SM))
                     Row(
                         modifier = Modifier
@@ -150,13 +168,13 @@ fun PostWorkoutFeedbackScreen(
                         horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.MD)
                     ) {
                         YesNoChip(
-                            label = "Yes",
+                            label = stringResource(R.string.action_yes),
                             selected = hadPain == true,
                             onClick = { hadPain = true },
                             modifier = Modifier.weight(1f)
                         )
                         YesNoChip(
-                            label = "No",
+                            label = stringResource(R.string.action_no),
                             selected = hadPain == false,
                             onClick = {
                                 hadPain = false
@@ -171,7 +189,7 @@ fun PostWorkoutFeedbackScreen(
                         Spacer(modifier = Modifier.height(DesignTokens.Spacing.MD))
 
                         // Where is the pain? — dropdown
-                        Text("Where is the pain?", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
+                        Text(stringResource(R.string.feedback_pain_where), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
                         Spacer(modifier = Modifier.height(DesignTokens.Spacing.SM))
                         Box {
                             Row(
@@ -189,7 +207,9 @@ fun PostWorkoutFeedbackScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    painLocation ?: "Select location",
+                                    PAIN_LOCATIONS.firstOrNull { it.value == painLocation }
+                                        ?.let { stringResource(it.labelRes) }
+                                        ?: stringResource(R.string.feedback_select_location),
                                     color = if (painLocation == null) MaterialTheme.colorScheme.onSurfaceVariant
                                     else MaterialTheme.colorScheme.onSurface
                                 )
@@ -205,9 +225,9 @@ fun PostWorkoutFeedbackScreen(
                             ) {
                                 PAIN_LOCATIONS.forEach { location ->
                                     DropdownMenuItem(
-                                        text = { Text(location) },
+                                        text = { Text(stringResource(location.labelRes)) },
                                         onClick = {
-                                            painLocation = location
+                                            painLocation = location.value
                                             locationExpanded = false
                                         }
                                     )
@@ -218,7 +238,7 @@ fun PostWorkoutFeedbackScreen(
                         Spacer(modifier = Modifier.height(DesignTokens.Spacing.MD))
 
                         // Pain intensity — Borg scale 0-10
-                        Text("Pain intensity (Borg scale)", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
+                        Text(stringResource(R.string.feedback_pain_intensity), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
                         val painColor = borgColor(painIntensity.toInt())
                         Slider(
                             value = painIntensity,
@@ -234,14 +254,14 @@ fun PostWorkoutFeedbackScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("No pain (0)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(stringResource(R.string.feedback_pain_none), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Text(
                                 "${painIntensity.toInt()}",
                                 fontWeight = FontWeight.Bold,
                                 color = painColor,
                                 style = MaterialTheme.typography.titleMedium
                             )
-                            Text("Worst (10)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(stringResource(R.string.feedback_pain_worst), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
@@ -258,7 +278,7 @@ fun PostWorkoutFeedbackScreen(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(modifier = Modifier.padding(DesignTokens.Spacing.MD)) {
-                    Text("Respiration (Borg scale)", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+                    Text(stringResource(R.string.feedback_respiration), fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
                     Spacer(modifier = Modifier.height(DesignTokens.Spacing.SM))
                     val respBorgColor = borgColor(respiration.toInt())
                     Slider(
@@ -275,14 +295,14 @@ fun PostWorkoutFeedbackScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Easy (0)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.feedback_respiration_easy), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(
                             "${respiration.toInt()}",
                             fontWeight = FontWeight.Bold,
                             color = respBorgColor,
                             style = MaterialTheme.typography.titleMedium
                         )
-                        Text("Severe (10)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.feedback_respiration_severe), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
@@ -298,18 +318,18 @@ fun PostWorkoutFeedbackScreen(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(modifier = Modifier.padding(DesignTokens.Spacing.MD)) {
-                    Text("Pulse Rate", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+                    Text(stringResource(R.string.feedback_pulse_rate), fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
                     Spacer(modifier = Modifier.height(DesignTokens.Spacing.SM))
                     OutlinedTextField(
                         value = pulseRate,
                         onValueChange = { input -> pulseRate = input.filter { it.isDigit() }.take(3) },
                         modifier = Modifier.fillMaxWidth(),
-                        label = { Text("Beats per minute (bpm)") },
+                        label = { Text(stringResource(R.string.feedback_pulse_hint)) },
                         singleLine = true,
                         isError = pulseRate.isNotEmpty() && !pulseValid,
                         supportingText = {
                             if (pulseRate.isNotEmpty() && !pulseValid) {
-                                Text("Enter a value between 30 and 250")
+                                Text(stringResource(R.string.feedback_pulse_error))
                             }
                         },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -331,7 +351,7 @@ fun PostWorkoutFeedbackScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(100.dp),
-                label = { Text("Typed Feedback / Notes (Sent to Doctor)") },
+                label = { Text(stringResource(R.string.feedback_notes_label)) },
                 shape = RoundedCornerShape(DesignTokens.Radius.Base),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = DesignTokens.Colors.Primary,
@@ -374,10 +394,10 @@ fun PostWorkoutFeedbackScreen(
                                 FirebaseService.sendChatMessage(uid, uid, patientName, chatText)
                             }
 
-                            toast("Feedback submitted")
+                            toast(context.getString(R.string.feedback_submitted))
                             onSubmit()
                         } catch (e: Exception) {
-                            toast("Failed to submit feedback")
+                            toast(context.getString(R.string.feedback_submit_failed))
                             errorMessage = ErrorHandler.getDisplayMessage(e, "save feedback")
                             isSubmitting = false
                         }
@@ -398,7 +418,7 @@ fun PostWorkoutFeedbackScreen(
                         strokeWidth = 2.dp
                     )
                 } else {
-                    Text("Submit Feedback", fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.feedback_submit), fontWeight = FontWeight.SemiBold)
                 }
             }
 

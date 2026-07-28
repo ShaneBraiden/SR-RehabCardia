@@ -29,6 +29,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.srcardiocare.R
@@ -135,9 +136,11 @@ fun PatientHomeScreen(
                         expiryText = if (nearestExpiry != null) {
                             val daysRemaining = java.time.temporal.ChronoUnit.DAYS.between(today, nearestExpiry).toInt()
                             when {
-                                daysRemaining < 0 -> "Plan Expired"
-                                daysRemaining == 0 -> "Expires Today"
-                                else -> "Expires in $daysRemaining days"
+                                daysRemaining < 0 -> context.getString(R.string.home_plan_expired)
+                                daysRemaining == 0 -> context.getString(R.string.home_expires_today)
+                                else -> context.resources.getQuantityString(
+                                    R.plurals.home_expires_in_days, daysRemaining, daysRemaining
+                                )
                             }
                         } else null
                     } catch (_: Exception) { }
@@ -153,9 +156,9 @@ fun PatientHomeScreen(
 
     val hour = LocalDateTime.now().hour
     val greeting = when {
-        hour in 5..11 -> "Good Morning"
-        hour in 12..16 -> "Good Afternoon"
-        else -> "Good Evening"
+        hour in 5..11 -> stringResource(R.string.greeting_morning)
+        hour in 12..16 -> stringResource(R.string.greeting_afternoon)
+        else -> stringResource(R.string.greeting_evening)
     }
 
     TutorialHost(tourKey = TutorialKeys.PATIENT_HOME, steps = TutorialTours.patientHome) {
@@ -171,18 +174,18 @@ fun PatientHomeScreen(
                         ) {
                             Image(
                                 painter = painterResource(id = R.drawable.sr_logo),
-                                contentDescription = "RehabCardia logo",
+                                contentDescription = stringResource(R.string.login_logo_desc),
                                 modifier = Modifier.size(38.dp),
                                 contentScale = ContentScale.Fit
                             )
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    "RehabCardia",
+                                    stringResource(R.string.app_name),
                                     fontWeight = FontWeight.Bold,
                                     style = MaterialTheme.typography.titleMedium
                                 )
                                 Text(
-                                    "A digital health platform for Cardiac rehabilitation",
+                                    stringResource(R.string.brand_tagline),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -205,7 +208,7 @@ fun PatientHomeScreen(
             item {
                 Column(modifier = Modifier.padding(horizontal = DesignTokens.Spacing.XL, vertical = DesignTokens.Spacing.MD)) {
                     Text(greeting, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(userName.ifBlank { "Loading…" }, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+                    Text(userName.ifBlank { stringResource(R.string.loading) }, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
                 }
             }
 
@@ -266,9 +269,9 @@ fun PatientHomeScreen(
                                 Text("$progressPercent%", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
                             }
                             Column {
-                                Text("Today's Progress", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimary)
+                                Text(stringResource(R.string.home_todays_progress), fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimary)
                                 Spacer(modifier = Modifier.height(4.dp))
-                                Text("$completedCount of $totalCount exercises", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f))
+                                Text(stringResource(R.string.home_progress_count, completedCount, totalCount), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f))
                             }
                         }
                     }
@@ -279,7 +282,7 @@ fun PatientHomeScreen(
             // Dashboard Cards section
             item {
                 Text(
-                    "Dashboard",
+                    stringResource(R.string.home_dashboard),
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(horizontal = DesignTokens.Spacing.XL, vertical = DesignTokens.Spacing.SM)
@@ -297,16 +300,16 @@ fun PatientHomeScreen(
                     DashboardCard(
                         modifier = Modifier.weight(1f).tutorialTarget(TutorialIds.HOME_START),
                         icon = Icons.Default.FitnessCenter,
-                        title = "Exercises",
-                        subtitle = "$totalCount assigned",
+                        title = stringResource(R.string.home_card_exercises),
+                        subtitle = stringResource(R.string.home_card_exercises_sub, totalCount),
                         badgeCount = if (totalCount - completedCount > 0) totalCount - completedCount else null,
                         onClick = onExerciseTap
                     )
                     DashboardCard(
                         modifier = Modifier.weight(1f).tutorialTarget(TutorialIds.HOME_SCHEDULE),
                         icon = Icons.Default.CalendarMonth,
-                        title = "Schedule",
-                        subtitle = "View appointments",
+                        title = stringResource(R.string.home_card_schedule),
+                        subtitle = stringResource(R.string.home_card_schedule_sub),
                         onClick = onScheduleTap
                     )
                 }
@@ -324,15 +327,15 @@ fun PatientHomeScreen(
                     DashboardCard(
                         modifier = Modifier.weight(1f).tutorialTarget(TutorialIds.HOME_PROGRESS),
                         icon = Icons.Default.Insights,
-                        title = "Progress",
-                        subtitle = "Track your stats",
+                        title = stringResource(R.string.home_card_progress),
+                        subtitle = stringResource(R.string.home_card_progress_sub),
                         onClick = onAnalyticsTap
                     )
                     DashboardCard(
                         modifier = Modifier.weight(1f).tutorialTarget(TutorialIds.HOME_CHAT),
                         icon = Icons.Default.ChatBubble,
-                        title = "Messages",
-                        subtitle = "Chat with doctor",
+                        title = stringResource(R.string.home_card_messages),
+                        subtitle = stringResource(R.string.home_card_messages_sub),
                         onClick = onChatTap
                     )
                 }
@@ -350,15 +353,15 @@ fun PatientHomeScreen(
                     DashboardCard(
                         modifier = Modifier.weight(1f).tutorialTarget(TutorialIds.HOME_NOTIFICATIONS),
                         icon = Icons.Default.Notifications,
-                        title = "Notifications",
-                        subtitle = "View alerts",
+                        title = stringResource(R.string.home_card_notifications),
+                        subtitle = stringResource(R.string.home_card_notifications_sub),
                         onClick = onNotificationsTap
                     )
                     DashboardCard(
                         modifier = Modifier.weight(1f).tutorialTarget(TutorialIds.HOME_PROFILE),
                         icon = Icons.Default.Person,
-                        title = "Profile",
-                        subtitle = "Your account",
+                        title = stringResource(R.string.home_card_profile),
+                        subtitle = stringResource(R.string.home_card_profile_sub),
                         onClick = onProfile
                     )
                 }

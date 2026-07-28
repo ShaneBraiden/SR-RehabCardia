@@ -67,12 +67,6 @@ class AssignmentListViewModel : ViewModel() {
 
                         val isDone = completedSessions >= assignment.dailyFrequency
                         val daysUntilExpiry = ChronoUnit.DAYS.between(today, endDate).toInt()
-                        val expiryText = when {
-                            daysUntilExpiry == 0 -> "Expires today"
-                            daysUntilExpiry == 1 -> "Expires tomorrow"
-                            daysUntilExpiry <= 7 -> "Expires in $daysUntilExpiry days"
-                            else -> "Expires ${endDate.format(dateFormatter)}"
-                        }
 
                         activeList.add(
                             ActiveExerciseItem(
@@ -82,7 +76,8 @@ class AssignmentListViewModel : ViewModel() {
                                 isDoneToday = isDone,
                                 canStartSession = !isDone && inProgressSession == null,
                                 currentSession = inProgressSession,
-                                expiryText = expiryText,
+                                expiryDaysRemaining = daysUntilExpiry,
+                                expiryDate = endDate.format(dateFormatter),
                                 progressText = "$completedSessions/${assignment.dailyFrequency}"
                             )
                         )

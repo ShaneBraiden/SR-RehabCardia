@@ -2,34 +2,48 @@
 package com.srcardiocare.core.security
 
 import android.util.Log
+import androidx.annotation.StringRes
 import com.google.firebase.auth.FirebaseAuthException
+import com.srcardiocare.R
+import com.srcardiocare.core.locale.LocaleManager
 
 /**
  * Handles error message sanitization to prevent leaking implementation details.
  * Maps technical errors to user-friendly messages.
+ *
+ * Messages resolve via [LocaleManager.string] so the current language is picked
+ * up without every call site having to pass a Context — `getDisplayMessage` is
+ * used from ~20 places across patient and doctor screens.
+ *
+ * Note the map KEYS are Firebase error codes matched against exception text and
+ * must never be translated. Only the values are user-facing.
  */
 object ErrorHandler {
 
     private const val TAG = "SRCardiocare"
 
+    /** Falls back to the English text if the Application isn't up yet. */
+    private fun str(@StringRes id: Int, fallback: String): String =
+        LocaleManager.string(id, fallback)
+
     // Map of known Firebase/network error patterns to user-friendly messages
-    private val errorMappings = mapOf(
-        "INVALID_LOGIN_CREDENTIALS" to "Invalid email or password",
-        "wrong-password" to "Invalid email or password",
-        "user-not-found" to "No account found with this email",
-        "email-already-in-use" to "An account with this email already exists",
-        "weak-password" to "Password is too weak. Please use a stronger password",
-        "network-request-failed" to "Network error. Please check your connection",
-        "too-many-requests" to "Too many attempts. Please try again later",
-        "user-disabled" to "This account has been disabled",
-        "blocked by admin" to "Your account has been blocked by admin",
-        "account access has been blocked" to "Your account has been blocked by admin",
-        "invalid-email" to "Please enter a valid email address",
-        "permission-denied" to "You don't have permission to perform this action",
-        "unavailable" to "Service temporarily unavailable. Please try again",
-        "PERMISSION_DENIED" to "You don't have permission to perform this action",
-        "requires-recent-login" to "Please log out and log back in to continue",
-        "credential-already-in-use" to "This credential is already associated with another account"
+    private val errorMappings: Map<String, Int> = mapOf(
+        "INVALID_LOGIN_CREDENTIALS" to R.string.error_invalid_credentials,
+        "wrong-password" to R.string.error_invalid_credentials,
+        "user-not-found" to R.string.error_no_account,
+        "email-already-in-use" to R.string.error_email_in_use,
+        "weak-password" to R.string.error_weak_password,
+        "network-request-failed" to R.string.error_network,
+        "too-many-requests" to R.string.error_too_many_requests,
+        "user-disabled" to R.string.error_account_disabled,
+        "blocked by admin" to R.string.error_account_blocked,
+        "account access has been blocked" to R.string.error_account_blocked,
+        "invalid-email" to R.string.error_invalid_email,
+        "permission-denied" to R.string.error_permission_denied,
+        "unavailable" to R.string.error_service_unavailable,
+        "PERMISSION_DENIED" to R.string.error_permission_denied,
+        "requires-recent-login" to R.string.error_requires_recent_login,
+        "credential-already-in-use" to R.string.error_credential_in_use
     )
 
     /**
@@ -37,33 +51,36 @@ object ErrorHandler {
      * The Firebase Android SDK reports codes like "ERROR_WRONG_PASSWORD" (not the
      * kebab-case web codes), so these are matched first against [FirebaseAuthException.errorCode].
      */
-    private val authCodeMappings = mapOf(
-        "ERROR_INVALID_EMAIL" to "Please enter a valid email address",
-        "ERROR_WRONG_PASSWORD" to "Incorrect password. Please try again",
-        "ERROR_USER_NOT_FOUND" to "No account found with this email",
-        "ERROR_INVALID_CREDENTIAL" to "Incorrect email or password",
-        "ERROR_USER_DISABLED" to "This account has been disabled",
-        "ERROR_USER_TOKEN_EXPIRED" to "Your session expired. Please log in again",
-        "ERROR_TOO_MANY_REQUESTS" to "Too many attempts. Please try again later",
-        "ERROR_NETWORK_REQUEST_FAILED" to "Network error. Please check your connection",
-        "ERROR_EMAIL_ALREADY_IN_USE" to "An account with this email already exists",
-        "ERROR_WEAK_PASSWORD" to "Password is too weak. Please use a stronger password",
-        "ERROR_REQUIRES_RECENT_LOGIN" to "Please log out and log back in to continue"
+    private val authCodeMappings: Map<String, Int> = mapOf(
+        "ERROR_INVALID_EMAIL" to R.string.error_invalid_email,
+        "ERROR_WRONG_PASSWORD" to R.string.error_wrong_password,
+        "ERROR_USER_NOT_FOUND" to R.string.error_no_account,
+        "ERROR_INVALID_CREDENTIAL" to R.string.error_invalid_credentials,
+        "ERROR_USER_DISABLED" to R.string.error_account_disabled,
+        "ERROR_USER_TOKEN_EXPIRED" to R.string.error_session_expired,
+        "ERROR_TOO_MANY_REQUESTS" to R.string.error_too_many_requests,
+        "ERROR_NETWORK_REQUEST_FAILED" to R.string.error_network,
+        "ERROR_EMAIL_ALREADY_IN_USE" to R.string.error_email_in_use,
+        "ERROR_WEAK_PASSWORD" to R.string.error_weak_password,
+        "ERROR_REQUIRES_RECENT_LOGIN" to R.string.error_requires_recent_login
     )
 
     /**
      * Generic user-friendly messages for different operation types.
+     *
+     * These are resolved on access rather than being compile-time constants, so
+     * they follow the selected language.
      */
     object UserMessages {
-        const val LOGIN_FAILED = "Login failed. Please try again"
-        const val REGISTRATION_FAILED = "Registration failed. Please try again"
-        const val SAVE_FAILED = "Failed to save. Please try again"
-        const val LOAD_FAILED = "Failed to load data. Please try again"
-        const val DELETE_FAILED = "Failed to delete. Please try again"
-        const val UPLOAD_FAILED = "Upload failed. Please try again"
-        const val NETWORK_ERROR = "Network error. Please check your connection"
-        const val GENERIC_ERROR = "An error occurred. Please try again"
-        const val PASSWORD_CHANGE_FAILED = "Failed to change password. Please try again"
+        val LOGIN_FAILED get() = str(R.string.error_login_failed, "Login failed. Please try again")
+        val REGISTRATION_FAILED get() = str(R.string.error_registration_failed, "Registration failed. Please try again")
+        val SAVE_FAILED get() = str(R.string.error_save_failed, "Failed to save. Please try again")
+        val LOAD_FAILED get() = str(R.string.error_load_failed, "Failed to load data. Please try again")
+        val DELETE_FAILED get() = str(R.string.error_delete_failed, "Failed to delete. Please try again")
+        val UPLOAD_FAILED get() = str(R.string.error_upload_failed, "Upload failed. Please try again")
+        val NETWORK_ERROR get() = str(R.string.error_network, "Network error. Please check your connection")
+        val GENERIC_ERROR get() = str(R.string.error_generic, "An error occurred. Please try again")
+        val PASSWORD_CHANGE_FAILED get() = str(R.string.error_password_change_failed, "Failed to change password. Please try again")
     }
 
     /**
@@ -82,13 +99,13 @@ object ErrorHandler {
 
         // Firebase Auth: match the explicit error code first (most reliable on Android).
         if (exception is FirebaseAuthException) {
-            authCodeMappings[exception.errorCode]?.let { return it }
+            authCodeMappings[exception.errorCode]?.let { return str(it, UserMessages.GENERIC_ERROR) }
         }
 
         // Check for known error patterns
-        for ((pattern, userMessage) in errorMappings) {
+        for ((pattern, messageRes) in errorMappings) {
             if (message.contains(pattern, ignoreCase = true)) {
-                return userMessage
+                return str(messageRes, UserMessages.GENERIC_ERROR)
             }
         }
 

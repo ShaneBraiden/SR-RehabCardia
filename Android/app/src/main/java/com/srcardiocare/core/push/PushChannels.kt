@@ -4,6 +4,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
+import com.srcardiocare.R
 
 /**
  * Registers the app's notification channels (Android 8+).
@@ -24,18 +25,30 @@ object PushChannels {
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         manager.createNotificationChannel(
-            NotificationChannel(GENERAL, "General alerts", NotificationManager.IMPORTANCE_HIGH).apply {
-                description = "Plan updates, feedback and general reminders"
+            NotificationChannel(
+                GENERAL,
+                context.getString(R.string.channel_general_name),
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = context.getString(R.string.channel_general_desc)
             }
         )
         manager.createNotificationChannel(
-            NotificationChannel(CHAT, "Messages", NotificationManager.IMPORTANCE_HIGH).apply {
-                description = "Direct messages between you and your care team"
+            NotificationChannel(
+                CHAT,
+                context.getString(R.string.channel_chat_name),
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = context.getString(R.string.channel_chat_desc)
             }
         )
         manager.createNotificationChannel(
-            NotificationChannel(APPOINTMENTS, "Appointments", NotificationManager.IMPORTANCE_HIGH).apply {
-                description = "Appointment requests, confirmations and changes"
+            NotificationChannel(
+                APPOINTMENTS,
+                context.getString(R.string.channel_appointments_name),
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = context.getString(R.string.channel_appointments_desc)
             }
         )
     }

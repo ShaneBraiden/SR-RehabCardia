@@ -63,6 +63,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.google.firebase.firestore.FieldValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.srcardiocare.R
 import com.srcardiocare.core.security.ErrorHandler
 import com.srcardiocare.core.security.InputValidator
 import com.srcardiocare.data.firebase.FirebaseService
@@ -122,6 +125,13 @@ private fun currentWeekDays(): List<DayItem> {
     }
 }
 
+/**
+ * The only appointment type. Persisted to Firestore as `type` and interpolated
+ * into notification copy, so it must stay in English — see
+ * R.string.appointment_type_consultation for the display label.
+ */
+const val APPOINTMENT_TYPE_CONSULTATION = "Consultation"
+
 fun statusColor(status: String): Color {
     return when (status.lowercase()) {
         "confirmed", "completed" -> DesignTokens.Colors.Success
@@ -131,15 +141,31 @@ fun statusColor(status: String): Color {
     }
 }
 
-private fun prettyStatus(status: String): String {
-    if (status.isBlank()) return "Unknown"
-    return status.replaceFirstChar { it.uppercase() }
+/**
+ * Maps the stored lowercase status key to a display label.
+ *
+ * The key itself is Firestore data and is never translated — only the label is.
+ * An unrecognised key falls back to capitalising it, which keeps forward
+ * compatibility if a new status is added server-side.
+ */
+@Composable
+private fun prettyStatus(status: String): String = when (status.lowercase()) {
+    "" -> stringResource(R.string.appt_status_unknown)
+    "pending" -> stringResource(R.string.appt_status_pending)
+    "confirmed" -> stringResource(R.string.appt_status_confirmed)
+    "scheduled" -> stringResource(R.string.appt_status_scheduled)
+    "completed" -> stringResource(R.string.appt_status_completed)
+    "cancelled" -> stringResource(R.string.appt_status_cancelled)
+    "accepted" -> stringResource(R.string.appt_status_accepted)
+    "declined" -> stringResource(R.string.appt_status_declined)
+    else -> status.replaceFirstChar { it.uppercase() }
 }
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScheduleScreen(onBack: () -> Unit) {
+    val context = LocalContext.current
     var selectedDay by remember { mutableIntStateOf(LocalDate.now().dayOfWeek.value - 1) }
     val days = remember { currentWeekDays() }
 
@@ -182,7 +208,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
         action: String
     ) {
         if (notifyUserId.isNullOrBlank()) {
-            throw Exception("Missing target user")
+            throw Exception(context.getString(R.string.schedule_missing_target_user))
         }
 
         FirebaseService.updateAppointment(
@@ -207,7 +233,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
     if (showAddDialog) {
         AlertDialog(
             onDismissRequest = { if (!isSaving) showAddDialog = false },
-            title = { Text("New Appointment", fontWeight = FontWeight.Bold) },
+            title = { Text(stringResource(R.string.schedule_new_appointment), fontWeight = FontWeight.Bold) },
             text = {
                 Column(
                     modifier = Modifier
@@ -216,14 +242,14 @@ fun ScheduleScreen(onBack: () -> Unit) {
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     if (userRole == "doctor" || userRole == "admin") {
-                        Text("Patient", fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
+                        Text(stringResource(R.string.schedule_patient), fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
 
                         Box {
                             OutlinedTextField(
                                 value = patients.firstOrNull { it.id == selectedPatientId }?.name ?: "",
                                 onValueChange = {},
                                 readOnly = true,
-                                label = { Text("Select patient") },
+                                label = { Text(stringResource(R.string.schedule_select_patient)) },
                                 trailingIcon = { Text(if (patientMenuExpanded) "▲" else "▼") },
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -252,14 +278,14 @@ fun ScheduleScreen(onBack: () -> Unit) {
 
                         if (patients.isEmpty()) {
                             Text(
-                                "No patients available. Add a patient first.",
+                                stringResource(R.string.schedule_no_patients),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = DesignTokens.Colors.Warning
                             )
                         }
                     }
 
-                    Text("Time", fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
+                    Text(stringResource(R.string.schedule_time), fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -304,7 +330,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
                     OutlinedTextField(
                         value = apptNotes,
                         onValueChange = { apptNotes = InputValidator.limitLength(it, InputValidator.MaxLength.NOTES) },
-                        label = { Text("Notes (optional)") },
+                        label = { Text(stringResource(R.string.schedule_notes_optional)) },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(DesignTokens.Radius.Base),
                         colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = DesignTokens.Colors.Primary)
@@ -314,7 +340,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
             confirmButton = {
                 TextButton(
                     onClick = {
-                        val type = "Consultation"
+                        val type = APPOINTMENT_TYPE_CONSULTATION
                         val hour = apptHour.toIntOrNull() ?: 10
                         val minute = apptMinute.toIntOrNull() ?: 0
                         val apptDate = days.getOrNull(selectedDay)?.fullDate ?: LocalDate.now()
@@ -327,7 +353,8 @@ fun ScheduleScreen(onBack: () -> Unit) {
                         isSaving = true
                         scope.launch {
                             try {
-                                val uid = currentUid ?: FirebaseService.currentUID ?: throw Exception("Not signed in")
+                                val uid = currentUid ?: FirebaseService.currentUID
+                                    ?: throw Exception(context.getString(R.string.schedule_not_signed_in))
                                 val role = userRole
 
                                 val appointmentData = mutableMapOf<String, Any>(
@@ -340,7 +367,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
                                 if (role == "doctor" || role == "admin") {
                                     val patientId = selectedPatientId
                                     if (patientId.isNullOrBlank()) {
-                                        throw Exception("Please select a patient")
+                                        throw Exception(context.getString(R.string.schedule_select_patient_error))
                                     }
 
                                     appointmentData["status"] = "confirmed"
@@ -358,11 +385,11 @@ fun ScheduleScreen(onBack: () -> Unit) {
                                         )
                                     )
 
-                                    snackbarHostState.showSnackbar("Appointment created")
+                                    snackbarHostState.showSnackbar(context.getString(R.string.schedule_appointment_created))
                                 } else {
                                     val doctorId = assignedDoctorId
                                     if (doctorId.isNullOrBlank()) {
-                                        throw Exception("No assigned doctor found")
+                                        throw Exception(context.getString(R.string.schedule_no_doctor_error))
                                     }
 
                                     appointmentData["status"] = "pending"
@@ -380,7 +407,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
                                         )
                                     )
 
-                                    snackbarHostState.showSnackbar("Request sent. Waiting for doctor approval")
+                                    snackbarHostState.showSnackbar(context.getString(R.string.schedule_request_sent))
                                 }
 
                                 showAddDialog = false
@@ -404,13 +431,13 @@ fun ScheduleScreen(onBack: () -> Unit) {
                             strokeWidth = 2.dp
                         )
                     } else {
-                        Text("Create", color = DesignTokens.Colors.Primary, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.schedule_create), color = DesignTokens.Colors.Primary, fontWeight = FontWeight.Bold)
                     }
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showAddDialog = false }, enabled = !isSaving) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.action_cancel))
                 }
             }
         )
@@ -420,15 +447,15 @@ fun ScheduleScreen(onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Schedule", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.schedule_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
                 actions = {
                     TextButton(onClick = { selectedDay = LocalDate.now().dayOfWeek.value - 1 }) {
-                        Text("Today", color = DesignTokens.Colors.Primary, fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(R.string.schedule_today), color = DesignTokens.Colors.Primary, fontWeight = FontWeight.SemiBold)
                     }
                     TutorialHelpButton()
                 },
@@ -442,7 +469,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
                 shape = CircleShape,
                 modifier = Modifier.tutorialTarget(TutorialIds.SCHEDULE_ADD)
             ) {
-                Icon(Icons.Default.Add, contentDescription = "New appointment", tint = MaterialTheme.colorScheme.onPrimary)
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.schedule_new_appointment_desc), tint = MaterialTheme.colorScheme.onPrimary)
             }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -525,7 +552,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
                 loadError != null -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("Could not load schedule", fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
+                            Text(stringResource(R.string.schedule_load_error), fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 loadError ?: "",
@@ -534,7 +561,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             TextButton(onClick = { viewModel.load() }) {
-                                Text("Retry")
+                                Text(stringResource(R.string.action_retry))
                             }
                         }
                     }
@@ -543,10 +570,10 @@ fun ScheduleScreen(onBack: () -> Unit) {
                 filteredAppts.isEmpty() -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("No appointments for this day", fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
+                            Text(stringResource(R.string.schedule_empty), fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                "Tap + to create one",
+                                stringResource(R.string.schedule_empty_hint),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -598,7 +625,15 @@ fun ScheduleScreen(onBack: () -> Unit) {
 
                                         Column(modifier = Modifier.weight(1f)) {
                                             Text(appt.title, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
-                                            Text(appt.type, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            // "Consultation" is a value we write ourselves, so it
+                                            // gets a display label; the stored string stays English.
+                                            Text(
+                                                if (appt.type == APPOINTMENT_TYPE_CONSULTATION)
+                                                    stringResource(R.string.appointment_type_consultation)
+                                                else appt.type,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
                                             if (appt.notes.isNotBlank()) {
                                                 Spacer(modifier = Modifier.height(2.dp))
                                                 Text(appt.notes, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -635,7 +670,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
                                                                 body = "Your ${appt.type} request has been accepted.",
                                                                 action = "accepted"
                                                             )
-                                                            snackbarHostState.showSnackbar("Appointment accepted")
+                                                            snackbarHostState.showSnackbar(context.getString(R.string.schedule_appointment_accepted))
                                                             viewModel.load()
                                                         } catch (e: Exception) {
                                                             snackbarHostState.showSnackbar(
@@ -645,7 +680,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
                                                     }
                                                 }
                                             ) {
-                                                Text("Accept", color = DesignTokens.Colors.Success)
+                                                Text(stringResource(R.string.schedule_accept), color = DesignTokens.Colors.Success)
                                             }
 
                                             TextButton(
@@ -660,7 +695,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
                                                                 body = "Your ${appt.type} request was declined.",
                                                                 action = "declined"
                                                             )
-                                                            snackbarHostState.showSnackbar("Appointment declined")
+                                                            snackbarHostState.showSnackbar(context.getString(R.string.schedule_appointment_declined))
                                                             viewModel.load()
                                                         } catch (e: Exception) {
                                                             snackbarHostState.showSnackbar(
@@ -670,7 +705,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
                                                     }
                                                 }
                                             ) {
-                                                Text("Decline", color = DesignTokens.Colors.Error)
+                                                Text(stringResource(R.string.schedule_decline), color = DesignTokens.Colors.Error)
                                             }
                                         }
                                     }
@@ -689,7 +724,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
                                                             body = "Patient cancelled the ${appt.type} request.",
                                                             action = "cancelled"
                                                         )
-                                                        snackbarHostState.showSnackbar("Request cancelled")
+                                                        snackbarHostState.showSnackbar(context.getString(R.string.schedule_request_cancelled))
                                                         viewModel.load()
                                                     } catch (e: Exception) {
                                                         snackbarHostState.showSnackbar(
@@ -699,7 +734,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
                                                 }
                                             }
                                         ) {
-                                            Text("Cancel Request", color = DesignTokens.Colors.Error)
+                                            Text(stringResource(R.string.schedule_cancel_request), color = DesignTokens.Colors.Error)
                                         }
                                     }
                                 }

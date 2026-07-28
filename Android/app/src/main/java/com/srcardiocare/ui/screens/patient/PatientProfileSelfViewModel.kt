@@ -15,13 +15,26 @@ import kotlinx.coroutines.launch
 
 class PatientProfileSelfViewModel : ViewModel() {
 
+    /** Which field failed validation, so the screen can pick the right message. */
+    enum class ProfileField { NAME, PHONE }
+
+    /** Outcome of resolving the patient's assigned doctor. */
+    sealed interface AssignedDoctor {
+        data class Named(val name: String) : AssignedDoctor
+        /** Doctor id present on the user doc but the lookup failed. */
+        data object Unknown : AssignedDoctor
+        data object NotAssigned : AssignedDoctor
+    }
+
     data class State(
         val firstName: String = "",
         val lastName: String = "",
         val email: String = "",
         val condition: String = "",
         val phone: String = "",
-        val assignedDoctor: String = "",
+        // Not a pre-rendered string: "Not assigned" / "Unknown" are UI copy and
+        // must be resolved against the current locale by the composable.
+        val assignedDoctor: AssignedDoctor = AssignedDoctor.NotAssigned,
         val isLoading: Boolean = true,
         val isSaving: Boolean = false
     )
@@ -43,12 +56,14 @@ class PatientProfileSelfViewModel : ViewModel() {
                     val assignedDoctor = if (doctorId != null) {
                         try {
                             val doctor = UserRepository.getUser(doctorId)
-                            "Dr. ${doctor.lastName}".let { if (it == "Dr. ") doctor.fullName else it }
+                            val name = "Dr. ${doctor.lastName}"
+                                .let { if (it == "Dr. ") doctor.fullName else it }
+                            AssignedDoctor.Named(name)
                         } catch (_: Exception) {
-                            "Unknown"
+                            AssignedDoctor.Unknown
                         }
                     } else {
-                        "Not assigned"
+                        AssignedDoctor.NotAssigned
                     }
                     _state.update {
                         it.copy(
@@ -70,21 +85,22 @@ class PatientProfileSelfViewModel : ViewModel() {
         editFirstName: String,
         editLastName: String,
         editPhone: String,
-        onValidationError: (String) -> Unit,
+        nameFieldLabel: String,
+        onValidationError: (ProfileField, String?) -> Unit,
         onSuccess: () -> Unit,
         onError: (String) -> Unit
     ) {
         val nameValidation = InputValidator.validateName(
             "${editFirstName.trim()} ${editLastName.trim()}".trim(),
-            "Name"
+            nameFieldLabel
         )
         if (!nameValidation.isValid) {
-            onValidationError(nameValidation.errorMessage ?: "Invalid name")
+            onValidationError(ProfileField.NAME, nameValidation.errorMessage)
             return
         }
         val phoneValidation = InputValidator.validatePhone(editPhone)
         if (!phoneValidation.isValid) {
-            onValidationError(phoneValidation.errorMessage ?: "Invalid phone")
+            onValidationError(ProfileField.PHONE, phoneValidation.errorMessage)
             return
         }
         _state.update { it.copy(isSaving = true) }

@@ -1,0 +1,415 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Tamil (ta). Terminology is fixed by docs/i18n/tamil-glossary.md — please
+      keep the two in step. Notably: session = அமர்வு, set = சுற்று, rep = முறை.
+      These are three distinct clinical concepts and must not be merged.
+    -->
+
+    <string name="brand_tagline">இதய மறுவாழ்வுக்கான ஒரு டிஜிட்டல் சுகாதார தளம்</string>
+
+    <string name="language">மொழி</string>
+
+    <!-- ===== Common actions ===== -->
+    <string name="action_back">பின்செல்</string>
+    <string name="action_next">அடுத்து</string>
+    <string name="action_skip">தவிர்</string>
+    <string name="action_done">முடிந்தது</string>
+    <string name="action_save">சேமி</string>
+    <string name="action_cancel">ரத்து</string>
+    <string name="action_close">மூடு</string>
+    <string name="action_ok">சரி</string>
+    <string name="action_send">அனுப்பு</string>
+    <string name="action_yes">ஆம்</string>
+    <string name="action_no">இல்லை</string>
+    <string name="action_retry">மீண்டும் முயற்சி</string>
+    <string name="action_show">காட்டு</string>
+    <string name="action_hide">மறை</string>
+    <string name="action_change_password">கடவுச்சொல்லை மாற்று</string>
+    <string name="action_sign_out">வெளியேறு</string>
+
+    <!-- ===== Login ===== -->
+    <string name="login_logo_desc">RehabCardia சின்னம்</string>
+    <string name="login_welcome_back">மீண்டும் வரவேற்கிறோம்</string>
+    <string name="login_subtitle">உங்கள் இதய சிகிச்சையைத் தொடர உள்நுழையவும்</string>
+    <string name="login_email_label">மின்னஞ்சல் முகவரி</string>
+    <string name="login_password_label">கடவுச்சொல்</string>
+    <string name="login_sign_in">உள்நுழை</string>
+    <string name="login_error_empty_fields">மின்னஞ்சல் மற்றும் கடவுச்சொல்லை உள்ளிடவும்.</string>
+    <string name="login_error_invalid_email">சரியான மின்னஞ்சல் முகவரியை உள்ளிடவும்.</string>
+    <string name="login_first_login_message">இது உங்கள் முதல் உள்நுழைவு. சிறந்த பாதுகாப்பிற்காக இப்போதே கடவுச்சொல்லை மாற்ற விரும்புகிறீர்களா?</string>
+
+    <!-- ===== Change password ===== -->
+    <string name="change_password_heading">உங்கள் கடவுச்சொல்லைப் புதுப்பிக்கவும்</string>
+    <string name="change_password_subtitle">தற்போதைய கடவுச்சொல்லை உள்ளிட்டு புதிய ஒன்றைத் தேர்ந்தெடுக்கவும்.</string>
+    <string name="change_password_current_label">தற்போதைய கடவுச்சொல்</string>
+    <string name="change_password_new_label">புதிய கடவுச்சொல்</string>
+    <string name="change_password_confirm_label">புதிய கடவுச்சொல்லை உறுதிப்படுத்தவும்</string>
+    <string name="change_password_error_current_blank">தற்போதைய கடவுச்சொல்லை உள்ளிடவும்.</string>
+    <string name="change_password_error_current_wrong">தற்போதைய கடவுச்சொல் தவறானது.</string>
+    <string name="change_password_error_mismatch">புதிய கடவுச்சொற்கள் பொருந்தவில்லை.</string>
+    <string name="change_password_error_same">புதிய கடவுச்சொல் தற்போதையதிலிருந்து வேறுபட்டிருக்க வேண்டும்.</string>
+    <string name="change_password_success">கடவுச்சொல் மாற்றப்பட்டது!</string>
+
+    <!-- ===== Onboarding ===== -->
+    <string name="onboarding_1_title">RehabCardia-க்கு வரவேற்கிறோம்</string>
+    <string name="onboarding_1_body">இதய மறுவாழ்வுக்கான உங்கள் துணை. உங்கள் சிகிச்சைக் குழு உங்களுக்காகவே உருவாக்கிய குணமடையும் திட்டத்தை அடிப்படையாகக் கொண்டது.</string>
+    <string name="onboarding_2_title">உங்களுக்காகவே உருவாக்கப்பட்ட பயிற்சிகள்</string>
+    <string name="onboarding_2_body">உங்கள் குணமடையும் நிலைக்கேற்ப காணொளி வழிகாட்டும் பயிற்சிகளை உங்கள் மருத்துவர் ஒதுக்குவார். ஒரு அமர்வாக, உங்கள் சொந்த வேகத்தில் பின்பற்றவும்.</string>
+    <string name="onboarding_3_title">உங்கள் முன்னேற்றத்தைக் காணுங்கள்</string>
+    <string name="onboarding_3_body">தினசரி முன்னேற்ற வளையங்களும் வரலாறு விளக்கபடங்களும் நீங்கள் எவ்வளவு முன்னேறியுள்ளீர்கள் என்பதைக் காட்டுகின்றன. முடிக்கப்படும் ஒவ்வொரு அமர்வும் உங்கள் குணமடைதலுக்கு துணை புரிகிறது.</string>
+    <string name="onboarding_4_title">உங்கள் சிகிச்சைக் குழு ஒரு தட்டல் தூரத்தில்</string>
+    <string name="onboarding_4_body">உங்கள் மருத்துவருக்கு செய்தி அனுப்புங்கள், உங்கள் அமர்வுகளுக்கான கருத்தைப் பெறுங்கள். நினைவூட்டல்களுடன் எந்த சந்திப்பையும் தவறவிட மாட்டீர்கள்.</string>
+    <string name="onboarding_get_started">தொடங்குவோம்</string>
+
+    <!-- ===== Patient home ===== -->
+    <string name="greeting_morning">காலை வணக்கம்</string>
+    <string name="greeting_afternoon">மதிய வணக்கம்</string>
+    <string name="greeting_evening">மாலை வணக்கம்</string>
+    <string name="loading">ஏற்றுகிறது…</string>
+    <string name="home_todays_progress">இன்றைய முன்னேற்றம்</string>
+    <string name="home_progress_count">%2$d பயிற்சிகளில் %1$d முடிந்தது</string>
+    <string name="home_dashboard">முகப்பு</string>
+    <string name="home_plan_expired">திட்டம் முடிந்தது</string>
+    <string name="home_expires_today">இன்று முடிகிறது</string>
+    <plurals name="home_expires_in_days">
+        <item quantity="one">%d நாளில் முடிகிறது</item>
+        <item quantity="other">%d நாட்களில் முடிகிறது</item>
+    </plurals>
+    <string name="home_card_exercises">பயிற்சிகள்</string>
+    <string name="home_card_exercises_sub">%d ஒதுக்கப்பட்டுள்ளது</string>
+    <string name="home_card_schedule">அட்டவணை</string>
+    <string name="home_card_schedule_sub">சந்திப்புகளைக் காண்</string>
+    <string name="home_card_progress">முன்னேற்றம்</string>
+    <string name="home_card_progress_sub">உங்கள் நிலையைக் கண்காணி</string>
+    <string name="home_card_messages">செய்திகள்</string>
+    <string name="home_card_messages_sub">மருத்துவருடன் உரையாடு</string>
+    <string name="home_card_notifications">அறிவிப்புகள்</string>
+    <string name="home_card_notifications_sub">எச்சரிக்கைகளைக் காண்</string>
+    <string name="home_card_profile">சுயவிவரம்</string>
+    <string name="home_card_profile_sub">உங்கள் கணக்கு</string>
+
+    <!--
+      ===== Workout player =====
+      அமர்வு = session, சுற்று = set, முறை = rep. Do not merge these three.
+      workout_tag_* and workout_rep_* render at very large type — if a longer
+      word is ever substituted here it will clip on a phone screen.
+    -->
+    <string name="workout_header">அமர்வு %1$d  •  சுற்று %2$d / %3$d</string>
+    <string name="workout_end_desc">பயிற்சியை முடி</string>
+    <string name="workout_tag_go">செய்</string>
+    <string name="workout_tag_demo">மாதிரி</string>
+    <string name="workout_tag_rest">ஓய்வு</string>
+    <string name="workout_rep_singular">முறை</string>
+    <string name="workout_rep_plural">முறை</string>
+    <string name="workout_set_of">சுற்று %1$d / %2$d</string>
+    <string name="workout_no_demo_video">மாதிரி காணொளி இல்லை</string>
+    <string name="workout_rest_seconds_suffix">வி</string>
+    <string name="workout_up_next">அடுத்தது</string>
+    <string name="workout_action_ready">நான் தயார்</string>
+    <string name="workout_action_set_done">சுற்று முடிந்தது</string>
+    <string name="workout_action_skip_rest">ஓய்வைத் தவிர்</string>
+    <string name="workout_action_finishing">முடிக்கிறது…</string>
+    <string name="workout_abandon_title">பயிற்சியை முடிக்கவா?</string>
+    <string name="workout_abandon_message">இதுவரையிலான உங்கள் முன்னேற்றம் முழுமையடையாததாகச் சேமிக்கப்படும். இன்று பின்னர் புதிய அமர்வைத் தொடங்கலாம்.</string>
+    <string name="workout_abandon_confirm">முடி</string>
+    <string name="workout_abandon_dismiss">தொடரவும்</string>
+    <string name="workout_abandoned_toast">பயிற்சி கைவிடப்பட்டது</string>
+    <string name="workout_completed_toast">பயிற்சி முடிந்தது</string>
+    <string name="workout_complete_title">பயிற்சி முடிந்தது</string>
+    <string name="workout_session_done">அமர்வு %1$d முடிந்தது</string>
+
+    <!--
+      ===== Post-workout feedback =====
+      Clinically critical — this is what the patient reports back to the doctor.
+      See glossary §6. "Borg" stays in Latin script.
+    -->
+    <string name="feedback_title">பயிற்சி முடிந்தது!</string>
+    <string name="feedback_subtitle">நன்று! நீங்கள் எப்படி உணர்ந்தீர்கள் என்று தெரிவியுங்கள்.</string>
+    <string name="feedback_patient_fallback">நோயாளி</string>
+    <string name="feedback_pain_question">உங்களுக்கு ஏதேனும் வலி ஏற்பட்டதா?</string>
+    <string name="feedback_pain_where">வலி எங்கே உள்ளது?</string>
+    <string name="feedback_select_location">இடத்தைத் தேர்ந்தெடுக்கவும்</string>
+    <string name="feedback_pain_intensity">வலியின் அளவு (Borg அளவுகோல்)</string>
+    <string name="feedback_pain_none">வலி இல்லை (0)</string>
+    <string name="feedback_pain_worst">மிக கடுமை (10)</string>
+    <string name="feedback_respiration">மூச்சு (Borg அளவுகோல்)</string>
+    <string name="feedback_respiration_easy">எளிது (0)</string>
+    <string name="feedback_respiration_severe">மிக கடுமை (10)</string>
+    <string name="feedback_pulse_rate">நாடித்துடிப்பு</string>
+    <string name="feedback_pulse_hint">நிமிடத்திற்கு துடிப்புகள் (bpm)</string>
+    <string name="feedback_pulse_error">30 முதல் 250 வரையிலான மதிப்பை உள்ளிடவும்</string>
+    <string name="feedback_notes_label">உங்கள் கருத்து / குறிப்புகள் (மருத்துவருக்கு அனுப்பப்படும்)</string>
+    <string name="feedback_submit">கருத்தை சமர்ப்பி</string>
+    <string name="feedback_submitted">கருத்து சமர்ப்பிக்கப்பட்டது</string>
+    <string name="feedback_submit_failed">கருத்தை சமர்ப்பிக்க முடியவில்லை</string>
+
+    <!-- Display labels only — the stored Firestore value stays English. -->
+    <string name="pain_location_left_arm">இடது கை</string>
+    <string name="pain_location_right_arm">வலது கை</string>
+    <string name="pain_location_left_leg">இடது கால்</string>
+    <string name="pain_location_right_leg">வலது கால்</string>
+    <string name="pain_location_left_chest">இடது மார்பு</string>
+    <string name="pain_location_right_chest">வலது மார்பு</string>
+    <string name="pain_location_head">தலை</string>
+    <string name="pain_location_other">மற்றவை</string>
+
+    <!-- ===== Daily exercises ===== -->
+    <string name="assignments_title">தினசரி பயிற்சிகள்</string>
+    <string name="assignments_today">இன்றைய பயிற்சிகள்</string>
+    <string name="assignments_history">வரலாறு</string>
+    <string name="assignments_empty_title">பயிற்சிகள் ஏதும் ஒதுக்கப்படவில்லை</string>
+    <string name="assignments_empty_subtitle">உங்கள் மருத்துவர் உங்களுக்கு பயிற்சிகளை ஒதுக்குவார்</string>
+    <string name="assignments_sets_reps">%1$d சுற்று • %2$d முறை</string>
+    <string name="assignments_start">தொடங்கு</string>
+    <string name="assignments_in_progress">நடைபெறுகிறது</string>
+    <string name="assignments_session_resume">அமர்வு நடைபெறுகிறது - தொடர தட்டவும்</string>
+    <string name="assignments_expires_today">இன்று முடிகிறது</string>
+    <string name="assignments_expires_tomorrow">நாளை முடிகிறது</string>
+    <plurals name="assignments_expires_in_days">
+        <item quantity="one">%d நாளில் முடிகிறது</item>
+        <item quantity="other">%d நாட்களில் முடிகிறது</item>
+    </plurals>
+    <string name="assignments_expires_on">%1$s அன்று முடிகிறது</string>
+    <string name="status_completed">முடிந்தது</string>
+    <string name="status_partial">பகுதியளவு</string>
+    <string name="status_missed">தவறவிட்டது</string>
+
+    <!-- ===== Workout history ===== -->
+    <string name="history_title">பயிற்சி வரலாறு</string>
+    <string name="history_empty">வரலாறு எதுவும் இல்லை.</string>
+    <string name="history_sessions_done">%2$d இல் %1$d முடிந்தது</string>
+
+    <!-- ===== Chat with doctor ===== -->
+    <string name="chat_title">மருத்துவருடன் உரையாடல்</string>
+    <string name="chat_input_hint">செய்தியை உள்ளிடவும்...</string>
+
+    <!-- ===== Patient profile ===== -->
+    <string name="profile_title">எனது சுயவிவரம்</string>
+    <string name="profile_edit">சுயவிவரத்தைத் திருத்து</string>
+    <string name="profile_first_name">முதற் பெயர்</string>
+    <string name="profile_last_name">கடைசிப் பெயர்</string>
+    <string name="profile_last_name_optional">கடைசிப் பெயர் (விருப்பத்தேர்வு)</string>
+    <string name="profile_phone">தொலைபேசி</string>
+    <string name="profile_email">மின்னஞ்சல்</string>
+    <string name="profile_email_readonly">மின்னஞ்சல் (மாற்ற முடியாது)</string>
+    <string name="profile_condition">உடல்நிலை</string>
+    <string name="profile_condition_readonly">உடல்நிலை (மருத்துவரால் நிர்ணயிக்கப்பட்டது)</string>
+    <string name="profile_assigned_doctor">உங்கள் மருத்துவர்</string>
+    <string name="profile_none_listed">பதிவு செய்யப்படவில்லை</string>
+    <string name="profile_empty_value">—</string>
+    <string name="profile_doctor_not_assigned">ஒதுக்கப்படவில்லை</string>
+    <string name="profile_doctor_unknown">தெரியவில்லை</string>
+    <string name="profile_name_field_label">பெயர்</string>
+    <string name="profile_invalid_name">தவறான பெயர்</string>
+    <string name="profile_invalid_phone">தவறான தொலைபேசி எண்</string>
+    <string name="profile_updated">சுயவிவரம் புதுப்பிக்கப்பட்டது</string>
+    <string name="profile_update_failed">சுயவிவரத்தைப் புதுப்பிக்க முடியவில்லை</string>
+
+    <!-- ===== Notifications ===== -->
+    <string name="notifications_title">அறிவிப்புகள்</string>
+    <string name="notifications_mark_all_read">அனைத்தையும் படித்ததாகக் குறி</string>
+    <string name="notifications_all_marked_read">அனைத்து அறிவிப்புகளும் படித்ததாகக் குறிக்கப்பட்டன</string>
+    <string name="notifications_empty">அனைத்தையும் பார்த்துவிட்டீர்கள்.</string>
+    <string name="notifications_fallback_title">அறிவிப்பு</string>
+    <string name="time_just_now">இப்போதுதான்</string>
+    <string name="time_minutes_ago">%1$d நிமிடங்களுக்கு முன்</string>
+    <string name="time_hours_ago">%1$d மணி நேரத்திற்கு முன்</string>
+    <string name="time_days_ago">%1$d நாட்களுக்கு முன்</string>
+
+    <!-- ===== Analytics / progress ===== -->
+    <string name="analytics_title">எனது முன்னேற்றம்</string>
+    <string name="analytics_subtitle">உங்கள் குணமடையும் பயணத்தைக் கண்காணியுங்கள்</string>
+    <string name="analytics_this_week">இந்த வாரம் ▾</string>
+    <string name="analytics_workout_overview">பயிற்சி மேலோட்டம்</string>
+    <string name="analytics_weekly_performance">வாராந்திர செயல்திறன்</string>
+    <string name="analytics_compliance">பின்பற்றுதல்</string>
+    <string name="analytics_workouts">பயிற்சிகள்</string>
+    <string name="analytics_total">மொத்தம்</string>
+    <string name="analytics_health_metrics">சமீபத்திய உடல்நல அளவீடுகள்</string>
+    <string name="analytics_metrics_legend">மூச்சு (0-10); ஆரஞ்சு = வலி தெரிவிக்கப்பட்டது, சிவப்பு = கடுமையான வலி</string>
+    <string name="analytics_no_feedback">கருத்து தரவு எதுவும் இல்லை.</string>
+
+    <!-- ===== Exercise library ===== -->
+    <string name="exercise_library_title">பயிற்சி நூலகம்</string>
+    <string name="exercise_library_search">பயிற்சிகளைத் தேடு…</string>
+    <string name="filter_all">அனைத்தும்</string>
+    <string name="action_delete">நீக்கு</string>
+    <string name="action_play">இயக்கு</string>
+    <string name="exercise_video">காணொளி</string>
+    <string name="exercise_upload_video">காணொளியைப் பதிவேற்று</string>
+    <string name="exercise_delete_title">பயிற்சியை நீக்கு</string>
+    <string name="exercise_delete_message">\'%1$s\' ஐ நீக்க வேண்டுமா? இந்தச் செயலைத் திரும்பப் பெற முடியாது.</string>
+    <string name="exercise_removed">பயிற்சி நீக்கப்பட்டது</string>
+    <string name="exercise_remove_failed">பயிற்சியை நீக்க முடியவில்லை</string>
+    <string name="exercise_no_video">காணொளி எதுவும் இல்லை</string>
+    <string name="exercise_invalid_video">தவறான காணொளி முகவரி</string>
+
+    <!-- ===== Schedule / appointments ===== -->
+    <string name="schedule_title">அட்டவணை</string>
+    <string name="schedule_today">இன்று</string>
+    <string name="schedule_new_appointment">புதிய சந்திப்பு</string>
+    <string name="schedule_new_appointment_desc">புதிய சந்திப்பு</string>
+    <string name="schedule_patient">நோயாளி</string>
+    <string name="schedule_select_patient">நோயாளியைத் தேர்ந்தெடுக்கவும்</string>
+    <string name="schedule_no_patients">நோயாளிகள் யாரும் இல்லை. முதலில் ஒரு நோயாளியைச் சேர்க்கவும்.</string>
+    <string name="schedule_time">நேரம்</string>
+    <string name="schedule_notes_optional">குறிப்புகள் (விருப்பத்தேர்வு)</string>
+    <string name="schedule_create">உருவாக்கு</string>
+    <string name="schedule_load_error">அட்டவணையை ஏற்ற முடியவில்லை</string>
+    <string name="schedule_empty">இந்த நாளுக்கு சந்திப்புகள் இல்லை</string>
+    <string name="schedule_empty_hint">உருவாக்க + ஐத் தட்டவும்</string>
+    <string name="schedule_appointment_created">சந்திப்பு உருவாக்கப்பட்டது</string>
+    <string name="schedule_request_sent">கோரிக்கை அனுப்பப்பட்டது. மருத்துவரின் ஒப்புதலுக்குக் காத்திருக்கிறது</string>
+    <string name="schedule_select_patient_error">நோயாளியைத் தேர்ந்தெடுக்கவும்</string>
+    <string name="schedule_no_doctor_error">ஒதுக்கப்பட்ட மருத்துவர் இல்லை</string>
+    <string name="schedule_not_signed_in">உள்நுழையவில்லை</string>
+    <string name="schedule_missing_target_user">இலக்கு பயனர் இல்லை</string>
+    <string name="schedule_accept">ஏற்கவும்</string>
+    <string name="schedule_decline">நிராகரி</string>
+    <string name="schedule_cancel_request">கோரிக்கையை ரத்து செய்</string>
+    <string name="schedule_appointment_accepted">சந்திப்பு ஏற்கப்பட்டது</string>
+    <string name="schedule_appointment_declined">சந்திப்பு நிராகரிக்கப்பட்டது</string>
+    <string name="schedule_request_cancelled">கோரிக்கை ரத்து செய்யப்பட்டது</string>
+    <string name="appointment_type_consultation">ஆலோசனை</string>
+    <!-- Labels only — the stored status key stays English. -->
+    <string name="appt_status_pending">நிலுவையில்</string>
+    <string name="appt_status_confirmed">உறுதி செய்யப்பட்டது</string>
+    <string name="appt_status_scheduled">திட்டமிடப்பட்டது</string>
+    <string name="appt_status_completed">முடிந்தது</string>
+    <string name="appt_status_cancelled">ரத்து செய்யப்பட்டது</string>
+    <string name="appt_status_accepted">ஏற்கப்பட்டது</string>
+    <string name="appt_status_declined">நிராகரிக்கப்பட்டது</string>
+    <string name="appt_status_unknown">தெரியவில்லை</string>
+
+    <!-- ===== Shared error catalogue ===== -->
+    <string name="error_invalid_credentials">தவறான மின்னஞ்சல் அல்லது கடவுச்சொல்</string>
+    <string name="error_wrong_password">கடவுச்சொல் தவறானது. மீண்டும் முயற்சிக்கவும்</string>
+    <string name="error_no_account">இந்த மின்னஞ்சலுக்கு கணக்கு எதுவும் இல்லை</string>
+    <string name="error_email_in_use">இந்த மின்னஞ்சலுடன் ஏற்கனவே ஒரு கணக்கு உள்ளது</string>
+    <string name="error_weak_password">கடவுச்சொல் பலவீனமானது. வலிமையான ஒன்றைப் பயன்படுத்தவும்</string>
+    <string name="error_network">பிணைய பிழை. உங்கள் இணைப்பைச் சரிபார்க்கவும்</string>
+    <string name="error_too_many_requests">மிகப் பல முயற்சிகள். பின்னர் மீண்டும் முயற்சிக்கவும்</string>
+    <string name="error_account_disabled">இந்தக் கணக்கு முடக்கப்பட்டுள்ளது</string>
+    <string name="error_account_blocked">உங்கள் கணக்கு நிர்வாகியால் தடுக்கப்பட்டுள்ளது</string>
+    <string name="error_invalid_email">சரியான மின்னஞ்சல் முகவரியை உள்ளிடவும்</string>
+    <string name="error_permission_denied">இந்தச் செயலைச் செய்ய உங்களுக்கு அனுமதி இல்லை</string>
+    <string name="error_service_unavailable">சேவை தற்காலிகமாகக் கிடைக்கவில்லை. மீண்டும் முயற்சிக்கவும்</string>
+    <string name="error_requires_recent_login">தொடர வெளியேறி மீண்டும் உள்நுழையவும்</string>
+    <string name="error_credential_in_use">இந்தச் சான்று ஏற்கனவே வேறு கணக்குடன் இணைக்கப்பட்டுள்ளது</string>
+    <string name="error_session_expired">உங்கள் அமர்வு முடிந்தது. மீண்டும் உள்நுழையவும்</string>
+    <string name="error_login_failed">உள்நுழைவு தோல்வியடைந்தது. மீண்டும் முயற்சிக்கவும்</string>
+    <string name="error_registration_failed">பதிவு தோல்வியடைந்தது. மீண்டும் முயற்சிக்கவும்</string>
+    <string name="error_save_failed">சேமிக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்</string>
+    <string name="error_load_failed">தகவல்களை ஏற்ற முடியவில்லை. மீண்டும் முயற்சிக்கவும்</string>
+    <string name="error_delete_failed">நீக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்</string>
+    <string name="error_upload_failed">பதிவேற்ற முடியவில்லை. மீண்டும் முயற்சிக்கவும்</string>
+    <string name="error_generic">ஒரு பிழை ஏற்பட்டது. மீண்டும் முயற்சிக்கவும்</string>
+    <string name="error_password_change_failed">கடவுச்சொல்லை மாற்ற முடியவில்லை. மீண்டும் முயற்சிக்கவும்</string>
+
+    <!-- ===== Shared components ===== -->
+    <string name="privacy_policy">தனியுரிமைக் கொள்கை</string>
+    <string name="terms_of_service">சேவை விதிமுறைகள்</string>
+    <string name="sign_out_confirm_message">வெளியேற விரும்புகிறீர்களா?</string>
+    <string name="fullscreen_enter">முழுத்திரை</string>
+    <string name="fullscreen_exit">முழுத்திரையிலிருந்து வெளியேறு</string>
+    <string name="tutorial_show">பயிற்சி வழிகாட்டியைக் காட்டு</string>
+
+    <!-- ===== Password rules ===== -->
+    <string name="password_error_too_short">கடவுச்சொல் குறைந்தது %1$d எழுத்துகள் இருக்க வேண்டும்</string>
+    <string name="password_error_uppercase">கடவுச்சொல்லில் குறைந்தது ஒரு பெரிய எழுத்து இருக்க வேண்டும்</string>
+    <string name="password_error_lowercase">கடவுச்சொல்லில் குறைந்தது ஒரு சிறிய எழுத்து இருக்க வேண்டும்</string>
+    <string name="password_error_digit">கடவுச்சொல்லில் குறைந்தது ஒரு எண் இருக்க வேண்டும்</string>
+    <string name="password_requirements">கடவுச்சொல் குறைந்தது 8 எழுத்துகள், ஒரு பெரிய எழுத்து, ஒரு சிறிய எழுத்து மற்றும் ஒரு எண்ணைக் கொண்டிருக்க வேண்டும்</string>
+
+    <!-- ===== Notification channels ===== -->
+    <string name="channel_general_name">பொது எச்சரிக்கைகள்</string>
+    <string name="channel_general_desc">திட்ட புதுப்பிப்புகள், கருத்துகள் மற்றும் பொது நினைவூட்டல்கள்</string>
+    <string name="channel_chat_name">செய்திகள்</string>
+    <string name="channel_chat_desc">உங்களுக்கும் உங்கள் சிகிச்சைக் குழுவுக்கும் இடையிலான நேரடி செய்திகள்</string>
+    <string name="channel_appointments_name">சந்திப்புகள்</string>
+    <string name="channel_appointments_desc">சந்திப்பு கோரிக்கைகள், உறுதிப்படுத்தல்கள் மற்றும் மாற்றங்கள்</string>
+
+    <string name="exercise_not_found">பயிற்சி கிடைக்கவில்லை</string>
+
+    <!-- ===== Guided tour copy (patient tours only) ===== -->
+    <string name="tour_home_start_title">இன்றைய அமர்வு</string>
+    <string name="tour_home_start_text">உங்கள் சிகிச்சைக் குழு இன்றைக்கு ஒதுக்கிய பயிற்சிகளைத் தொடங்க இங்கே தட்டவும்.</string>
+    <string name="tour_home_schedule_title">அட்டவணை</string>
+    <string name="tour_home_schedule_text">சந்திப்புகளைக் கண்டு, நினைவூட்டல்களை அமைத்து எந்த அமர்வையும் தவறவிடாதீர்கள்.</string>
+    <string name="tour_home_progress_title">உங்கள் முன்னேற்றம்</string>
+    <string name="tour_home_progress_text">உங்கள் குணமடைதல் எப்படி மேம்படுகிறது என்பதைக் காட்டும் விளக்கபடங்களைக் காணுங்கள்.</string>
+    <string name="tour_home_chat_title">மருத்துவருக்கு செய்தி அனுப்புங்கள்</string>
+    <string name="tour_home_chat_text">கேள்வி உள்ளதா? உங்கள் சிகிச்சைக் குழுவுடன் நேரடியாக இங்கே உரையாடுங்கள்.</string>
+    <string name="tour_home_notifications_title">அறிவிப்புகள்</string>
+    <string name="tour_home_notifications_text">உங்கள் மருத்துவரிடமிருந்து வரும் நினைவூட்டல்களும் கருத்துகளும் இங்கே வரும்.</string>
+    <string name="tour_home_profile_title">உங்கள் சுயவிவரம்</string>
+    <string name="tour_home_profile_text">உங்கள் விவரங்களைப் புதுப்பிக்கவும், கடவுச்சொல்லை மாற்றவும், அல்லது வெளியேறவும்.</string>
+
+    <string name="tour_assignment_card_title">உங்கள் பயிற்சிகள்</string>
+    <string name="tour_assignment_card_text">ஒவ்வொரு அட்டையும் உங்கள் மருத்துவர் ஒதுக்கிய பயிற்சி — அதன் சுற்றுகள், முறைகள் மற்றும் எத்தனை முறை செய்ய வேண்டும் என்பதுடன்.</string>
+    <string name="tour_assignment_start_title">அமர்வைத் தொடங்கு</string>
+    <string name="tour_assignment_start_text">இந்தப் பயிற்சிக்கான வழிகாட்டப்பட்ட அமர்வைத் தொடங்க தட்டவும்.</string>
+    <string name="tour_assignment_history_title">வரலாறு</string>
+    <string name="tour_assignment_history_text">நீங்கள் இதுவரை முடித்த பயிற்சிகளை மீளாய்வு செய்யுங்கள்.</string>
+
+    <string name="tour_exercise_row_title">உங்கள் பயிற்சிகள்</string>
+    <string name="tour_exercise_row_text">ஒவ்வொரு வரிசையும் இன்றைய திட்டத்தில் உள்ள ஒரு பயிற்சி.</string>
+    <string name="tour_exercise_start_title">தொடங்கு</string>
+    <string name="tour_exercise_start_text">காணொளியைத் திறந்து தொடங்க ஒரு பயிற்சியைத் தட்டவும்.</string>
+
+    <string name="tour_player_video_title">பின்பற்றுங்கள்</string>
+    <string name="tour_player_video_text">விளக்கத்தைப் பார்த்து உங்கள் சொந்த வேகத்தில் செய்யுங்கள்.</string>
+    <string name="tour_player_fullscreen_title">முழுத்திரை</string>
+    <string name="tour_player_fullscreen_text">தெளிவாகப் பார்க்க காணொளியைப் பெரிதாக்க தட்டவும்.</string>
+    <string name="tour_player_complete_title">சுற்றை முடிக்கவும்</string>
+    <string name="tour_player_complete_text">முடித்ததும், அதைப் பதிவு செய்து அடுத்ததற்குச் செல்ல இங்கே தட்டவும்.</string>
+
+    <string name="tour_aw_video_title">பயிற்சி மாதிரி</string>
+    <string name="tour_aw_video_text">தொடங்கும் முன் அசைவு எப்படிச் செய்யப்படுகிறது என்பதைப் பாருங்கள்.</string>
+    <string name="tour_aw_target_title">உங்கள் இலக்கு</string>
+    <string name="tour_aw_target_text">இந்த அமர்வில் நீங்கள் இலக்காகக் கொள்ள வேண்டிய முறைகளையும் சுற்றுகளையும் இது காட்டுகிறது.</string>
+    <string name="tour_aw_primary_title">தொடங்கி தொடரவும்</string>
+    <string name="tour_aw_primary_text">பயிற்சியைத் தொடங்கவும் ஒவ்வொரு சுற்றிலும் முன்னேறவும் இந்தப் பொத்தானைப் பயன்படுத்துங்கள்.</string>
+
+    <string name="tour_feedback_pain_title">ஏதேனும் வலி?</string>
+    <string name="tour_feedback_pain_text">அமர்வின் போது வலி ஏற்பட்டதா, எங்கே ஏற்பட்டது என்பதைத் தெரிவியுங்கள்.</string>
+    <string name="tour_feedback_borg_title">எப்படி உணர்ந்தீர்கள்</string>
+    <string name="tour_feedback_borg_text">முயற்சியும் மூச்சும் எவ்வளவு கடினமாக இருந்தது என்பதை இந்த சறுக்கிகளால் மதிப்பிடுங்கள்.</string>
+    <string name="tour_feedback_pulse_title">உங்கள் நாடித்துடிப்பு</string>
+    <string name="tour_feedback_pulse_text">உங்கள் மருத்துவர் கண்காணிக்க உங்கள் இதயத் துடிப்பை உள்ளிடவும்.</string>
+    <string name="tour_feedback_submit_title">அனுப்புங்கள்</string>
+    <string name="tour_feedback_submit_text">உங்கள் சிகிச்சைக் குழுவுடன் பகிர உங்கள் கருத்தைச் சமர்ப்பியுங்கள்.</string>
+
+    <string name="tour_schedule_calendar_title">உங்கள் நாட்காட்டி</string>
+    <string name="tour_schedule_calendar_text">சந்திப்புகளையும் நினைவூட்டல்களையும் காண ஒரு நாளைத் தட்டவும்.</string>
+    <string name="tour_schedule_add_title">நினைவூட்டலைச் சேர்</string>
+    <string name="tour_schedule_add_text">உங்கள் அமர்வுகளில் தொடர்ந்து இருக்க நினைவூட்டல்களை உருவாக்குங்கள்.</string>
+
+    <string name="tour_analytics_range_title">கால அளவு</string>
+    <string name="tour_analytics_range_text">வாரம், மாதம் மற்றும் நீண்ட காலக் காட்சிகளுக்கு இடையே மாறவும்.</string>
+    <string name="tour_analytics_chart_title">உங்கள் போக்கு</string>
+    <string name="tour_analytics_chart_text">உங்கள் செயல்பாடு காலப்போக்கில் எப்படி மாறுகிறது என்பதை இந்த விளக்கபடம் காட்டுகிறது.</string>
+    <string name="tour_analytics_metrics_title">முக்கிய எண்கள்</string>
+    <string name="tour_analytics_metrics_text">விரைவான புள்ளிவிவரங்கள் உங்கள் குணமடைதலைச் சுருக்கமாகக் காட்டுகின்றன.</string>
+
+    <string name="tour_chat_field_title">செய்தி எழுதுங்கள்</string>
+    <string name="tour_chat_field_text">உங்கள் சிகிச்சைக் குழுவுக்கு இங்கே செய்தியை உள்ளிடுங்கள்.</string>
+    <string name="tour_chat_send_title">அனுப்பு</string>
+    <string name="tour_chat_send_text">உங்கள் செய்தியை அனுப்ப தட்டவும்.</string>
+
+    <string name="tour_profile_edit_title">சுயவிவரத்தைத் திருத்து</string>
+    <string name="tour_profile_edit_text">உங்கள் தனிப்பட்ட மற்றும் உடல்நல விவரங்களைப் புதுப்பித்து வைத்திருங்கள்.</string>
+    <string name="tour_profile_password_title">கடவுச்சொல்லை மாற்று</string>
+    <string name="tour_profile_password_text">உங்கள் கணக்கைப் பாதுகாப்பாக வைக்க கடவுச்சொல்லைப் புதுப்பியுங்கள்.</string>
+    <string name="tour_profile_logout_title">வெளியேறு</string>
+    <string name="tour_profile_logout_text">வெளியேறத் தயாராகும் போது இங்கே தட்டவும்.</string>
+
+    <string name="tour_history_list_title">உங்கள் வரலாறு</string>
+    <string name="tour_history_list_text">கடந்த பயிற்சிகளையும் அவை எவ்வளவு நன்றாக முடிக்கப்பட்டன என்பதையும் மீளாய்வு செய்யுங்கள்.</string>
+
+    <string name="tour_notification_item_title">அறிவிப்புகள்</string>
+    <string name="tour_notification_item_text">எதைப் பற்றியது என்பதைத் திறக்க ஒரு உருப்படியைத் தட்டவும்.</string>
+    <string name="tour_notification_read_title">படித்ததாகக் குறி</string>
+    <string name="tour_notification_read_text">பார்த்த பிறகு அறிவிப்புகளை அழிக்கவும்.</string>
+</resources>

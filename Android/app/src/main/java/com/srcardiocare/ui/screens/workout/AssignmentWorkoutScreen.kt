@@ -29,6 +29,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -43,6 +44,7 @@ import androidx.media3.common.VideoSize
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
+import com.srcardiocare.R
 import com.srcardiocare.core.security.ErrorHandler
 import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.data.model.Assignment
@@ -173,7 +175,7 @@ fun AssignmentWorkoutScreen(
                 showAbandonDialog = false
                 scope.launch {
                     sessionId?.let { runCatching { FirebaseService.abandonSession(it) } }
-                    toast("Workout abandoned")
+                    toast(context.getString(R.string.workout_abandoned_toast))
                     onBack()
                 }
             },
@@ -188,7 +190,7 @@ fun AssignmentWorkoutScreen(
             onComplete = {
                 scope.launch {
                     sessionId?.let { runCatching { FirebaseService.completeSession(it) } }
-                    toast("Workout completed")
+                    toast(context.getString(R.string.workout_completed_toast))
                     onComplete()
                 }
             }
@@ -208,7 +210,7 @@ fun AssignmentWorkoutScreen(
                             maxLines = 1
                         )
                         Text(
-                            "Session $sessionNumber  •  Set $currentSet of $totalSets",
+                            stringResource(R.string.workout_header, sessionNumber, currentSet, totalSets),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -216,7 +218,7 @@ fun AssignmentWorkoutScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = { showAbandonDialog = true }) {
-                        Icon(Icons.Default.Close, contentDescription = "End workout")
+                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.workout_end_desc))
                     }
                 },
                 actions = { TutorialHelpButton() },
@@ -327,7 +329,7 @@ fun AssignmentWorkoutScreen(
     errorMessage?.let { msg ->
         Snackbar(
             modifier = Modifier.padding(DesignTokens.Spacing.MD),
-            action = { TextButton(onClick = { errorMessage = null }) { Text("OK") } }
+            action = { TextButton(onClick = { errorMessage = null }) { Text(stringResource(R.string.action_ok)) } }
         ) { Text(msg) }
     }
 }
@@ -402,7 +404,9 @@ private fun VideoSurface(
         }
 
         // Tag in corner: "DEMO" vs "GO"
-        val tagText = if (phase == Phase.ACTIVE) "GO" else "DEMO"
+        val tagText = stringResource(
+            if (phase == Phase.ACTIVE) R.string.workout_tag_go else R.string.workout_tag_demo
+        )
         val tagColor = if (phase == Phase.ACTIVE) DesignTokens.Colors.Success else DesignTokens.Colors.Primary
         Surface(
             shape = RoundedCornerShape(50),
@@ -512,7 +516,7 @@ private fun ExerciseStage(
             color = if (phase == Phase.ACTIVE) DesignTokens.Colors.Success else DesignTokens.Colors.Primary
         )
         Text(
-            if (reps == 1) "REP" else "REPS",
+            stringResource(if (reps == 1) R.string.workout_rep_singular else R.string.workout_rep_plural),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = FontWeight.Bold,
@@ -522,7 +526,7 @@ private fun ExerciseStage(
         Spacer(modifier = Modifier.height(DesignTokens.Spacing.SM))
 
         Text(
-            "Set $currentSet of $totalSets",
+            stringResource(R.string.workout_set_of, currentSet, totalSets),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold
         )
@@ -568,7 +572,7 @@ private fun NoVideoPlaceholder() {
                 modifier = Modifier.size(48.dp)
             )
             Spacer(modifier = Modifier.height(DesignTokens.Spacing.SM))
-            Text("No demo video", color = Color.White.copy(alpha = 0.7f))
+            Text(stringResource(R.string.workout_no_demo_video), color = Color.White.copy(alpha = 0.7f))
         }
     }
 }
@@ -589,7 +593,7 @@ private fun RestStage(remaining: Int, total: Int, nextSet: Int, totalSets: Int) 
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            "REST",
+            stringResource(R.string.workout_tag_rest),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -612,7 +616,7 @@ private fun RestStage(remaining: Int, total: Int, nextSet: Int, totalSets: Int) 
                     color = DesignTokens.Colors.Primary
                 )
                 Text(
-                    "sec",
+                    stringResource(R.string.workout_rest_seconds_suffix),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -620,13 +624,13 @@ private fun RestStage(remaining: Int, total: Int, nextSet: Int, totalSets: Int) 
         }
         Spacer(modifier = Modifier.height(DesignTokens.Spacing.XL))
         Text(
-            "Up next",
+            stringResource(R.string.workout_up_next),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             letterSpacing = 2.sp
         )
         Text(
-            "Set $nextSet of $totalSets",
+            stringResource(R.string.workout_set_of, nextSet, totalSets),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
@@ -640,10 +644,10 @@ private fun RestStage(remaining: Int, total: Int, nextSet: Int, totalSets: Int) 
 @Composable
 private fun BottomActionBar(phase: Phase, onPrimary: () -> Unit, buttonModifier: Modifier = Modifier) {
     val (label, container, icon) = when (phase) {
-        Phase.DEMO -> Triple("I'm Ready", DesignTokens.Colors.Primary, Icons.Default.PlayArrow)
-        Phase.ACTIVE -> Triple("Set Done", DesignTokens.Colors.Success, Icons.Default.Check)
-        Phase.REST -> Triple("Skip Rest", MaterialTheme.colorScheme.secondary, Icons.Default.SkipNext)
-        Phase.ALL_DONE -> Triple("Finishing…", DesignTokens.Colors.Success, Icons.Default.Check)
+        Phase.DEMO -> Triple(stringResource(R.string.workout_action_ready), DesignTokens.Colors.Primary, Icons.Default.PlayArrow)
+        Phase.ACTIVE -> Triple(stringResource(R.string.workout_action_set_done), DesignTokens.Colors.Success, Icons.Default.Check)
+        Phase.REST -> Triple(stringResource(R.string.workout_action_skip_rest), MaterialTheme.colorScheme.secondary, Icons.Default.SkipNext)
+        Phase.ALL_DONE -> Triple(stringResource(R.string.workout_action_finishing), DesignTokens.Colors.Success, Icons.Default.Check)
     }
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -678,15 +682,15 @@ private fun BottomActionBar(phase: Phase, onPrimary: () -> Unit, buttonModifier:
 private fun AbandonDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("End workout?") },
-        text = { Text("Your progress so far will be saved as incomplete. You can start a new session later today.") },
+        title = { Text(stringResource(R.string.workout_abandon_title)) },
+        text = { Text(stringResource(R.string.workout_abandon_message)) },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text("End", color = DesignTokens.Colors.Error)
+                Text(stringResource(R.string.workout_abandon_confirm), color = DesignTokens.Colors.Error)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Keep going") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.workout_abandon_dismiss)) }
         }
     )
 }
@@ -724,7 +728,7 @@ private fun AllDonePopup(exerciseName: String, sessionNumber: Int, onComplete: (
                 }
                 Spacer(modifier = Modifier.height(DesignTokens.Spacing.LG))
                 Text(
-                    "Workout Complete",
+                    stringResource(R.string.workout_complete_title),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
@@ -737,7 +741,7 @@ private fun AllDonePopup(exerciseName: String, sessionNumber: Int, onComplete: (
                     textAlign = TextAlign.Center
                 )
                 Text(
-                    "Session $sessionNumber done",
+                    stringResource(R.string.workout_session_done, sessionNumber),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
@@ -753,7 +757,7 @@ private fun AllDonePopup(exerciseName: String, sessionNumber: Int, onComplete: (
                 ) {
                     Icon(Icons.Default.Check, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Done", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.action_done), fontWeight = FontWeight.Bold)
                 }
             }
         }

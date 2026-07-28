@@ -24,6 +24,8 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.srcardiocare.R
 import com.srcardiocare.data.firebase.AssignmentRepository
 import com.srcardiocare.data.firebase.SessionRepository
 import com.srcardiocare.data.model.*
@@ -123,10 +125,10 @@ fun PatientHistoryScreen(
             TopAppBar(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
-                title = { Text("Workout History", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.history_title), fontWeight = FontWeight.Bold) },
                 actions = { TutorialHelpButton() },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
             )
@@ -153,7 +155,7 @@ fun PatientHistoryScreen(
                             modifier = Modifier.fillMaxWidth().padding(DesignTokens.Spacing.XL),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("No history available.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(stringResource(R.string.history_empty), color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 } else {
@@ -235,9 +237,10 @@ private fun HistoryCard(item: HistoryExerciseItem, modifier: Modifier = Modifier
             Column(horizontalAlignment = Alignment.End) {
                 Text(
                     when (item.status) {
-                        AssignmentHistoryStatus.FULLY_COMPLETED -> "Completed"
-                        AssignmentHistoryStatus.PARTIALLY_COMPLETED -> "${item.sessionsCompleted}/${item.sessionsPossible} Done"
-                        AssignmentHistoryStatus.MISSED -> "Missed"
+                        AssignmentHistoryStatus.FULLY_COMPLETED -> stringResource(R.string.status_completed)
+                        AssignmentHistoryStatus.PARTIALLY_COMPLETED ->
+                            stringResource(R.string.history_sessions_done, item.sessionsCompleted, item.sessionsPossible)
+                        AssignmentHistoryStatus.MISSED -> stringResource(R.string.status_missed)
                     },
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.SemiBold,

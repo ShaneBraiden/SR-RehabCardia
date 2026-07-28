@@ -22,6 +22,8 @@ import androidx.compose.foundation.layout.size
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.compose.ui.res.stringResource
+import com.srcardiocare.R
 
 /** Walks the context wrapper chain to find the host [Activity], if any. */
 fun Context.findActivity(): Activity? {
@@ -77,7 +79,9 @@ fun FullscreenToggleButton(
     ) {
         Icon(
             imageVector = if (isFullscreen) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
-            contentDescription = if (isFullscreen) "Exit fullscreen" else "Fullscreen",
+            contentDescription = stringResource(
+                if (isFullscreen) R.string.fullscreen_exit else R.string.fullscreen_enter
+            ),
             tint = Color.White,
             modifier = Modifier.padding(7.dp)
         )

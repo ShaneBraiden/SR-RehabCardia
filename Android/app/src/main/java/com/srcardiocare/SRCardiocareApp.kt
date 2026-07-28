@@ -1,9 +1,11 @@
 package com.srcardiocare
 
 import android.app.Application
+import android.content.Context
 import android.util.Log
 import com.google.firebase.FirebaseApp
 import com.srcardiocare.core.auth.AuthManager
+import com.srcardiocare.core.locale.LocaleManager
 import com.srcardiocare.core.push.PushChannels
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -18,6 +20,14 @@ import kotlinx.coroutines.async
  * inside a LaunchedEffect — the first Compose frame renders immediately.
  */
 class SRCardiocareApp : Application() {
+
+    /**
+     * Applies the chosen language app-wide, so contexts that never go through an
+     * Activity — notification building in particular — resolve localised strings.
+     */
+    override fun attachBaseContext(base: Context) {
+        super.attachBaseContext(LocaleManager.wrap(base))
+    }
 
     /** App-wide scope that survives configuration changes. */
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)

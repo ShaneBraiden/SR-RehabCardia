@@ -14,12 +14,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.google.firebase.firestore.FirebaseFirestore
+import com.srcardiocare.R
 import com.srcardiocare.core.security.ErrorHandler
 import com.srcardiocare.core.security.PasswordValidator
 import com.srcardiocare.data.firebase.FirebaseService
@@ -42,15 +45,16 @@ fun ChangePasswordScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var successMessage by remember { mutableStateOf<String?>(null) }
 
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Change Password", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.action_change_password), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
@@ -70,14 +74,14 @@ fun ChangePasswordScreen(
             Spacer(modifier = Modifier.height(DesignTokens.Spacing.XL))
 
             Text(
-                "Update Your Password",
+                stringResource(R.string.change_password_heading),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
             )
             Spacer(modifier = Modifier.height(DesignTokens.Spacing.SM))
             Text(
-                "Enter your current password and choose a new one.",
+                stringResource(R.string.change_password_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -88,7 +92,7 @@ fun ChangePasswordScreen(
             OutlinedTextField(
                 value = oldPassword,
                 onValueChange = { oldPassword = it; errorMessage = null },
-                label = { Text("Current Password") },
+                label = { Text(stringResource(R.string.change_password_current_label)) },
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = if (oldPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -98,7 +102,9 @@ fun ChangePasswordScreen(
                     IconButton(onClick = { oldPasswordVisible = !oldPasswordVisible }) {
                         Icon(
                             if (oldPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                            contentDescription = if (oldPasswordVisible) "Hide" else "Show"
+                            contentDescription = stringResource(
+                                if (oldPasswordVisible) R.string.action_hide else R.string.action_show
+                            )
                         )
                     }
                 },
@@ -114,7 +120,7 @@ fun ChangePasswordScreen(
             OutlinedTextField(
                 value = newPassword,
                 onValueChange = { newPassword = it; errorMessage = null },
-                label = { Text("New Password") },
+                label = { Text(stringResource(R.string.change_password_new_label)) },
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = if (newPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -124,7 +130,9 @@ fun ChangePasswordScreen(
                     IconButton(onClick = { newPasswordVisible = !newPasswordVisible }) {
                         Icon(
                             if (newPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                            contentDescription = if (newPasswordVisible) "Hide" else "Show"
+                            contentDescription = stringResource(
+                                if (newPasswordVisible) R.string.action_hide else R.string.action_show
+                            )
                         )
                     }
                 },
@@ -148,7 +156,7 @@ fun ChangePasswordScreen(
             OutlinedTextField(
                 value = confirmPassword,
                 onValueChange = { confirmPassword = it; errorMessage = null },
-                label = { Text("Confirm New Password") },
+                label = { Text(stringResource(R.string.change_password_confirm_label)) },
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -179,7 +187,7 @@ fun ChangePasswordScreen(
                     // Validate
                     when {
                         oldPassword.isBlank() -> {
-                            errorMessage = "Please enter your current password."
+                            errorMessage = context.getString(R.string.change_password_error_current_blank)
                             return@Button
                         }
                         else -> {
@@ -192,11 +200,11 @@ fun ChangePasswordScreen(
                         }
                     }
                     if (newPassword != confirmPassword) {
-                        errorMessage = "New passwords do not match."
+                        errorMessage = context.getString(R.string.change_password_error_mismatch)
                         return@Button
                     }
                     if (newPassword == oldPassword) {
-                        errorMessage = "New password must be different from current password."
+                        errorMessage = context.getString(R.string.change_password_error_same)
                         return@Button
                     }
 
@@ -214,7 +222,7 @@ fun ChangePasswordScreen(
                                         .await()
                                 } catch (_: Exception) { }
                             }
-                            successMessage = "Password changed successfully!"
+                            successMessage = context.getString(R.string.change_password_success)
                             isLoading = false
                             // Navigate back after short delay
                             kotlinx.coroutines.delay(1500)
@@ -223,7 +231,7 @@ fun ChangePasswordScreen(
                             val msg = when {
                                 e.message?.contains("INVALID_LOGIN_CREDENTIALS") == true ||
                                 e.message?.contains("wrong-password") == true ->
-                                    "Current password is incorrect."
+                                    context.getString(R.string.change_password_error_current_wrong)
                                 else -> ErrorHandler.getDisplayMessage(e, "change password")
                             }
                             errorMessage = msg
@@ -245,7 +253,7 @@ fun ChangePasswordScreen(
                         strokeWidth = 2.dp
                     )
                 } else {
-                    Text("Change Password", fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.action_change_password), fontWeight = FontWeight.SemiBold)
                 }
             }
 

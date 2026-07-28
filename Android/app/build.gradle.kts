@@ -58,6 +58,12 @@ android {
         }
     }
 
+    androidResources {
+        // Ship only the locales we actually translate. AGP 9 removed
+        // defaultConfig.resourceConfigurations — localeFilters replaces it.
+        localeFilters += listOf("en", "ta")
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17

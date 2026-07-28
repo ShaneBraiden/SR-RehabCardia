@@ -7,6 +7,7 @@
 // care team connection.
 package com.srcardiocare.ui.screens.onboarding
 
+import androidx.annotation.StringRes
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -66,6 +67,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -74,9 +76,13 @@ import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.ui.theme.DesignTokens
 import kotlinx.coroutines.launch
 
+/**
+ * Copy is held as resource ids rather than resolved strings so the page list can
+ * stay inside `remember` — stringResource is not callable from a remember block.
+ */
 private data class OnboardingPage(
-    val title: String,
-    val body: String,
+    @StringRes val titleRes: Int,
+    @StringRes val bodyRes: Int,
     val accent: Color,
     val illustration: @Composable () -> Unit
 )
@@ -90,26 +96,26 @@ fun OnboardingScreen(onFinished: () -> Unit) {
     val pages = remember {
         listOf(
             OnboardingPage(
-                title = "Welcome to RehabCardia",
-                body = "Your personal companion for cardiac rehabilitation — built around a recovery plan created just for you by your care team.",
+                titleRes = R.string.onboarding_1_title,
+                bodyRes = R.string.onboarding_1_body,
                 accent = DesignTokens.Colors.Primary,
                 illustration = { LogoIllustration() }
             ),
             OnboardingPage(
-                title = "Exercises Made for You",
-                body = "Your doctor assigns video-guided exercises matched to your recovery stage. Follow along at your own pace, one session at a time.",
+                titleRes = R.string.onboarding_2_title,
+                bodyRes = R.string.onboarding_2_body,
                 accent = DesignTokens.Colors.ChartSecondaryTeal,
                 illustration = { ExerciseIllustration() }
             ),
             OnboardingPage(
-                title = "Watch Your Recovery Grow",
-                body = "Daily progress rings and history charts show how far you've come — every completed session counts toward your recovery.",
+                titleRes = R.string.onboarding_3_title,
+                bodyRes = R.string.onboarding_3_body,
                 accent = DesignTokens.Colors.Success,
                 illustration = { ProgressIllustration() }
             ),
             OnboardingPage(
-                title = "Your Care Team, One Tap Away",
-                body = "Message your doctor, receive feedback on your sessions, and never miss an appointment with built-in reminders.",
+                titleRes = R.string.onboarding_4_title,
+                bodyRes = R.string.onboarding_4_body,
                 accent = DesignTokens.Colors.PrimaryDark,
                 illustration = { CareTeamIllustration() }
             )
@@ -180,7 +186,7 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                 AnimatedVisibility(visible = !isLastPage, enter = fadeIn(), exit = fadeOut()) {
                     TextButton(onClick = finish, enabled = !isSaving) {
                         Text(
-                            "Skip",
+                            stringResource(R.string.action_skip),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontWeight = DesignTokens.Typography.Medium
                         )
@@ -232,7 +238,7 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                     Spacer(modifier = Modifier.height(DesignTokens.Spacing.XXL + DesignTokens.Spacing.Base))
 
                     Text(
-                        text = page.title,
+                        text = stringResource(page.titleRes),
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onBackground,
@@ -242,7 +248,7 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                     Spacer(modifier = Modifier.height(DesignTokens.Spacing.MD))
 
                     Text(
-                        text = page.body,
+                        text = stringResource(page.bodyRes),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
@@ -302,7 +308,9 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                     )
                 } else {
                     Text(
-                        text = if (isLastPage) "Get Started" else "Next",
+                        text = stringResource(
+                            if (isLastPage) R.string.onboarding_get_started else R.string.action_next
+                        ),
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onPrimary
                     )
@@ -332,7 +340,7 @@ private fun LogoIllustration() {
 
     Image(
         painter = painterResource(id = R.drawable.sr_logo),
-        contentDescription = "RehabCardia logo",
+        contentDescription = stringResource(R.string.login_logo_desc),
         contentScale = ContentScale.Fit,
         modifier = Modifier
             .size(120.dp)

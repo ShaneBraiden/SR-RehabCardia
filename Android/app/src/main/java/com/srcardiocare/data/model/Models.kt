@@ -246,7 +246,11 @@ data class ActiveExerciseItem(
     val isDoneToday: Boolean,           // sessionsToday >= dailyTarget
     val canStartSession: Boolean,       // !isDoneToday && no in-progress session
     val currentSession: SessionLog? = null, // If there's an in-progress session
-    val expiryText: String? = null,     // "Expires in 3 days", "Expires today"
+    // Whole days from today until the assignment ends; null if it never expires.
+    // Deliberately a number rather than pre-rendered copy so the UI owns both the
+    // wording and the urgency colour — a localised string cannot carry either.
+    val expiryDaysRemaining: Int? = null,
+    val expiryDate: String? = null,     // dd/MM/yyyy, shown when expiry is far off
     val progressText: String = "0/3"    // "1/3", "2/3", "3/3"
 )
 

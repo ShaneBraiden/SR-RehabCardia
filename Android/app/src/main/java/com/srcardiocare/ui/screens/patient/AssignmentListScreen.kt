@@ -24,6 +24,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import com.srcardiocare.R
 import com.srcardiocare.data.model.*
 import com.srcardiocare.ui.components.SkeletonListRow
 import com.srcardiocare.ui.components.tutorial.TutorialHelpButton
@@ -63,13 +66,13 @@ fun AssignmentListScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text("Daily Exercises", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(R.string.assignments_title), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                         Text(today.format(dateFormatter), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
                 actions = {
@@ -77,7 +80,7 @@ fun AssignmentListScreen(
                         onClick = onHistoryTap,
                         modifier = Modifier.tutorialTarget(TutorialIds.ASSIGNMENT_HISTORY)
                     ) {
-                        Icon(Icons.Default.History, contentDescription = "History")
+                        Icon(Icons.Default.History, contentDescription = stringResource(R.string.assignments_history))
                     }
                     TutorialHelpButton()
                 },
@@ -136,7 +139,7 @@ fun AssignmentListScreen(
                 if (!isLoading && activeExercises.isNotEmpty()) {
                     item {
                         Text(
-                            "Today's Exercises",
+                            stringResource(R.string.assignments_today),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(
@@ -186,13 +189,13 @@ fun AssignmentListScreen(
                                 )
                                 Spacer(modifier = Modifier.height(DesignTokens.Spacing.MD))
                                 Text(
-                                    "No exercises assigned",
+                                    stringResource(R.string.assignments_empty_title),
                                     style = MaterialTheme.typography.titleMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Spacer(modifier = Modifier.height(DesignTokens.Spacing.XS))
                                 Text(
-                                    "Your doctor will assign exercises for you",
+                                    stringResource(R.string.assignments_empty_subtitle),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -263,19 +266,19 @@ private fun ActiveExerciseCard(
                 when {
                     item.isDoneToday -> Icon(
                         Icons.Default.CheckCircle,
-                        contentDescription = "Done",
+                        contentDescription = stringResource(R.string.action_done),
                         tint = DesignTokens.Colors.Success,
                         modifier = Modifier.size(24.dp)
                     )
                     item.currentSession != null -> Icon(
                         Icons.Default.Pause,
-                        contentDescription = "In Progress",
+                        contentDescription = stringResource(R.string.assignments_in_progress),
                         tint = DesignTokens.Colors.Warning,
                         modifier = Modifier.size(24.dp)
                     )
                     else -> Icon(
                         Icons.Default.PlayArrow,
-                        contentDescription = "Start",
+                        contentDescription = stringResource(R.string.assignments_start),
                         tint = DesignTokens.Colors.Primary,
                         modifier = Modifier.size(24.dp)
                     )
@@ -302,17 +305,24 @@ private fun ActiveExerciseCard(
                 Spacer(modifier = Modifier.height(2.dp))
 
                 Text(
-                    "${item.assignment.sets} Sets • ${item.assignment.reps} Reps",
+                    stringResource(R.string.assignments_sets_reps, item.assignment.sets, item.assignment.reps),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                // Expiry warning
-                item.expiryText?.let { expiry ->
-                    val expiryColor = when {
-                        expiry.contains("today") -> DesignTokens.Colors.Error
-                        expiry.contains("tomorrow") -> DesignTokens.Colors.Warning
+                // Expiry warning. Both the wording and the urgency colour come from
+                // the day count — never from matching words in the rendered string.
+                item.expiryDaysRemaining?.let { days ->
+                    val expiryColor = when (days) {
+                        0 -> DesignTokens.Colors.Error
+                        1 -> DesignTokens.Colors.Warning
                         else -> MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+                    val expiry = when {
+                        days == 0 -> stringResource(R.string.assignments_expires_today)
+                        days == 1 -> stringResource(R.string.assignments_expires_tomorrow)
+                        days <= 7 -> pluralStringResource(R.plurals.assignments_expires_in_days, days, days)
+                        else -> stringResource(R.string.assignments_expires_on, item.expiryDate.orEmpty())
                     }
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
@@ -334,7 +344,7 @@ private fun ActiveExerciseCard(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            "Session in progress - tap to continue",
+                            stringResource(R.string.assignments_session_resume),
                             style = MaterialTheme.typography.labelSmall,
                             color = DesignTokens.Colors.Warning,
                             fontWeight = FontWeight.Medium
@@ -381,17 +391,17 @@ private fun HistoryExerciseCard(item: HistoryExerciseItem) {
         AssignmentHistoryStatus.FULLY_COMPLETED -> Triple(
             DesignTokens.Colors.Success,
             Icons.Default.CheckCircle,
-            "Completed"
+            stringResource(R.string.status_completed)
         )
         AssignmentHistoryStatus.PARTIALLY_COMPLETED -> Triple(
             DesignTokens.Colors.Warning,
             Icons.Default.Warning,
-            "Partial"
+            stringResource(R.string.status_partial)
         )
         AssignmentHistoryStatus.MISSED -> Triple(
             DesignTokens.Colors.Error,
             Icons.Default.Cancel,
-            "Missed"
+            stringResource(R.string.status_missed)
         )
     }
 
