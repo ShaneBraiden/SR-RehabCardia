@@ -77,6 +77,9 @@ venv/
 __pycache__/
 *.pyc
 
+# Pre-change backups (originals are recoverable from git history)
+*.bak
+
 # Service account keys
 service-account-key.json
 sr-cardiocare-6110649dfa04.json

@@ -30,11 +30,24 @@ object FeedbackRepository {
         )
     }
 
-    /** Submit post-workout feedback to a top-level collection. */
+    /**
+     * Submit post-workout feedback to a top-level collection.
+     *
+     * `patientId` and `doctorId` are stamped here rather than taken from the
+     * caller's map: both are authorization-relevant, and the security rules
+     * check them against the caller's own ID token. Stamping them centrally
+     * means a screen cannot accidentally omit or contradict them.
+     *
+     * (Before this change no `doctorId` was written at all, which is why
+     * fetchDoctorFeedbacks() has always returned an empty list.)
+     */
     suspend fun submitPostWorkoutFeedback(data: Map<String, Any?>) {
+        val patientId = AuthRepository.currentUID ?: throw Exception("Not authenticated")
         val ref = FirebaseClients.db.collection("postWorkoutFeedback").document()
         val mutableData = data.toMutableMap()
         mutableData["id"] = ref.id
+        mutableData["patientId"] = patientId
+        mutableData["doctorId"] = AuthRepository.assignedDoctorId()
         ref.set(mutableData).await()
     }
 

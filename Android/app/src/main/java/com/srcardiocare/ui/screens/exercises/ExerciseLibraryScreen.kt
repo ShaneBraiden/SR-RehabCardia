@@ -445,6 +445,12 @@ private fun VideoPlayerDialog(
                                 WebView(context).apply {
                                     settings.javaScriptEnabled = true
                                     settings.mediaPlaybackRequiresUserGesture = false
+                                    // Below API 30 these default to true. The player only ever
+                                    // needs remote YouTube content, so deny it any path to local
+                                    // files or content:// providers.
+                                    settings.allowFileAccess = false
+                                    settings.allowContentAccess = false
+                                    settings.domStorageEnabled = false
                                     // Restrict navigation to YouTube domains only
                                     webViewClient = object : WebViewClient() {
                                         override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {

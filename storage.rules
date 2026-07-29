@@ -1,17 +1,52 @@
 rules_version = '2';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// SR-Cardiocare — Cloud Storage security rules
+//
+// Roles come from Firebase Auth custom claims (see firestore.rules and the
+// syncUserClaims Cloud Function). Storage paths are addressed by patient UID
+// and carry no metadata to authorise against, so doctor scoping needs one
+// cross-service lookup of the patient's user document.
+// ─────────────────────────────────────────────────────────────────────────────
+
 service firebase.storage {
   match /b/{bucket}/o {
 
-    // ── Helpers ───────────────────────────────────────────────────────────
+    // ── Identity ──────────────────────────────────────────────────────────
 
     function isAuth() {
       return request.auth != null;
     }
 
-    function isOwner(uid) {
-      return request.auth.uid == uid;
+    function claims() {
+      return request.auth.token;
     }
+
+    function role() {
+      return isAuth() ? claims().get('role', '') : '';
+    }
+
+    function isActive() {
+      return isAuth() && claims().get('isBlocked', false) != true && role() != '';
+    }
+
+    function isOwner(uid) {
+      return isActive() && request.auth.uid == uid;
+    }
+
+    function isAdmin()     { return isActive() && role() == 'admin'; }
+    function isDoctor()    { return isActive() && role() == 'doctor'; }
+    function isClinician() { return isDoctor() || isAdmin(); }
+
+    // Admins reach any patient; a doctor reaches only their own caseload.
+    function isMyPatient(patientId) {
+      return isAdmin() || (isDoctor() &&
+        firestore.exists(/databases/(default)/documents/users/$(patientId)) &&
+        firestore.get(/databases/(default)/documents/users/$(patientId))
+          .data.get('assignedDoctorId', '') == request.auth.uid);
+    }
+
+    // ── Content type / size guards ────────────────────────────────────────
 
     function isImage() {
       return request.resource.contentType.matches('image/(jpeg|png|webp|gif)');
@@ -29,69 +64,62 @@ service firebase.storage {
       return request.resource.size <= mb * 1024 * 1024;
     }
 
-    // Role lookup from Firestore (cross-service rules).
-    function isClinician() {
-      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role in ['doctor', 'admin'];
-    }
-
     // ── User Profile Images ───────────────────────────────────────────────
     // Path: /users/{userId}/profile/{fileName}
-    // Doctors and patients both have profile photos. Any authenticated user
-    // can read (doctor needs patient avatar in chat). Only the owner writes.
+    // Avatars surface across chat and dashboards, so any active user may read
+    // them. Only the owner writes.
     match /users/{userId}/profile/{fileName} {
-      allow read:   if isAuth();
-      allow write:  if isAuth() && isOwner(userId) && isImage() && underMB(5);
-      allow delete: if isAuth() && isOwner(userId);
+      allow read:   if isActive();
+      allow write:  if isOwner(userId) && isImage() && underMB(5);
+      allow delete: if isOwner(userId);
     }
 
     // ── Patient Workout Videos ────────────────────────────────────────────
     // Path: /workouts/{userId}/{fileName}
-    // Patients upload their own exercise recordings. Doctors can read for review.
+    // Video of a patient performing exercises is clinical data. Readable by
+    // that patient and their own care team only.
     match /workouts/{userId}/{fileName} {
-      allow read:   if isAuth();
-      allow write:  if isAuth() && isOwner(userId) && isVideo() && underMB(500);
-      allow delete: if isAuth() && isOwner(userId);
-    }
-
-    // ── Exercise Library Videos ───────────────────────────────────────────
-    // Path: /videos/{fileName} — written by the app's Video Upload screen
-    // (doctors/admins adding exercise demonstration videos).
-    match /videos/{fileName} {
-      allow read:   if isAuth();
-      allow write:  if isAuth() && isClinician() && isVideo() && underMB(500);
-      allow delete: if isAuth() && isClinician();
-    }
-
-    // Path: /exercises/{exerciseId}/{fileName}
-    // Read-only for all authenticated users. Writes must go through a Cloud
-    // Function using the Admin SDK — no direct client uploads permitted.
-    match /exercises/{exerciseId}/{allPaths=**} {
-      allow read:          if isAuth();
-      allow write, delete: if false;
-    }
-
-    // ── Chat Attachments ──────────────────────────────────────────────────
-    // Path: /chats/{patientId}/attachments/{fileName}
-    // Both patient and doctor sides of the chat can read. Any authenticated
-    // user may upload (the doctor's UID won't match patientId so we allow
-    // authenticated writes broadly here). Only the patient can delete their
-    // own folder.
-    match /chats/{patientId}/attachments/{fileName} {
-      allow read:   if isAuth();
-      allow write:  if isAuth() && isImageOrVideo() && underMB(50);
-      allow delete: if isAuth() && isOwner(patientId);
+      allow read:   if isOwner(userId) || isMyPatient(userId);
+      allow write:  if isOwner(userId) && isVideo() && underMB(500);
+      allow delete: if isOwner(userId);
     }
 
     // ── Session Log Attachments ───────────────────────────────────────────
     // Path: /sessionLogs/{userId}/{sessionId}/{fileName}
-    // Heart-rate screenshots, RPE photos, or short clips attached to a session.
+    // Heart-rate screenshots, RPE photos, short clips.
     match /sessionLogs/{userId}/{sessionId}/{fileName} {
-      allow read:   if isAuth();
-      allow write:  if isAuth() && isOwner(userId) && isImageOrVideo() && underMB(100);
-      allow delete: if isAuth() && isOwner(userId);
+      allow read:   if isOwner(userId) || isMyPatient(userId);
+      allow write:  if isOwner(userId) && isImageOrVideo() && underMB(100);
+      allow delete: if isOwner(userId);
     }
 
-    // ── Default deny — explicit allowlist above, everything else is blocked ─
+    // ── Chat Attachments ──────────────────────────────────────────────────
+    // Path: /chats/{patientId}/attachments/{fileName}
+    // Scoped to the two parties in the thread.
+    match /chats/{patientId}/attachments/{fileName} {
+      allow read:   if isOwner(patientId) || isMyPatient(patientId);
+      allow write:  if (isOwner(patientId) || isMyPatient(patientId))
+                      && isImageOrVideo() && underMB(50);
+      allow delete: if isOwner(patientId);
+    }
+
+    // ── Exercise Library Videos ───────────────────────────────────────────
+    // Shared clinical content, not patient data.
+    match /videos/{fileName} {
+      allow read:   if isActive();
+      allow write:  if isClinician() && isVideo() && underMB(500);
+      allow delete: if isClinician();
+    }
+
+    // Path: /exercises/{exerciseId}/{fileName}
+    // Read-only for clients. Writes must go through a Cloud Function using the
+    // Admin SDK — no direct client uploads permitted.
+    match /exercises/{exerciseId}/{allPaths=**} {
+      allow read:          if isActive();
+      allow write, delete: if false;
+    }
+
+    // ── Default deny — explicit allowlist above, everything else blocked ───
     match /{allPaths=**} {
       allow read, write: if false;
     }

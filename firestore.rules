@@ -1,9 +1,30 @@
 rules_version = '2';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// SR-Cardiocare — Firestore security rules
+//
+// Authorization comes from Firebase Auth CUSTOM CLAIMS, not from Firestore.
+// The `syncUserClaims` Cloud Function mirrors users/{uid}.{role,isBlocked,
+// assignedDoctorId} into the ID token. Nothing below reads a role out of a
+// document, so a client that can write a user document still cannot grant
+// itself privileges.
+//
+// Two consequences worth knowing:
+//   * A claim change reaches the client on its next token refresh (hourly, or
+//     immediately via getIdToken(true)). syncUserClaims revokes refresh tokens
+//     whenever privileges shrink, so demotions and blocks cannot be outlived.
+//   * An account with no `role` claim is denied everywhere. Run
+//     functions/scripts/backfill-claims.js before deploying these rules.
+//
+// Doctors are scoped to their own patients. Clinical collections carry a
+// denormalised `doctorId` so that list queries can be authorised per-document
+// without a lookup.
+// ─────────────────────────────────────────────────────────────────────────────
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ── Helpers ──────────────────────────────────────────────────────────
+    // ── Identity ──────────────────────────────────────────────────────────
 
     function isAuthenticated() {
       return request.auth != null;
@@ -13,202 +34,303 @@ service cloud.firestore {
       return request.auth.uid;
     }
 
-    // Reads role from the user's Firestore doc (custom claims are not used).
-    function role() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    function claims() {
+      return request.auth.token;
     }
 
-    function isAdmin()  { return isAuthenticated() && role() == 'admin';  }
-    function isDoctor() { return isAuthenticated() && role() == 'doctor'; }
-    function isPatient(){ return isAuthenticated() && role() == 'patient';}
+    function role() {
+      return isAuthenticated() ? claims().get('role', '') : '';
+    }
+
+    // Blocking an account revokes API access, not merely the UI.
+    function isActive() {
+      return isAuthenticated() && claims().get('isBlocked', false) != true;
+    }
+
+    function isAdmin()   { return isActive() && role() == 'admin';  }
+    function isDoctor()  { return isActive() && role() == 'doctor'; }
+    function isPatient() { return isActive() && role() == 'patient';}
+    function isClinician() { return isDoctor() || isAdmin(); }
+
+    // The doctor this patient is assigned to, straight off their own token.
+    function myDoctorId() {
+      return isAuthenticated() ? claims().get('assignedDoctorId', '') : '';
+    }
+
+    // ── Scoping ───────────────────────────────────────────────────────────
+
+    // A clinician may reach a record when they are an admin, or when the
+    // record names them as the responsible doctor. Clinical collections carry
+    // a denormalised doctorId precisely so this works on list queries.
+    function ownsRecord() {
+      return isAdmin() || (isDoctor() && resource.data.get('doctorId', '') == uid());
+    }
+
+    // Path-addressed collections (chat) cannot denormalise, so fall back to a
+    // single lookup of the patient's user document.
+    function isMyPatient(patientId) {
+      return isAdmin() || (isDoctor() &&
+        exists(/databases/$(database)/documents/users/$(patientId)) &&
+        get(/databases/$(database)/documents/users/$(patientId))
+          .data.get('assignedDoctorId', '') == uid());
+    }
+
+    function unchanged(key) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny([key]);
+    }
 
     // ── Users ─────────────────────────────────────────────────────────────
     match /users/{userId} {
-      // Own doc, or doctors/admins can list/read all users.
-      // Patients may also read the profile of the doctor assigned to them
-      // (so the app can show "Dr. <name>" instead of "Unknown").
-      allow read: if isAuthenticated() && (
+      // Own doc is readable even while blocked, so the app can render the
+      // "account blocked" screen instead of hanging on a denied read.
+      // Doctors see their own patients, plus other doctors (needed by the
+      // reassignment picker) — but never another doctor's patients.
+      allow get: if isAuthenticated() && (
         uid() == userId ||
-        isDoctor() ||
         isAdmin() ||
-        get(/databases/$(database)/documents/users/$(uid())).data.assignedDoctorId == userId
+        myDoctorId() == userId ||
+        (isDoctor() && (
+          resource.data.get('assignedDoctorId', '') == uid() ||
+          resource.data.get('role', '') == 'doctor'
+        ))
       );
 
-      // Own profile updates — cannot touch role, isBlocked, assignedDoctorId.
-      // Doctors can manage other users' docs but can never change a role
-      // (prevents self-promotion to admin).
-      allow update: if isAdmin() || (isAuthenticated() && (
+      // List queries are authorised per returned document, so a doctor's
+      // query must already be constrained to their own patients (or to
+      // role == 'doctor') or it will be rejected wholesale.
+      allow list: if isAdmin() || (isDoctor() && (
+        resource.data.get('assignedDoctorId', '') == uid() ||
+        resource.data.get('role', '') == 'doctor'
+      ));
+
+      // Own profile updates cannot touch authorization fields. Doctors may
+      // administer their own patients but never write a role.
+      allow update: if isAdmin() || (isActive() && (
         (uid() == userId &&
           !request.resource.data.diff(resource.data)
             .affectedKeys().hasAny(['role','isBlocked','assignedDoctorId'])) ||
         (isDoctor() && uid() != userId &&
+          resource.data.get('assignedDoctorId', '') == uid() &&
           !request.resource.data.diff(resource.data)
             .affectedKeys().hasAny(['role']))
       ));
 
-      // Doctors can create patient accounts; admins can do anything.
-      allow create: if isAuthenticated() && (isDoctor() || isAdmin());
+      // Roles are claims now, so a forged role field here is inert — but there
+      // is no reason to let one be written, and the value seeds the claim via
+      // syncUserClaims. Doctors may only ever mint patients assigned to
+      // themselves; only an admin can create a doctor or another admin.
+      allow create: if request.resource.data.role in ['patient','doctor','admin']
+        && request.resource.data.get('isBlocked', false) == false
+        && (
+          isAdmin() ||
+          (isDoctor() &&
+            request.resource.data.role == 'patient' &&
+            request.resource.data.get('assignedDoctorId', '') == uid())
+        );
+
       allow delete: if isAdmin();
     }
 
-    // ── Exercises ─────────────────────────────────────────────────────────
+    // ── Exercise library (shared clinical content, not patient data) ───────
     match /exercises/{exerciseId} {
-      allow read:                    if isAuthenticated();
-      allow create, update, delete:  if isDoctor() || isAdmin();
+      allow read:                    if isActive();
+      allow create, update, delete:  if isClinician();
+    }
+
+    match /videos/{videoId} {
+      allow read:                   if isActive();
+      allow create, update, delete: if isClinician();
     }
 
     // ── Plans ─────────────────────────────────────────────────────────────
     match /plans/{planId} {
-      allow get:  if isAuthenticated() && (
-        resource.data.patientId == uid() ||
-        resource.data.doctorId  == uid() ||
-        isDoctor() ||
-        isAdmin()
+      allow get:  if isActive() && (
+        resource.data.patientId == uid() || ownsRecord()
       );
-      // Patients may only run queries constrained to their own patientId.
-      allow list: if isDoctor() || isAdmin() ||
-        (isAuthenticated() && resource.data.patientId == uid());
-      allow create: if isDoctor() || isAdmin();
-      allow update: if isDoctor() || isAdmin();
-      allow delete: if isDoctor() || isAdmin();
+      allow list: if isAdmin() ||
+        (isActive() && resource.data.patientId == uid()) ||
+        (isDoctor() && resource.data.get('doctorId', '') == uid());
+      allow create: if isAdmin() ||
+        (isDoctor() && request.resource.data.get('doctorId', '') == uid());
+      allow update, delete: if ownsRecord();
     }
 
     // ── Assignments ───────────────────────────────────────────────────────
     match /assignments/{assignmentId} {
-      allow get:  if isAuthenticated() && (
-        resource.data.patientId == uid() ||
-        resource.data.doctorId  == uid() ||
-        isDoctor() ||
-        isAdmin()
+      allow get:  if isActive() && (
+        resource.data.patientId == uid() || ownsRecord()
       );
-      allow list: if isDoctor() || isAdmin() ||
-        (isAuthenticated() && resource.data.patientId == uid());
-      allow create: if isDoctor() || isAdmin();
-      allow update: if isDoctor() || isAdmin();
-      allow delete: if isDoctor() || isAdmin();
+      allow list: if isAdmin() ||
+        (isActive() && resource.data.patientId == uid()) ||
+        (isDoctor() && resource.data.get('doctorId', '') == uid());
+      allow create: if isAdmin() ||
+        (isDoctor() && request.resource.data.get('doctorId', '') == uid());
+      allow update, delete: if ownsRecord();
     }
 
     // ── Session Logs ──────────────────────────────────────────────────────
+    // Written by patients; `doctorId` is denormalised from the patient's own
+    // assignedDoctorId claim so it cannot be spoofed to reach another
+    // clinician's caseload.
     match /sessionLogs/{sessionId} {
-      allow get:  if isAuthenticated() && (
-        resource.data.patientId == uid() || isDoctor() || isAdmin()
-      );
-      allow list: if isDoctor() || isAdmin() ||
-        (isAuthenticated() && resource.data.patientId == uid());
-      allow create: if isAuthenticated() &&
-        request.resource.data.patientId == uid();
-      allow update: if isAuthenticated() && (
-        resource.data.patientId == uid() || isAdmin()
-      );
-      allow delete: if isAdmin();
-    }
-
-    // ── Workouts ──────────────────────────────────────────────────────────
-    match /workouts/{workoutId} {
-      allow get:  if isAuthenticated() && (
-        resource.data.patientId == uid() || isDoctor() || isAdmin()
-      );
-      allow list: if isDoctor() || isAdmin() ||
-        (isAuthenticated() && resource.data.patientId == uid());
-      allow create: if isAuthenticated() &&
-        request.resource.data.patientId == uid();
-      allow update: if isAuthenticated() && (
-        resource.data.patientId == uid() || isDoctor() || isAdmin()
-      );
-      allow delete: if isDoctor() || isAdmin();
-    }
-
-    // ── Notifications ─────────────────────────────────────────────────────
-    match /notifications/{notificationId} {
-      allow get:  if isAuthenticated() && (
-        resource.data.userId == uid() || isAdmin()
+      allow get:  if isActive() && (
+        resource.data.patientId == uid() || ownsRecord()
       );
       allow list: if isAdmin() ||
-        (isAuthenticated() && resource.data.userId == uid());
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated() && resource.data.userId == uid();
+        (isActive() && resource.data.patientId == uid()) ||
+        (isDoctor() && resource.data.get('doctorId', '') == uid());
+      allow create: if isActive() &&
+        request.resource.data.patientId == uid() &&
+        request.resource.data.get('doctorId', '') == myDoctorId();
+      // patientId and doctorId are immutable — a patient must not be able to
+      // re-attribute their own clinical record.
+      allow update: if isAdmin() ||
+        (isActive() && resource.data.patientId == uid() &&
+          unchanged('patientId') && unchanged('doctorId'));
       allow delete: if isAdmin();
+    }
+
+    // ── Workouts (legacy, read-only on the client) ─────────────────────────
+    match /workouts/{workoutId} {
+      allow get:  if isActive() && (
+        resource.data.patientId == uid() || ownsRecord()
+      );
+      allow list: if isAdmin() ||
+        (isActive() && resource.data.patientId == uid()) ||
+        (isDoctor() && resource.data.get('doctorId', '') == uid());
+      allow create: if isActive() &&
+        request.resource.data.patientId == uid() &&
+        request.resource.data.get('doctorId', '') == myDoctorId();
+      allow update: if ownsRecord() ||
+        (isActive() && resource.data.patientId == uid() &&
+          unchanged('patientId') && unchanged('doctorId'));
+      allow delete: if ownsRecord();
+    }
+
+    // ── Post-Workout Feedback ─────────────────────────────────────────────
+    match /postWorkoutFeedback/{feedbackId} {
+      allow get:  if isActive() && (
+        resource.data.patientId == uid() || ownsRecord()
+      );
+      allow list: if isAdmin() ||
+        (isActive() && resource.data.patientId == uid()) ||
+        (isDoctor() && resource.data.get('doctorId', '') == uid());
+      allow create: if isActive() &&
+        request.resource.data.patientId == uid() &&
+        request.resource.data.get('doctorId', '') == myDoctorId();
+      allow update, delete: if isAdmin();
+    }
+
+    // ── Doctor Feedback (doctor → patient) ────────────────────────────────
+    match /feedback/{feedbackId} {
+      allow get:  if isActive() && (
+        resource.data.patientId == uid() || ownsRecord()
+      );
+      allow list: if isAdmin() ||
+        (isActive() && resource.data.patientId == uid()) ||
+        (isDoctor() && resource.data.get('doctorId', '') == uid());
+      allow create: if isAdmin() ||
+        (isDoctor() && request.resource.data.doctorId == uid());
+      allow update, delete: if isAdmin();
     }
 
     // ── Appointments ──────────────────────────────────────────────────────
     match /appointments/{appointmentId} {
-      allow get:  if isAuthenticated() && (
+      allow get:  if isActive() && (
         resource.data.patientId == uid() ||
         resource.data.doctorId  == uid() ||
         isAdmin()
       );
       allow list: if isAdmin() ||
-        (isAuthenticated() && (
+        (isActive() && (
           resource.data.patientId == uid() || resource.data.doctorId == uid()
         ));
-      allow create: if isDoctor() || isAdmin();
-      allow update: if isAuthenticated() && (
+      // A doctor books under their own name; only an admin may book on behalf
+      // of another clinician. A patient may raise a *request* against their own
+      // assigned doctor only, and it must start as 'pending' — they cannot
+      // self-confirm a slot. (This patient path exists in ScheduleScreen but
+      // was blocked outright by the previous ruleset.)
+      allow create: if isAdmin() ||
+        (isDoctor() && request.resource.data.doctorId == uid()) ||
+        (isPatient() &&
+          request.resource.data.patientId == uid() &&
+          request.resource.data.doctorId == myDoctorId() &&
+          request.resource.data.status == 'pending');
+      allow update: if isActive() && (
         resource.data.doctorId  == uid() ||
         (resource.data.patientId == uid() &&
           request.resource.data.diff(resource.data)
             .affectedKeys().hasOnly(['patientConfirmed','patientNotes'])) ||
         isAdmin()
       );
-      allow delete: if isAuthenticated() && (
+      allow delete: if isActive() && (
         resource.data.doctorId == uid() || isAdmin()
       );
     }
 
     // ── Chat ──────────────────────────────────────────────────────────────
+    // Thread is addressed by patient UID, so there is no field to denormalise;
+    // isMyPatient() costs one document read per access.
     match /chats/{patientId}/messages/{messageId} {
-      allow read:   if isAuthenticated() && (
-        uid() == patientId || isDoctor() || isAdmin()
+      allow read:   if isActive() && (
+        uid() == patientId || isMyPatient(patientId)
       );
-      allow create: if isAuthenticated() && (
-        uid() == patientId || isDoctor() || isAdmin()
-      );
+      // senderId is pinned to the caller so neither side can forge a message
+      // attributed to the other.
+      allow create: if isActive()
+        && request.resource.data.senderId == uid()
+        && request.resource.data.text is string
+        && request.resource.data.text.size() <= 5000
+        && (uid() == patientId || isMyPatient(patientId));
       allow update, delete: if false;
     }
 
-    // ── Doctor Feedback (doctor → patient) ────────────────────────────────
-    match /feedback/{feedbackId} {
-      allow get:  if isAuthenticated() && (
-        resource.data.patientId == uid() ||
-        resource.data.doctorId  == uid() ||
-        isAdmin()
+    // ── Notifications ─────────────────────────────────────────────────────
+    // A notification document triggers fanOutNotification, which pushes
+    // client-authored title/body/route straight to the recipient's device.
+    // Creation is therefore tightly scoped: clinicians may notify anyone,
+    // a patient may notify only themselves or their assigned doctor.
+    match /notifications/{notificationId} {
+      allow get:  if isActive() && (
+        resource.data.userId == uid() || isAdmin()
       );
       allow list: if isAdmin() ||
-        (isAuthenticated() && (
-          resource.data.patientId == uid() || resource.data.doctorId == uid()
-        ));
-      allow create: if isDoctor() || isAdmin();
-      allow update, delete: if isAdmin();
-    }
+        (isActive() && resource.data.userId == uid());
 
-    // ── Post-Workout Feedback ─────────────────────────────────────────────
-    match /postWorkoutFeedback/{feedbackId} {
-      allow get:  if isAuthenticated() && (
-        resource.data.patientId == uid() || isDoctor() || isAdmin()
-      );
-      allow list: if isDoctor() || isAdmin() ||
-        (isAuthenticated() && resource.data.patientId == uid());
-      allow create: if isAuthenticated() &&
-        request.resource.data.patientId == uid();
-      allow update, delete: if isAdmin();
+      allow create: if isActive()
+        && request.resource.data.userId is string
+        && request.resource.data.title is string
+        && request.resource.data.body is string
+        && request.resource.data.title.size() <= 200
+        && request.resource.data.body.size() <= 2000
+        && (
+          isClinician() ||
+          request.resource.data.userId == uid() ||
+          request.resource.data.userId == myDoctorId()
+        );
+
+      // Recipients may only flip read state — not rewrite the message.
+      allow update: if isActive() && resource.data.userId == uid()
+        && request.resource.data.diff(resource.data)
+             .affectedKeys().hasOnly(['isRead','readAt']);
+      allow delete: if isAdmin();
     }
 
     // ── Login Logs ────────────────────────────────────────────────────────
+    // Append-only audit trail. Entries are pinned to the caller so login
+    // history cannot be fabricated for another account. Deliberately NOT gated
+    // on isActive(), so a blocked user's attempts are still recorded.
     match /loginLogs/{logId} {
       allow read:   if isAdmin();
-      allow create: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+        request.resource.data.get('userId', uid()) == uid();
       allow update, delete: if false;
     }
 
     // ── App Settings ──────────────────────────────────────────────────────
     match /settings/{docId} {
-      allow read:  if isAuthenticated();
+      allow read:  if isActive();
       allow write: if isAdmin();
-    }
-
-    // ── Videos ────────────────────────────────────────────────────────────
-    match /videos/{videoId} {
-      allow read:                   if isAuthenticated();
-      allow create, update, delete: if isDoctor() || isAdmin();
     }
 
     // ── Audit Logs ────────────────────────────────────────────────────────

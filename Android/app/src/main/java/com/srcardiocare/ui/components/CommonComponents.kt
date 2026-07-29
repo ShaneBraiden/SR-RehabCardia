@@ -124,7 +124,8 @@ fun StatItem(
                 Text(
                     text = label,
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color.White.copy(alpha = 0.8f)
+                    color = Color.White.copy(alpha = 0.8f),
+                    textAlign = TextAlign.Center
                 )
             }
             StatItemStyle.PRIMARY -> {

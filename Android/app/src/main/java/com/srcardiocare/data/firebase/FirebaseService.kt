@@ -34,8 +34,11 @@ object FirebaseService {
         password: String,
         firstName: String,
         lastName: String,
-        role: String
-    ): String = AuthRepository.registerOther(email, password, firstName, lastName, role)
+        role: String,
+        assignedDoctorId: String? = null
+    ): String = AuthRepository.registerOther(
+        email, password, firstName, lastName, role, assignedDoctorId
+    )
 
     fun logout() = AuthRepository.logout()
 

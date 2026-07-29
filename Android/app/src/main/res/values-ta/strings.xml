@@ -6,7 +6,13 @@
       These are three distinct clinical concepts and must not be merged.
     -->
 
-    <string name="brand_tagline">இதய மறுவாழ்வுக்கான ஒரு டிஜிட்டல் சுகாதார தளம்</string>
+    <!--
+      Kept short deliberately: this sits in a fixed-height TopAppBar and is capped
+      at one line. "ஒரு" is dropped (Tamil needs no indefinite article in a
+      strapline) and "சுகாதாரத் தளம்" takes the euphonic த். Glossary term
+      "இதய மறுவாழ்வு" is preserved.
+    -->
+    <string name="brand_tagline">இதய மறுவாழ்வுக்கான டிஜிட்டல் சுகாதாரத் தளம்</string>
 
     <string name="language">மொழி</string>
 

@@ -14,16 +14,26 @@
   },
   "main": "index.js",
   "dependencies": {
-    "deploy": "^1.1.0",
-    "firebase": "^12.12.0",
     "firebase-admin": "^13.8.0",
-    "firebase-functions": "^7.2.5",
-    "googleapis": "^171.4.0"
+    "firebase-functions": "^7.3.2"
   },
   "devDependencies": {
     "eslint": "^8.15.0",
     "eslint-config-google": "^0.14.0",
     "firebase-functions-test": "^3.4.1"
+  },
+  "//overrides": "Transitive-dependency CVE patches pulled in via firebase-admin / firebase-functions. Pinned to the lowest fixed version within the same major so the SDKs' own version ranges are not broken. Re-check on each SDK upgrade and drop entries the upstream has caught up on.",
+  "overrides": {
+    "@grpc/grpc-js": "^1.14.4",
+    "protobufjs": "^7.5.5",
+    "websocket-driver": "^0.7.5",
+    "fast-xml-parser": "^5.5.6",
+    "form-data": "^4.0.6",
+    "body-parser": "^1.20.6",
+    "qs": "^6.15.3",
+    "uuid": "^11.1.1",
+    "brace-expansion": "^2.0.3",
+    "path-to-regexp": "^0.1.13"
   },
   "private": true
 }

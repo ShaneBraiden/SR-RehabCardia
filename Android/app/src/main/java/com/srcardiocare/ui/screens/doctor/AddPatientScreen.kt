@@ -222,12 +222,21 @@ fun AddPatientScreen(onSaved: () -> Unit, onBack: () -> Unit) {
                             }
 
                             // Create account WITHOUT switching auth session
+                            // Resolve the assignment BEFORE creating the doc: the
+                            // security rules require a doctor to name themselves
+                            // as the assigned clinician in the creating write, so
+                            // this cannot be applied in the update() below.
+                            val assignTo = creatingUserUid?.takeIf {
+                                UserRepository.getUser(it).role == "doctor"
+                            }
+
                             val newPatientUid = FirebaseService.registerOther(
                                 email = emailValidation.sanitizedValue,
                                 password = temporaryPassword,
                                 firstName = firstName,
                                 lastName = lastName,
-                                role = "patient"
+                                role = "patient",
+                                assignedDoctorId = assignTo
                             )
 
                             // Write extra fields directly to the new patient's doc
@@ -242,12 +251,8 @@ fun AddPatientScreen(onSaved: () -> Unit, onBack: () -> Unit) {
                                 extraFields["age"] = ageValidation.sanitizedValue.toInt()
                             }
                             extraFields["gender"] = genders[selectedGender]
-                            if (creatingUserUid != null) {
-                                val creatorRole = UserRepository.getUser(creatingUserUid).role
-                                if (creatorRole == "doctor") {
-                                    extraFields["assignedDoctorId"] = creatingUserUid
-                                }
-                            }
+                            // assignedDoctorId is set at creation time (above),
+                            // not here — the rules reject it as a later update.
                             // Flag for first login password change prompt
                             extraFields["mustChangePassword"] = true
 

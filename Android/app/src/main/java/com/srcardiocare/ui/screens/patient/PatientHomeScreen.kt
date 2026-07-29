@@ -31,6 +31,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.srcardiocare.R
 import com.srcardiocare.data.firebase.AssignmentRepository
@@ -179,15 +181,23 @@ fun PatientHomeScreen(
                                 contentScale = ContentScale.Fit
                             )
                             Column(modifier = Modifier.weight(1f)) {
+                                // TopAppBar is a fixed 64.dp; anything taller spills
+                                // over the content below instead of growing the bar.
+                                // A wrapped Tamil tagline did exactly that, so both
+                                // lines are pinned to one line each.
                                 Text(
                                     stringResource(R.string.app_name),
                                     fontWeight = FontWeight.Bold,
-                                    style = MaterialTheme.typography.titleMedium
+                                    style = MaterialTheme.typography.titleMedium,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
                                     stringResource(R.string.brand_tagline),
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                             TutorialHelpButton()
@@ -427,16 +437,21 @@ private fun DashboardCard(
                 }
             }
             Spacer(modifier = Modifier.height(DesignTokens.Spacing.SM))
+            // textAlign matters once the label wraps: the Column only centres the
+            // Text as a block, so a wrapped label fills the card and its lines fall
+            // back to Start. Single-line English never showed it; Tamil does.
             Text(
                 text = title,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center
             )
             Text(
                 text = subtitle,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall
+                style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.Center
             )
         }
     }

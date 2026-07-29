@@ -14,6 +14,44 @@ object AuthRepository {
     val currentUID: String? get() = FirebaseClients.auth.currentUser?.uid
     val isAuthenticated: Boolean get() = FirebaseClients.auth.currentUser != null
 
+    // ── Custom claims ───────────────────────────────────────────────────────
+    // Authorization lives in the ID token, written by the `syncUserClaims`
+    // Cloud Function. The security rules read these same values, so reading
+    // them here keeps client behaviour and server enforcement in agreement.
+    //
+    // `forceRefresh = true` costs a network round trip; use it only after a
+    // change that alters the caller's own claims.
+
+    /** Reads the caller's custom claims from their ID token. */
+    suspend fun claims(forceRefresh: Boolean = false): Map<String, Any> {
+        val user = FirebaseClients.auth.currentUser ?: return emptyMap()
+        return runCatching {
+            user.getIdToken(forceRefresh).await().claims
+        }.getOrDefault(emptyMap())
+    }
+
+    /** The caller's role, per their ID token. Empty until claims propagate. */
+    suspend fun claimedRole(forceRefresh: Boolean = false): String =
+        claims(forceRefresh)["role"] as? String ?: ""
+
+    /**
+     * The doctor this patient is assigned to, per their ID token.
+     *
+     * Clinical documents are stamped with this value so doctor-scoped list
+     * queries can be authorised per document. The rules verify the stamp
+     * against this same claim, so a client cannot write itself onto another
+     * clinician's caseload.
+     */
+    suspend fun assignedDoctorId(forceRefresh: Boolean = false): String =
+        claims(forceRefresh)["assignedDoctorId"] as? String ?: ""
+
+    /**
+     * Pulls a fresh ID token so newly written custom claims take effect now
+     * rather than at the next hourly refresh. Call after any operation that
+     * changes the caller's own role, block state, or doctor assignment.
+     */
+    suspend fun refreshClaims(): Map<String, Any> = claims(forceRefresh = true)
+
     suspend fun login(email: String, password: String): Map<String, Any?> {
         var loginHandled = false
         var attemptedUid: String? = null
@@ -55,6 +93,15 @@ object AuthRepository {
                 )
                 loginHandled = true
                 throw Exception("Your account access is temporarily blocked by admin settings.")
+            }
+
+            // Custom claims are written asynchronously by the syncUserClaims
+            // Cloud Function, so a freshly created account can sign in with a
+            // token that predates its own claims. Every security rule reads
+            // the token, so force one refresh when it disagrees with Firestore
+            // — otherwise the user lands in an app that denies every read.
+            if (role.isNotBlank() && claimedRole() != role) {
+                refreshClaims()
             }
 
             // Update last seen on login
@@ -118,13 +165,19 @@ object AuthRepository {
      * Register a new user WITHOUT switching the current auth session.
      * Uses a temporary secondary FirebaseApp so the doctor/admin stays signed in.
      * Returns the new user's UID.
+     *
+     * [assignedDoctorId] must be supplied in the same write as the rest of the
+     * document. The security rules require a doctor to name themselves as the
+     * assigned clinician at creation time, so setting it in a follow-up
+     * update() — as this flow used to — is rejected outright.
      */
     suspend fun registerOther(
         email: String,
         password: String,
         firstName: String,
         lastName: String,
-        role: String
+        role: String,
+        assignedDoctorId: String? = null
     ): String {
         val defaultApp = FirebaseApp.getInstance()
         // Get or create secondary app
@@ -164,6 +217,9 @@ object AuthRepository {
                 "autoToursEnabled" to true,
                 "createdAt" to FieldValue.serverTimestamp()
             )
+            if (!assignedDoctorId.isNullOrBlank()) {
+                userData["assignedDoctorId"] = assignedDoctorId
+            }
             FirebaseClients.db.collection("users").document(newUid).set(userData).await()
             return newUid
         } catch (e: Exception) {

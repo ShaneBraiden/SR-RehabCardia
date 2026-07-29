@@ -86,11 +86,17 @@ object SessionRepository {
         totalSets: Int
     ): String {
         val patientId = AuthRepository.currentUID ?: throw Exception("Not authenticated")
+        // Denormalised so the doctor's caseload query can be authorised per
+        // document without a lookup. Sourced from the caller's own ID token,
+        // and the security rules check it against that same claim — so this
+        // cannot be pointed at another clinician.
+        val doctorId = AuthRepository.assignedDoctorId()
         val ref = FirebaseClients.db.collection("sessionLogs").document()
         val data = hashMapOf<String, Any?>(
             "id" to ref.id,
             "assignmentId" to assignmentId,
             "patientId" to patientId,
+            "doctorId" to doctorId,
             "sessionDate" to sessionDate,
             "sessionNumber" to sessionNumber,
             "startedAt" to FieldValue.serverTimestamp(),
