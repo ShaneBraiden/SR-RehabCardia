@@ -82,7 +82,8 @@ async function main() {
       user = await admin.auth().getUser(uid);
     } catch (err) {
       if (err.code === "auth/user-not-found") {
-        console.warn(`  ! ${uid} — Firestore doc with no Auth account, skipped`);
+        console.warn(
+            `  ! ${uid} — Firestore doc with no Auth account, skipped`);
         missing++;
         continue;
       }
@@ -106,7 +107,8 @@ async function main() {
     `noAuthAccount=${missing} invalidRole=${noRole}`);
 
   if (!DRY_RUN && updated > 0) {
-    console.log("\nNote: existing signed-in users pick up their new claims on " +
+    console.log(
+        "\nNote: existing signed-in users pick up their new claims on " +
       "the next token refresh (within the hour), or immediately if the app " +
       "calls getIdToken(true).");
   }

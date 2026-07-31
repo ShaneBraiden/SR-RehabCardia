@@ -43,6 +43,11 @@
     <string name="login_sign_in">Sign In</string>
     <string name="login_error_empty_fields">Please enter your email and password.</string>
     <string name="login_error_invalid_email">Please enter a valid email address.</string>
+    <string name="login_error_email_required">Please enter your email address.</string>
+    <string name="login_error_password_required">Please enter your password.</string>
+    <string name="login_show_password">Show password</string>
+    <string name="login_hide_password">Hide password</string>
+    <string name="login_error_icon_desc">Sign-in error</string>
     <string name="login_first_login_message">This is your first login. Would you like to change your password now for better security?</string>
 
     <!-- ===== Change password ===== -->
@@ -297,7 +302,12 @@
       Reused across every screen. Tone stays calm and non-alarming — patients
       read these while unwell.
     -->
-    <string name="error_invalid_credentials">Invalid email or password</string>
+    <!--
+      One message covers both a wrong password and an unregistered address.
+      Naming which one was wrong would let anyone test whether a given person
+      is a patient here. Keep it that way — see ErrorHandler.errorMappings.
+    -->
+    <string name="error_invalid_credentials">Incorrect email or password. Please check both and try again</string>
     <string name="error_wrong_password">Incorrect password. Please try again</string>
     <string name="error_no_account">No account found with this email</string>
     <string name="error_email_in_use">An account with this email already exists</string>

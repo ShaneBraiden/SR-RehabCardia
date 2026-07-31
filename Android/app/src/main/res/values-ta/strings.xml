@@ -43,6 +43,11 @@
     <string name="login_sign_in">உள்நுழை</string>
     <string name="login_error_empty_fields">மின்னஞ்சல் மற்றும் கடவுச்சொல்லை உள்ளிடவும்.</string>
     <string name="login_error_invalid_email">சரியான மின்னஞ்சல் முகவரியை உள்ளிடவும்.</string>
+    <string name="login_error_email_required">உங்கள் மின்னஞ்சல் முகவரியை உள்ளிடவும்.</string>
+    <string name="login_error_password_required">உங்கள் கடவுச்சொல்லை உள்ளிடவும்.</string>
+    <string name="login_show_password">கடவுச்சொல்லைக் காட்டு</string>
+    <string name="login_hide_password">கடவுச்சொல்லை மறை</string>
+    <string name="login_error_icon_desc">உள்நுழைவுப் பிழை</string>
     <string name="login_first_login_message">இது உங்கள் முதல் உள்நுழைவு. சிறந்த பாதுகாப்பிற்காக இப்போதே கடவுச்சொல்லை மாற்ற விரும்புகிறீர்களா?</string>
 
     <!-- ===== Change password ===== -->
@@ -289,7 +294,7 @@
     <string name="appt_status_unknown">தெரியவில்லை</string>
 
     <!-- ===== Shared error catalogue ===== -->
-    <string name="error_invalid_credentials">தவறான மின்னஞ்சல் அல்லது கடவுச்சொல்</string>
+    <string name="error_invalid_credentials">மின்னஞ்சல் அல்லது கடவுச்சொல் தவறானது. இரண்டையும் சரிபார்த்து மீண்டும் முயற்சிக்கவும்</string>
     <string name="error_wrong_password">கடவுச்சொல் தவறானது. மீண்டும் முயற்சிக்கவும்</string>
     <string name="error_no_account">இந்த மின்னஞ்சலுக்கு கணக்கு எதுவும் இல்லை</string>
     <string name="error_email_in_use">இந்த மின்னஞ்சலுடன் ஏற்கனவே ஒரு கணக்கு உள்ளது</string>

@@ -27,10 +27,18 @@ object ErrorHandler {
         LocaleManager.string(id, fallback)
 
     // Map of known Firebase/network error patterns to user-friendly messages
+    //
+    // Credential failures deliberately collapse to one message. Firebase's
+    // email-enumeration protection returns the same code whether the address is
+    // unregistered or the password is wrong, and telling the two apart would let
+    // anyone probe which patients hold an account here. See error_invalid_credentials.
     private val errorMappings: Map<String, Int> = mapOf(
         "INVALID_LOGIN_CREDENTIALS" to R.string.error_invalid_credentials,
+        "INVALID_PASSWORD" to R.string.error_invalid_credentials,
+        "EMAIL_NOT_FOUND" to R.string.error_invalid_credentials,
         "wrong-password" to R.string.error_invalid_credentials,
-        "user-not-found" to R.string.error_no_account,
+        "invalid-credential" to R.string.error_invalid_credentials,
+        "user-not-found" to R.string.error_invalid_credentials,
         "email-already-in-use" to R.string.error_email_in_use,
         "weak-password" to R.string.error_weak_password,
         "network-request-failed" to R.string.error_network,
@@ -53,9 +61,12 @@ object ErrorHandler {
      */
     private val authCodeMappings: Map<String, Int> = mapOf(
         "ERROR_INVALID_EMAIL" to R.string.error_invalid_email,
-        "ERROR_WRONG_PASSWORD" to R.string.error_wrong_password,
-        "ERROR_USER_NOT_FOUND" to R.string.error_no_account,
+        "ERROR_WRONG_PASSWORD" to R.string.error_invalid_credentials,
+        "ERROR_USER_NOT_FOUND" to R.string.error_invalid_credentials,
         "ERROR_INVALID_CREDENTIAL" to R.string.error_invalid_credentials,
+        // Plural spelling — returned by newer Auth backends when email
+        // enumeration protection is enabled.
+        "ERROR_INVALID_CREDENTIALS" to R.string.error_invalid_credentials,
         "ERROR_USER_DISABLED" to R.string.error_account_disabled,
         "ERROR_USER_TOKEN_EXPIRED" to R.string.error_session_expired,
         "ERROR_TOO_MANY_REQUESTS" to R.string.error_too_many_requests,

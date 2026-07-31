@@ -7,9 +7,13 @@ import com.google.firebase.auth.userProfileChangeRequest
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withTimeoutOrNull
 
 /** Authentication state, sign-in/up, password changes, and login-log auditing. */
 object AuthRepository {
+
+    /** Upper bound on how long an audit write may delay the sign-in flow. */
+    private const val LOG_WRITE_TIMEOUT_MS = 5_000L
 
     val currentUID: String? get() = FirebaseClients.auth.currentUser?.uid
     val isAuthenticated: Boolean get() = FirebaseClients.auth.currentUser != null
@@ -67,7 +71,9 @@ object AuthRepository {
             val isBlocked = userData["isBlocked"] as? Boolean ?: false
 
             if (isBlocked) {
-                FirebaseClients.auth.signOut()
+                // Record before signing out: the loginLogs rule requires an
+                // authenticated writer, so a log written after signOut() is
+                // rejected by the server and the block goes unaudited.
                 recordLoginLog(
                     userId = uid,
                     email = normalizedEmail,
@@ -75,6 +81,7 @@ object AuthRepository {
                     status = "blocked",
                     message = "Blocked by admin"
                 )
+                FirebaseClients.auth.signOut()
                 loginHandled = true
                 throw Exception("Your account access has been blocked by admin. Please contact support.")
             }
@@ -83,7 +90,7 @@ object AuthRepository {
             val roleBlockedByPolicy = (role == "patient" && accessSettings.blockAllPatients) ||
                 (role == "doctor" && accessSettings.blockAllDoctors)
             if (roleBlockedByPolicy) {
-                FirebaseClients.auth.signOut()
+                // Same ordering constraint as the isBlocked branch above.
                 recordLoginLog(
                     userId = uid,
                     email = normalizedEmail,
@@ -91,6 +98,7 @@ object AuthRepository {
                     status = "blocked",
                     message = "Blocked by admin policy"
                 )
+                FirebaseClients.auth.signOut()
                 loginHandled = true
                 throw Exception("Your account access is temporarily blocked by admin settings.")
             }
@@ -116,7 +124,17 @@ object AuthRepository {
             loginHandled = true
             return userData
         } catch (e: Exception) {
-            if (!loginHandled) {
+            // Only attempt an audit write if we actually hold a session.
+            //
+            // A wrong password or unknown address fails with no signed-in user,
+            // and the loginLogs rule requires an authenticated writer — so the
+            // write could never succeed. It is not merely wasted: Firestore
+            // writes only settle once the server acknowledges them, so with no
+            // connection the await here never returned and the caller sat on a
+            // spinner instead of being told the credentials were wrong.
+            // Failed-credential attempts have to be audited server-side (a
+            // blocking Auth trigger) to be recorded at all.
+            if (!loginHandled && isAuthenticated) {
                 recordLoginLog(
                     userId = attemptedUid,
                     email = normalizedEmail,
@@ -274,7 +292,10 @@ object AuthRepository {
                 "platform" to "android",
                 "createdAt" to FieldValue.serverTimestamp()
             )
-            ref.set(payload).await()
+            // A Firestore write settles only on server acknowledgement, so on a
+            // poor connection this await can outlast the user's patience. Auditing
+            // must never be the reason a sign-in appears to hang.
+            withTimeoutOrNull(LOG_WRITE_TIMEOUT_MS) { ref.set(payload).await() }
         } catch (_: Exception) {
             // Logging must never block auth flow.
         }
