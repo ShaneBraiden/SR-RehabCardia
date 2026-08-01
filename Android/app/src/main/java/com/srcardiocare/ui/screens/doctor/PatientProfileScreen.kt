@@ -73,7 +73,7 @@ private fun formatWorkoutDuration(ms: Long): String {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun PatientProfileScreen(
     patientId: String,
@@ -341,12 +341,20 @@ fun PatientProfileScreen(
                         }
                     }
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.SM)) {
+                    // FlowRow (not Row): on narrow screens the three chips exceed the
+                    // card width. A fixed Row squeezes the last chip until its label
+                    // wraps one character per line ("A/u/t/o"); FlowRow moves it to
+                    // the next line instead.
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.SM),
+                        verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.SM)
+                    ) {
                         FilterChip(
                             selected = careStatus == "ON_TRACK",
                             onClick = { setStatus("ON_TRACK") },
                             enabled = !isSavingStatus,
-                            label = { Text("On Track") },
+                            label = { Text("On Track", maxLines = 1) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = DesignTokens.Colors.Success.copy(alpha = 0.18f),
                                 selectedLabelColor = DesignTokens.Colors.Success
@@ -356,7 +364,7 @@ fun PatientProfileScreen(
                             selected = careStatus == "NEEDS_ATTENTION",
                             onClick = { setStatus("NEEDS_ATTENTION") },
                             enabled = !isSavingStatus,
-                            label = { Text("Needs Attention") },
+                            label = { Text("Needs Attention", maxLines = 1) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = DesignTokens.Colors.Warning.copy(alpha = 0.18f),
                                 selectedLabelColor = DesignTokens.Colors.Warning
@@ -366,7 +374,7 @@ fun PatientProfileScreen(
                             selected = careStatus.isBlank(),
                             onClick = { setStatus("") },
                             enabled = !isSavingStatus,
-                            label = { Text("Auto") }
+                            label = { Text("Auto", maxLines = 1) }
                         )
                     }
                 }
@@ -699,7 +707,7 @@ fun PatientProfileScreen(
                 AlertDialog(
                     onDismissRequest = { if (!isDeleting) showDeleteDialog = false },
                     title = { Text("Delete Patient", color = DesignTokens.Colors.Error) },
-                    text = { Text("Are you sure you want to delete this patient? This will remove all their data (plans, workouts, etc.) and cannot be undone.") },
+                    text = { Text("Are you sure you want to delete this patient? This permanently removes their sign-in account and all their data (plans, workouts, etc.) and cannot be undone. Their email address becomes free to register again.") },
                     confirmButton = {
                         TextButton(
                             onClick = {
@@ -711,7 +719,10 @@ fun PatientProfileScreen(
                                         showDeleteDialog = false
                                         onBack() // Navigate back on success
                                     } catch (e: Exception) {
-                                        toast("Failed to delete patient")
+                                        // The callable's message explains *why*
+                                        // (not assigned to you, admin account,
+                                        // offline); a flat string hid all of it.
+                                        toast(e.message ?: "Failed to delete patient")
                                         isDeleting = false
                                         showDeleteDialog = false
                                     }

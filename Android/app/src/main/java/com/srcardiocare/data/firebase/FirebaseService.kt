@@ -65,6 +65,10 @@ object FirebaseService {
 
     suspend fun deleteUser(uid: String) = UserRepository.deleteUser(uid)
 
+    /** Admin-only cleanup for a sign-in account left behind by an older delete. */
+    suspend fun purgeOrphanedAccount(email: String) =
+        UserRepository.purgeOrphanedAccount(email)
+
     suspend fun fetchPatients(doctorId: String): List<Pair<String, Map<String, Any?>>> =
         UserRepository.fetchPatients(doctorId)
 

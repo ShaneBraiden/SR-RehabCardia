@@ -56,7 +56,7 @@ fun AdminDoctorProfileScreen(
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
             title = { Text("Delete Doctor") },
-            text = { Text("Are you sure you want to delete Dr. ${ui.firstName} ${ui.lastName}? This will remove their Firestore profile.") },
+            text = { Text("Are you sure you want to delete Dr. ${ui.firstName} ${ui.lastName}? This permanently removes their profile and sign-in account and cannot be undone. Their email address becomes free to register again.") },
             confirmButton = {
                 TextButton(
                     onClick = {

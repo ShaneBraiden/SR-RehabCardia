@@ -89,8 +89,8 @@
     </plurals>
     <string name="home_card_exercises">Exercises</string>
     <string name="home_card_exercises_sub">%d assigned</string>
-    <string name="home_card_schedule">Schedule</string>
-    <string name="home_card_schedule_sub">View appointments</string>
+    <string name="home_card_schedule">Appointments</string>
+    <string name="home_card_schedule_sub">Request or view appointments</string>
     <string name="home_card_progress">Progress</string>
     <string name="home_card_progress_sub">Track your stats</string>
     <string name="home_card_messages">Messages</string>
@@ -257,13 +257,22 @@
     <string name="exercise_invalid_video">Invalid video URL</string>
 
     <!-- ===== Schedule / appointments ===== -->
-    <string name="schedule_title">Schedule</string>
+    <string name="schedule_title">Appointments</string>
     <string name="schedule_today">Today</string>
     <string name="schedule_new_appointment">New Appointment</string>
+    <string name="schedule_request_appointment">Request Appointment</string>
     <string name="schedule_new_appointment_desc">New appointment</string>
     <string name="schedule_patient">Patient</string>
     <string name="schedule_select_patient">Select patient</string>
+    <string name="schedule_search_patient">Search or select a patient</string>
+    <string name="schedule_no_patient_match">No matching patient</string>
     <string name="schedule_no_patients">No patients available. Add a patient first.</string>
+    <string name="schedule_date">Date</string>
+    <string name="schedule_requested_date">Requested date</string>
+    <string name="schedule_pick_date">Pick a date</string>
+    <string name="schedule_jump_to_date">Jump to date</string>
+    <string name="schedule_date_in_past">Please choose today or a later date</string>
+    <string name="schedule_request">Send Request</string>
     <string name="schedule_time">Time</string>
     <string name="schedule_hour" translatable="false">HH</string>
     <string name="schedule_minute" translatable="false">MM</string>
@@ -337,6 +346,8 @@
     <string name="sign_out_confirm_message">Are you sure you want to sign out?</string>
     <string name="fullscreen_enter">Fullscreen</string>
     <string name="fullscreen_exit">Exit fullscreen</string>
+    <string name="workout_sound_on">Turn sound on</string>
+    <string name="workout_sound_off">Mute sound</string>
     <string name="tutorial_show">Show tutorial</string>
 
     <!-- ===== Password rules ===== -->

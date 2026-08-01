@@ -333,6 +333,31 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ── App Version Gate ──────────────────────────────────────────────────
+    // Read is open, deliberately. The update gate runs before the user signs
+    // in — that is the whole point, since a build broken badly enough to need
+    // forcing out is often one that cannot complete a login. Gating this read
+    // on auth would make the kill switch unreachable exactly when it matters.
+    //
+    // The document carries no personal data: two version numbers and a message
+    // that ships to every install anyway. Writes stay admin-only, and the field
+    // validation below stops a compromised admin session from bricking every
+    // client with a garbage minVersionCode.
+    match /config/appVersion {
+      allow read: if true;
+      allow write: if isAdmin() &&
+        request.resource.data.minVersionCode is int &&
+        request.resource.data.minVersionCode >= 0 &&
+        request.resource.data.latestVersionCode is int &&
+        request.resource.data.latestVersionCode >=
+          request.resource.data.minVersionCode;
+    }
+
+    match /config/{docId} {
+      allow read:  if isActive();
+      allow write: if isAdmin();
+    }
+
     // ── Audit Logs ────────────────────────────────────────────────────────
     match /auditLogs/{logId} {
       allow read:  if isAdmin();

@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,31 +26,38 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -78,9 +86,11 @@ import com.srcardiocare.ui.components.tutorial.TutorialTours
 import com.srcardiocare.ui.components.tutorial.tutorialTarget
 import com.srcardiocare.ui.theme.DesignTokens
 import kotlinx.coroutines.launch
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
@@ -112,16 +122,83 @@ data class ApptItem(
     val requestedByRole: String
 )
 
-private fun currentWeekDays(): List<DayItem> {
-    val today = LocalDate.now()
-    val startOfWeek = today.minusDays(today.dayOfWeek.value.toLong() - 1)
-    return (0L..6L).map { offset ->
-        val d = startOfWeek.plusDays(offset)
+/**
+ * Day-strip window.
+ *
+ * This used to be the current calendar week only, which is why nothing more
+ * than a couple of days out could be reached — from a Friday the strip ended on
+ * Sunday. The strip now runs a month back (so past appointments stay
+ * reviewable) and a year forward, and the header date picker can jump anywhere
+ * inside the same window.
+ */
+private const val STRIP_DAYS_BEFORE = 30L
+private const val STRIP_DAYS_AFTER = 365L
+
+private fun scheduleDays(rangeStart: LocalDate): List<DayItem> =
+    (0L..(STRIP_DAYS_BEFORE + STRIP_DAYS_AFTER)).map { offset ->
+        val d = rangeStart.plusDays(offset)
         DayItem(
             dayName = d.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault()),
             date = d.dayOfMonth,
             fullDate = d
         )
+    }
+
+/**
+ * Material's date picker works in UTC-midnight millis, while everything else
+ * here is a [LocalDate]. These two convert between the pair without letting the
+ * device time zone shift the day by one.
+ */
+private fun LocalDate.toPickerMillis(): Long =
+    atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+
+private fun Long.toPickerLocalDate(): LocalDate =
+    Instant.ofEpochMilli(this).atZone(ZoneOffset.UTC).toLocalDate()
+
+/** Modal date picker constrained to [minDate]..[maxDate]. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ScheduleDatePickerDialog(
+    initial: LocalDate,
+    minDate: LocalDate,
+    maxDate: LocalDate,
+    onDismiss: () -> Unit,
+    onPick: (LocalDate) -> Unit
+) {
+    val minMillis = remember(minDate) { minDate.toPickerMillis() }
+    val maxMillis = remember(maxDate) { maxDate.toPickerMillis() }
+    val state = rememberDatePickerState(
+        initialSelectedDateMillis = initial.toPickerMillis(),
+        yearRange = minDate.year..maxDate.year,
+        selectableDates = remember(minMillis, maxMillis) {
+            object : SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long) =
+                    utcTimeMillis in minMillis..maxMillis
+
+                override fun isSelectableYear(year: Int) =
+                    year in minDate.year..maxDate.year
+            }
+        }
+    )
+
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    state.selectedDateMillis?.let { onPick(it.toPickerLocalDate()) }
+                    onDismiss()
+                },
+                enabled = state.selectedDateMillis != null
+            ) {
+                Text(stringResource(R.string.action_ok), color = DesignTokens.Colors.Primary)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+        }
+    ) {
+        DatePicker(state = state)
     }
 }
 
@@ -166,8 +243,12 @@ private fun prettyStatus(status: String): String = when (status.lowercase()) {
 @Composable
 fun ScheduleScreen(onBack: () -> Unit) {
     val context = LocalContext.current
-    var selectedDay by remember { mutableIntStateOf(LocalDate.now().dayOfWeek.value - 1) }
-    val days = remember { currentWeekDays() }
+    val today = remember { LocalDate.now() }
+    val rangeStart = remember(today) { today.minusDays(STRIP_DAYS_BEFORE) }
+    val rangeEnd = remember(today) { today.plusDays(STRIP_DAYS_AFTER) }
+    val days = remember(rangeStart) { scheduleDays(rangeStart) }
+    var selectedDate by remember { mutableStateOf(today) }
+    val stripState = rememberLazyListState(initialFirstVisibleItemIndex = STRIP_DAYS_BEFORE.toInt())
 
     val viewModel: ScheduleViewModel = viewModel()
     val ui by viewModel.state.collectAsStateWithLifecycle()
@@ -183,20 +264,40 @@ fun ScheduleScreen(onBack: () -> Unit) {
     var apptHour by remember { mutableStateOf("10") }
     var apptMinute by remember { mutableStateOf("00") }
     var apptNotes by remember { mutableStateOf("") }
+    // The date being requested/booked. Independent of the day strip so the form
+    // is self-contained — the strip only seeds its initial value.
+    var apptDate by remember { mutableStateOf(today) }
+    var showApptDatePicker by remember { mutableStateOf(false) }
+    var showJumpDatePicker by remember { mutableStateOf(false) }
     var selectedPatientId by remember { mutableStateOf<String?>(null) }
+    var patientQuery by remember { mutableStateOf("") }
     var patientMenuExpanded by remember { mutableStateOf(false) }
     var isSaving by remember { mutableStateOf(false) }
+
+    val isClinician = userRole == "doctor" || userRole == "admin"
 
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) { viewModel.load() }
 
-    val selectedDate = days.getOrNull(selectedDay)?.fullDate
-    val filteredAppts = if (selectedDate != null) {
-        appointments.filter { it.apptDate == selectedDate }
-    } else {
-        appointments
+    // Keep the selected day visible in the strip when it changes from the date
+    // picker or the Today button.
+    LaunchedEffect(selectedDate) {
+        val index = days.indexOfFirst { it.fullDate == selectedDate }
+        if (index >= 0) stripState.animateScrollToItem((index - 2).coerceAtLeast(0))
+    }
+
+    val filteredAppts = appointments.filter { it.apptDate == selectedDate }
+
+    fun openAddDialog() {
+        // A new appointment can never be in the past, so a past day in the strip
+        // seeds today instead.
+        apptDate = if (selectedDate.isBefore(today)) today else selectedDate
+        selectedPatientId = null
+        patientQuery = ""
+        patientMenuExpanded = false
+        showAddDialog = true
     }
 
     suspend fun updateStatusWithNotification(
@@ -231,9 +332,28 @@ fun ScheduleScreen(onBack: () -> Unit) {
     }
 
     if (showAddDialog) {
+        if (showApptDatePicker) {
+            ScheduleDatePickerDialog(
+                initial = apptDate,
+                // Neither a doctor booking nor a patient request may land in the past.
+                minDate = today,
+                maxDate = rangeEnd,
+                onDismiss = { showApptDatePicker = false },
+                onPick = { apptDate = it }
+            )
+        }
+
         AlertDialog(
             onDismissRequest = { if (!isSaving) showAddDialog = false },
-            title = { Text(stringResource(R.string.schedule_new_appointment), fontWeight = FontWeight.Bold) },
+            title = {
+                Text(
+                    stringResource(
+                        if (isClinician) R.string.schedule_new_appointment
+                        else R.string.schedule_request_appointment
+                    ),
+                    fontWeight = FontWeight.Bold
+                )
+            },
             text = {
                 Column(
                     modifier = Modifier
@@ -241,37 +361,70 @@ fun ScheduleScreen(onBack: () -> Unit) {
                         .imePadding(),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    if (userRole == "doctor" || userRole == "admin") {
+                    if (isClinician) {
                         Text(stringResource(R.string.schedule_patient), fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
 
-                        Box {
+                        // An editable ExposedDropdownMenuBox: the doctor can either
+                        // type to filter or just open the list of enrolled patients.
+                        // (The previous read-only TextField swallowed taps, so the
+                        // menu never opened and nothing could be typed either.)
+                        val filteredPatients = remember(patientQuery, patients, selectedPatientId) {
+                            val q = patientQuery.trim()
+                            if (q.isBlank() || selectedPatientId != null) patients
+                            else patients.filter { it.name.contains(q, ignoreCase = true) }
+                        }
+
+                        ExposedDropdownMenuBox(
+                            expanded = patientMenuExpanded,
+                            onExpandedChange = {
+                                if (!isSaving && patients.isNotEmpty()) {
+                                    patientMenuExpanded = !patientMenuExpanded
+                                }
+                            }
+                        ) {
                             OutlinedTextField(
-                                value = patients.firstOrNull { it.id == selectedPatientId }?.name ?: "",
-                                onValueChange = {},
-                                readOnly = true,
-                                label = { Text(stringResource(R.string.schedule_select_patient)) },
-                                trailingIcon = { Text(if (patientMenuExpanded) "▲" else "▼") },
+                                value = patientQuery,
+                                onValueChange = { input ->
+                                    patientQuery = input
+                                    // Typing after a pick clears it — the field and the
+                                    // selection must never disagree.
+                                    selectedPatientId = null
+                                    patientMenuExpanded = true
+                                },
+                                singleLine = true,
+                                enabled = !isSaving && patients.isNotEmpty(),
+                                label = { Text(stringResource(R.string.schedule_search_patient)) },
+                                trailingIcon = {
+                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = patientMenuExpanded)
+                                },
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable(enabled = !isSaving && patients.isNotEmpty()) {
-                                        patientMenuExpanded = !patientMenuExpanded
-                                    },
+                                    .menuAnchor(MenuAnchorType.PrimaryEditable)
+                                    .fillMaxWidth(),
                                 shape = RoundedCornerShape(DesignTokens.Radius.Base),
                                 colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = DesignTokens.Colors.Primary)
                             )
 
-                            DropdownMenu(
+                            ExposedDropdownMenu(
                                 expanded = patientMenuExpanded,
                                 onDismissRequest = { patientMenuExpanded = false }
                             ) {
-                                patients.forEach { patient ->
+                                if (filteredPatients.isEmpty()) {
                                     DropdownMenuItem(
-                                        text = { Text(patient.name) },
-                                        onClick = {
-                                            selectedPatientId = patient.id
-                                            patientMenuExpanded = false
-                                        }
+                                        text = { Text(stringResource(R.string.schedule_no_patient_match)) },
+                                        onClick = {},
+                                        enabled = false
                                     )
+                                } else {
+                                    filteredPatients.forEach { patient ->
+                                        DropdownMenuItem(
+                                            text = { Text(patient.name) },
+                                            onClick = {
+                                                selectedPatientId = patient.id
+                                                patientQuery = patient.name
+                                                patientMenuExpanded = false
+                                            }
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -283,6 +436,33 @@ fun ScheduleScreen(onBack: () -> Unit) {
                                 color = DesignTokens.Colors.Warning
                             )
                         }
+                    }
+
+                    // ── Date ────────────────────────────────────────────────────
+                    Text(
+                        stringResource(
+                            if (isClinician) R.string.schedule_date
+                            else R.string.schedule_requested_date
+                        ),
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    OutlinedButton(
+                        onClick = { if (!isSaving) showApptDatePicker = true },
+                        enabled = !isSaving,
+                        shape = RoundedCornerShape(DesignTokens.Radius.Base),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            Icons.Default.DateRange,
+                            contentDescription = stringResource(R.string.schedule_pick_date),
+                            tint = DesignTokens.Colors.Primary
+                        )
+                        Spacer(modifier = Modifier.width(DesignTokens.Spacing.SM))
+                        Text(
+                            apptDate.format(DateTimeFormatter.ofPattern("EEEE, dd/MM/yyyy")),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                     }
 
                     Text(stringResource(R.string.schedule_time), fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
@@ -343,7 +523,6 @@ fun ScheduleScreen(onBack: () -> Unit) {
                         val type = APPOINTMENT_TYPE_CONSULTATION
                         val hour = apptHour.toIntOrNull() ?: 10
                         val minute = apptMinute.toIntOrNull() ?: 0
-                        val apptDate = days.getOrNull(selectedDay)?.fullDate ?: LocalDate.now()
                         val dateTime = ZonedDateTime.of(
                             apptDate,
                             LocalTime.of(hour.coerceIn(0, 23), minute.coerceIn(0, 59)),
@@ -353,6 +532,9 @@ fun ScheduleScreen(onBack: () -> Unit) {
                         isSaving = true
                         scope.launch {
                             try {
+                                if (apptDate.isBefore(LocalDate.now())) {
+                                    throw Exception(context.getString(R.string.schedule_date_in_past))
+                                }
                                 val uid = currentUid ?: FirebaseService.currentUID
                                     ?: throw Exception(context.getString(R.string.schedule_not_signed_in))
                                 val role = userRole
@@ -415,6 +597,11 @@ fun ScheduleScreen(onBack: () -> Unit) {
                                 apptHour = "10"
                                 apptMinute = "00"
                                 selectedPatientId = null
+                                patientQuery = ""
+                                // Jump the list to the day just booked, so the new
+                                // appointment is visible instead of silently landing
+                                // on a day the user isn't looking at.
+                                selectedDate = apptDate
                                 viewModel.load()
                             } catch (e: Exception) {
                                 snackbarHostState.showSnackbar(ErrorHandler.getDisplayMessage(e, "create appointment"))
@@ -431,7 +618,14 @@ fun ScheduleScreen(onBack: () -> Unit) {
                             strokeWidth = 2.dp
                         )
                     } else {
-                        Text(stringResource(R.string.schedule_create), color = DesignTokens.Colors.Primary, fontWeight = FontWeight.Bold)
+                        Text(
+                            stringResource(
+                                if (isClinician) R.string.schedule_create
+                                else R.string.schedule_request
+                            ),
+                            color = DesignTokens.Colors.Primary,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             },
@@ -440,6 +634,16 @@ fun ScheduleScreen(onBack: () -> Unit) {
                     Text(stringResource(R.string.action_cancel))
                 }
             }
+        )
+    }
+
+    if (showJumpDatePicker) {
+        ScheduleDatePickerDialog(
+            initial = selectedDate,
+            minDate = rangeStart,
+            maxDate = rangeEnd,
+            onDismiss = { showJumpDatePicker = false },
+            onPick = { selectedDate = it }
         )
     }
 
@@ -454,8 +658,17 @@ fun ScheduleScreen(onBack: () -> Unit) {
                     }
                 },
                 actions = {
-                    TextButton(onClick = { selectedDay = LocalDate.now().dayOfWeek.value - 1 }) {
+                    TextButton(onClick = { selectedDate = today }) {
                         Text(stringResource(R.string.schedule_today), color = DesignTokens.Colors.Primary, fontWeight = FontWeight.SemiBold)
+                    }
+                    // Jump to any date in the window — the strip alone can't reach
+                    // far-out dates comfortably.
+                    IconButton(onClick = { showJumpDatePicker = true }) {
+                        Icon(
+                            Icons.Default.DateRange,
+                            contentDescription = stringResource(R.string.schedule_jump_to_date),
+                            tint = DesignTokens.Colors.Primary
+                        )
                     }
                     TutorialHelpButton()
                 },
@@ -464,7 +677,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { showAddDialog = true },
+                onClick = { openAddDialog() },
                 containerColor = DesignTokens.Colors.Primary,
                 shape = CircleShape,
                 modifier = Modifier.tutorialTarget(TutorialIds.SCHEDULE_ADD)
@@ -481,6 +694,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
                 .fillMaxSize()
         ) {
             LazyRow(
+                state = stripState,
                 contentPadding = PaddingValues(
                     horizontal = DesignTokens.Spacing.XL,
                     vertical = DesignTokens.Spacing.MD
@@ -489,13 +703,16 @@ fun ScheduleScreen(onBack: () -> Unit) {
             ) {
                 items(days.size) { index ->
                     val day = days[index]
-                    val selected = index == selectedDay
+                    val selected = day.fullDate == selectedDate
 
                     Card(
                         modifier = Modifier
                             .width(56.dp)
-                            .then(if (index == 0) Modifier.tutorialTarget(TutorialIds.SCHEDULE_CALENDAR) else Modifier)
-                            .clickable { selectedDay = index },
+                            .then(
+                                if (day.fullDate == today) Modifier.tutorialTarget(TutorialIds.SCHEDULE_CALENDAR)
+                                else Modifier
+                            )
+                            .clickable { selectedDate = day.fullDate },
                         shape = RoundedCornerShape(DesignTokens.Radius.LG),
                         colors = CardDefaults.cardColors(
                             containerColor = if (selected) DesignTokens.Colors.Primary else MaterialTheme.colorScheme.surface
@@ -528,15 +745,13 @@ fun ScheduleScreen(onBack: () -> Unit) {
                 }
             }
 
-            selectedDate?.let {
-                Text(
-                    it.format(DateTimeFormatter.ofPattern("EEEE, dd/MM/yyyy")),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = DesignTokens.Spacing.XL, vertical = DesignTokens.Spacing.SM)
-                )
-            }
+            Text(
+                selectedDate.format(DateTimeFormatter.ofPattern("EEEE, dd/MM/yyyy")),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = DesignTokens.Spacing.XL, vertical = DesignTokens.Spacing.SM)
+            )
 
             HorizontalDivider(color = DesignTokens.Colors.NeutralLight)
             when {

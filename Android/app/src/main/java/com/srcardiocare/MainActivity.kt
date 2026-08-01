@@ -29,6 +29,7 @@ import com.srcardiocare.core.push.PushMessagingService
 import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.navigation.SRCardiocareNavGraph
 import com.srcardiocare.navigation.Route
+import com.srcardiocare.ui.components.AppUpdateGate
 import com.srcardiocare.ui.theme.SRCardiocareTheme
 
 class MainActivity : ComponentActivity() {
@@ -47,51 +48,58 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             SRCardiocareTheme {
-                var startDest by remember { mutableStateOf<String?>(null) }
+                // Wraps everything, including login. A build pulled because it
+                // mishandles clinical data must not reach a dashboard, and the
+                // sign-in screen is app content like any other. While a forced
+                // update is showing, the block below never composes — auth is
+                // not resolved and no Firestore read is issued.
+                AppUpdateGate {
+                    var startDest by remember { mutableStateOf<String?>(null) }
 
-                // Request POST_NOTIFICATIONS permission on Android 13+
-                val notifPermissionLauncher = rememberLauncherForActivityResult(
-                    ActivityResultContracts.RequestPermission()
-                ) { /* granted or denied — notifications are optional */ }
+                    // Request POST_NOTIFICATIONS permission on Android 13+
+                    val notifPermissionLauncher = rememberLauncherForActivityResult(
+                        ActivityResultContracts.RequestPermission()
+                    ) { /* granted or denied — notifications are optional */ }
 
-                LaunchedEffect(Unit) {
-                    val auth = (application as SRCardiocareApp).awaitAuth()
+                    LaunchedEffect(Unit) {
+                        val auth = (application as SRCardiocareApp).awaitAuth()
 
-                    startDest = when {
-                        !auth.isLoggedIn -> Route.Login.path
-                        auth.userRole == "ADMIN" -> Route.AdminDashboard.path
-                        auth.userRole == "DOCTOR" -> Route.DoctorDashboard.path
-                        else -> Route.PatientHome.path
-                    }
+                        startDest = when {
+                            !auth.isLoggedIn -> Route.Login.path
+                            auth.userRole == "ADMIN" -> Route.AdminDashboard.path
+                            auth.userRole == "DOCTOR" -> Route.DoctorDashboard.path
+                            else -> Route.PatientHome.path
+                        }
 
-                    // Refresh FCM token on every startup so Firestore always has a valid token.
-                    FirebaseService.currentUID?.let { PushMessagingService.saveFcmToken(it) }
+                        // Refresh FCM token on every startup so Firestore always has a valid token.
+                        FirebaseService.currentUID?.let { PushMessagingService.saveFcmToken(it) }
 
-                    // Request notification permission after auth resolves (non-blocking)
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        val granted = ContextCompat.checkSelfPermission(
-                            this@MainActivity,
-                            Manifest.permission.POST_NOTIFICATIONS
-                        ) == PackageManager.PERMISSION_GRANTED
-                        if (!granted) {
-                            notifPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        // Request notification permission after auth resolves (non-blocking)
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            val granted = ContextCompat.checkSelfPermission(
+                                this@MainActivity,
+                                Manifest.permission.POST_NOTIFICATIONS
+                            ) == PackageManager.PERMISSION_GRANTED
+                            if (!granted) {
+                                notifPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                            }
                         }
                     }
-                }
 
-                if (startDest == null) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(MaterialTheme.colorScheme.background)
-                    )
-                } else {
-                    val navController = rememberNavController()
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        SRCardiocareNavGraph(
-                            navController = navController,
-                            startDestination = startDest!!
+                    if (startDest == null) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(MaterialTheme.colorScheme.background)
                         )
+                    } else {
+                        val navController = rememberNavController()
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            SRCardiocareNavGraph(
+                                navController = navController,
+                                startDestination = startDest!!
+                            )
+                        }
                     }
                 }
             }

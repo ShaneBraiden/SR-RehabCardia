@@ -38,6 +38,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.media3.common.AudioAttributes
+import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.VideoSize
@@ -84,7 +86,6 @@ fun AssignmentWorkoutScreen(
     val restSeconds = assignment.restSeconds.coerceIn(5, 600)
     val videoUrl = assignment.exerciseVideoUrl
     val isYoutube = remember(videoUrl) { !extractYoutubeVideoId(videoUrl.orEmpty()).isNullOrBlank() }
-    val playerHtml = remember(videoUrl) { buildPlayerHtml(videoUrl) }
 
     // Session state
     var sessionId by remember { mutableStateOf<String?>(null) }
@@ -123,13 +124,26 @@ fun AssignmentWorkoutScreen(
     // Demo video's native aspect ratio (updated once the video size is known).
     var videoAspectRatio by remember { mutableFloatStateOf(16f / 9f) }
 
-    // Looping demo video, muted (no controls)
+    // Sound is ON by default so the patient hears the exercise cues; the speaker
+    // button on the player toggles it. The WebView is allowed to autoplay with
+    // audio because mediaPlaybackRequiresUserGesture is disabled on it.
+    var isMuted by remember { mutableStateOf(false) }
+    val playerHtml = remember(videoUrl, isMuted) { buildPlayerHtml(videoUrl, isMuted) }
+
+    // Looping demo video (no controls)
     val exoPlayer = remember(videoUrl) {
         if (videoUrl.isNullOrBlank() || isYoutube) null
         else ExoPlayer.Builder(context).build().apply {
             setMediaItem(MediaItem.fromUri(videoUrl))
             repeatMode = Player.REPEAT_MODE_ALL
-            volume = 0f
+            // Request audio focus so playback ducks/pauses for calls and other apps.
+            setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setUsage(C.USAGE_MEDIA)
+                    .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
+                    .build(),
+                /* handleAudioFocus = */ true
+            )
             prepare()
             playWhenReady = true
             addListener(object : Player.Listener {
@@ -141,6 +155,7 @@ fun AssignmentWorkoutScreen(
             })
         }
     }
+    LaunchedEffect(exoPlayer, isMuted) { exoPlayer?.volume = if (isMuted) 0f else 1f }
     DisposableEffect(exoPlayer) { onDispose { exoPlayer?.release() } }
 
     // Rest-countdown ticker
@@ -251,6 +266,8 @@ fun AssignmentWorkoutScreen(
                         instructions = assignment.instructions,
                         isFullscreen = isVideoFullscreen,
                         onToggleFullscreen = { isVideoFullscreen = true },
+                        isMuted = isMuted,
+                        onToggleMute = { isMuted = !isMuted },
                         videoModifier = Modifier.tutorialTarget(TutorialIds.AW_VIDEO),
                         repModifier = Modifier.tutorialTarget(TutorialIds.AW_REP_TARGET)
                     )
@@ -320,6 +337,8 @@ fun AssignmentWorkoutScreen(
                 exoPlayer = exoPlayer,
                 isFullscreen = true,
                 onToggleFullscreen = { isVideoFullscreen = false },
+                isMuted = isMuted,
+                onToggleMute = { isMuted = !isMuted },
                 modifier = Modifier.fillMaxSize()
             )
         }
@@ -383,6 +402,8 @@ private fun VideoSurface(
     exoPlayer: ExoPlayer?,
     isFullscreen: Boolean,
     onToggleFullscreen: () -> Unit,
+    isMuted: Boolean,
+    onToggleMute: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier.background(Color.Black)) {
@@ -425,14 +446,33 @@ private fun VideoSurface(
         }
 
         if (!videoUrl.isNullOrBlank()) {
-            // Fullscreen enter/exit toggle (top-right).
-            FullscreenToggleButton(
-                isFullscreen = isFullscreen,
-                onToggle = onToggleFullscreen,
+            // Sound + fullscreen toggles (top-right).
+            Row(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(DesignTokens.Spacing.SM)
-            )
+                    .padding(DesignTokens.Spacing.SM),
+                horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.SM)
+            ) {
+                Surface(
+                    onClick = onToggleMute,
+                    shape = CircleShape,
+                    color = Color.Black.copy(alpha = 0.45f),
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = if (isMuted) Icons.Filled.VolumeOff else Icons.Filled.VolumeUp,
+                        contentDescription = stringResource(
+                            if (isMuted) R.string.workout_sound_on else R.string.workout_sound_off
+                        ),
+                        tint = Color.White,
+                        modifier = Modifier.padding(7.dp)
+                    )
+                }
+                FullscreenToggleButton(
+                    isFullscreen = isFullscreen,
+                    onToggle = onToggleFullscreen
+                )
+            }
 
             // App-logo watermark (branding + anti-piracy deterrent)
             AppLogoWatermark(
@@ -462,6 +502,8 @@ private fun ExerciseStage(
     instructions: String?,
     isFullscreen: Boolean,
     onToggleFullscreen: () -> Unit,
+    isMuted: Boolean,
+    onToggleMute: () -> Unit,
     videoModifier: Modifier = Modifier,
     repModifier: Modifier = Modifier
 ) {
@@ -499,6 +541,8 @@ private fun ExerciseStage(
                         exoPlayer = exoPlayer,
                         isFullscreen = false,
                         onToggleFullscreen = onToggleFullscreen,
+                        isMuted = isMuted,
+                        onToggleMute = onToggleMute,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -800,15 +844,31 @@ private fun YouTubeWebPlayer(html: String, modifier: Modifier = Modifier) {
                         return !allowed  // true = block, false = allow
                     }
                 }
+                tag = html
                 loadDataWithBaseURL("https://www.youtube.com", html, "text/html", "utf-8", null)
             }
         },
-        update = { it.loadDataWithBaseURL("https://www.youtube.com", html, "text/html", "utf-8", null) },
+        // Only reload when the document actually changed (e.g. the mute toggle).
+        // Reloading on every recomposition would restart the demo video.
+        update = { webView ->
+            if (webView.tag != html) {
+                webView.tag = html
+                webView.loadDataWithBaseURL("https://www.youtube.com", html, "text/html", "utf-8", null)
+            }
+        },
         modifier = modifier
     )
 }
 
-private fun buildPlayerHtml(videoUrl: String?): String {
+/**
+ * Builds the WebView document for the demo player.
+ *
+ * [muted] drives both the YouTube `mute` parameter and the HTML5 `muted`
+ * attribute. It defaults to false so the exercise audio plays — the WebView sets
+ * `mediaPlaybackRequiresUserGesture = false`, which is what lets unmuted
+ * autoplay through.
+ */
+private fun buildPlayerHtml(videoUrl: String?, muted: Boolean = false): String {
     if (videoUrl.isNullOrBlank()) {
         return """
             <html><body style="margin:0;padding:0;display:flex;align-items:center;justify-content:center;background:#000;color:#fff;font-family:sans-serif;">
@@ -828,7 +888,7 @@ private fun buildPlayerHtml(videoUrl: String?): String {
             </head>
             <body style="margin:0;padding:0;background:#000;">
               <iframe width="100%" height="100%"
-                src="https://www.youtube-nocookie.com/embed/$videoId?playsinline=1&rel=0&autoplay=1&mute=1&loop=1&playlist=$videoId&controls=0&modestbranding=1"
+                src="https://www.youtube-nocookie.com/embed/$videoId?playsinline=1&rel=0&autoplay=1&mute=${if (muted) 1 else 0}&loop=1&playlist=$videoId&controls=0&modestbranding=1"
                 frameborder="0" allow="autoplay; encrypted-media; picture-in-picture">
               </iframe>
             </body></html>
@@ -838,6 +898,7 @@ private fun buildPlayerHtml(videoUrl: String?): String {
         // value cannot break out of the src attribute (HTML injection).
         if (!videoUrl.startsWith("https://")) return buildPlayerHtml(null)
         val encodedUrl = Uri.encode(videoUrl, ":/?&=%.\\-_~")
+        val mutedAttr = if (muted) "muted" else ""
         """
             <html>
             <head>
@@ -845,7 +906,7 @@ private fun buildPlayerHtml(videoUrl: String?): String {
                 content="default-src 'none'; media-src https:; script-src 'none'; style-src 'unsafe-inline';">
             </head>
             <body style="margin:0;padding:0;background:#000;">
-              <video width="100%" height="100%" autoplay loop muted playsinline>
+              <video width="100%" height="100%" autoplay loop $mutedAttr playsinline>
                 <source src="$encodedUrl" type="video/mp4" />
               </video>
             </body></html>

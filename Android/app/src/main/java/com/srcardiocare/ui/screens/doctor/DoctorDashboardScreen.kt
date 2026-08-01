@@ -343,8 +343,8 @@ fun DoctorDashboardScreen(
                         DashboardCard(
                             modifier = Modifier.weight(1f).tutorialTarget(TutorialIds.DASH_SCHEDULE),
                             icon = Icons.Default.CalendarMonth,
-                            title = "Schedule",
-                            subtitle = "Appointments",
+                            title = "Appointments",
+                            subtitle = "Book & manage",
                             onClick = onSchedule
                         )
                     }

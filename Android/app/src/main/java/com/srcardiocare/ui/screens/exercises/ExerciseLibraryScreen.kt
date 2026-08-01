@@ -41,6 +41,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.VideoSize
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -464,11 +465,12 @@ private fun VideoPlayerDialog(
                                     loadDataWithBaseURL("https://www.youtube.com", html, "text/html", "utf-8", null)
                                 }
                             },
-                            modifier = if (isFullscreen) {
-                                Modifier.fillMaxSize()
-                            } else {
-                                Modifier.fillMaxWidth().aspectRatio(16f / 9f).align(Alignment.Center)
-                            }
+                            // The dialog is already full-screen, so give the player the
+                            // whole area. Forcing 16:9 made portrait clips (YouTube
+                            // Shorts in particular) letterbox down to a small centred
+                            // box; the embed scales to fit whatever box it is given, so
+                            // a full-screen box maximises the picture at any ratio.
+                            modifier = Modifier.fillMaxSize()
                         )
                     }
                 } else {
@@ -497,15 +499,15 @@ private fun VideoPlayerDialog(
                         factory = { ctx ->
                             PlayerView(ctx).apply {
                                 useController = true
+                                // FIT inside a full-screen surface: the frame is shown
+                                // whole and as large as the screen allows, portrait or
+                                // landscape, with no crop.
+                                resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
                                 player = exoPlayer
                             }
                         },
                         update = { it.player = exoPlayer },
-                        modifier = if (isFullscreen) {
-                            Modifier.fillMaxSize()
-                        } else {
-                            Modifier.fillMaxWidth().aspectRatio(16f / 9f).align(Alignment.Center)
-                        }
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
 

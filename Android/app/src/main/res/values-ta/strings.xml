@@ -89,8 +89,8 @@
     </plurals>
     <string name="home_card_exercises">பயிற்சிகள்</string>
     <string name="home_card_exercises_sub">%d ஒதுக்கப்பட்டுள்ளது</string>
-    <string name="home_card_schedule">அட்டவணை</string>
-    <string name="home_card_schedule_sub">சந்திப்புகளைக் காண்</string>
+    <string name="home_card_schedule">சந்திப்புகள்</string>
+    <string name="home_card_schedule_sub">சந்திப்பைக் கோரவும் அல்லது காணவும்</string>
     <string name="home_card_progress">முன்னேற்றம்</string>
     <string name="home_card_progress_sub">உங்கள் நிலையைக் கண்காணி</string>
     <string name="home_card_messages">செய்திகள்</string>
@@ -257,13 +257,22 @@
     <string name="exercise_invalid_video">தவறான காணொளி முகவரி</string>
 
     <!-- ===== Schedule / appointments ===== -->
-    <string name="schedule_title">அட்டவணை</string>
+    <string name="schedule_title">சந்திப்புகள்</string>
     <string name="schedule_today">இன்று</string>
     <string name="schedule_new_appointment">புதிய சந்திப்பு</string>
     <string name="schedule_new_appointment_desc">புதிய சந்திப்பு</string>
+    <string name="schedule_request_appointment">சந்திப்பைக் கோரவும்</string>
     <string name="schedule_patient">நோயாளி</string>
     <string name="schedule_select_patient">நோயாளியைத் தேர்ந்தெடுக்கவும்</string>
+    <string name="schedule_search_patient">நோயாளியைத் தேடவும் அல்லது தேர்ந்தெடுக்கவும்</string>
+    <string name="schedule_no_patient_match">பொருந்தும் நோயாளி இல்லை</string>
     <string name="schedule_no_patients">நோயாளிகள் யாரும் இல்லை. முதலில் ஒரு நோயாளியைச் சேர்க்கவும்.</string>
+    <string name="schedule_date">தேதி</string>
+    <string name="schedule_requested_date">கோரப்பட்ட தேதி</string>
+    <string name="schedule_pick_date">தேதியைத் தேர்ந்தெடுக்கவும்</string>
+    <string name="schedule_jump_to_date">தேதிக்குச் செல்</string>
+    <string name="schedule_date_in_past">இன்று அல்லது அதற்குப் பிந்தைய தேதியைத் தேர்ந்தெடுக்கவும்</string>
+    <string name="schedule_request">கோரிக்கையை அனுப்பு</string>
     <string name="schedule_time">நேரம்</string>
     <string name="schedule_notes_optional">குறிப்புகள் (விருப்பத்தேர்வு)</string>
     <string name="schedule_create">உருவாக்கு</string>
@@ -324,6 +333,8 @@
     <string name="sign_out_confirm_message">வெளியேற விரும்புகிறீர்களா?</string>
     <string name="fullscreen_enter">முழுத்திரை</string>
     <string name="fullscreen_exit">முழுத்திரையிலிருந்து வெளியேறு</string>
+    <string name="workout_sound_on">ஒலியை இயக்கு</string>
+    <string name="workout_sound_off">ஒலியை நிறுத்து</string>
     <string name="tutorial_show">பயிற்சி வழிகாட்டியைக் காட்டு</string>
 
     <!-- ===== Password rules ===== -->

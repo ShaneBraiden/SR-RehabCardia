@@ -20,8 +20,8 @@ android {
         applicationId = "com.srcardiocare"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4
-        versionName = "1.0.3"
+        versionCode = 5
+        versionName = "1.0.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -113,6 +113,9 @@ dependencies {
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-storage-ktx")
+    // Callable functions — permanent account deletion needs the Admin SDK,
+    // which only the backend can reach.
+    implementation("com.google.firebase:firebase-functions-ktx")
     implementation("com.google.firebase:firebase-appcheck-playintegrity")
     implementation("com.google.firebase:firebase-messaging-ktx")
     debugImplementation("com.google.firebase:firebase-appcheck-debug")

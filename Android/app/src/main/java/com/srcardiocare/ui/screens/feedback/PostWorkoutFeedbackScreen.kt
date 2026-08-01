@@ -6,6 +6,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,6 +21,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -67,6 +70,7 @@ private fun borgColor(value: Int) = when {
     else -> DesignTokens.Colors.Error
 }
 
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun PostWorkoutFeedbackScreen(
     workoutId: String? = null,
@@ -86,6 +90,7 @@ fun PostWorkoutFeedbackScreen(
 
     val scope = rememberCoroutineScope()
     val toast = rememberToast()
+    val notesBringIntoView = remember { BringIntoViewRequester() }
 
     LaunchedEffect(Unit) {
         val uid = FirebaseService.currentUID ?: return@LaunchedEffect
@@ -108,6 +113,12 @@ fun PostWorkoutFeedbackScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                // The activity runs edge-to-edge, so android:windowSoftInputMode
+                // ="adjustResize" no longer shrinks the window on its own. imePadding()
+                // is what shortens the scroll viewport when the keyboard opens, which
+                // in turn lets the focused field scroll into view instead of sitting
+                // behind the keyboard.
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(DesignTokens.Spacing.XL),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -344,13 +355,21 @@ fun PostWorkoutFeedbackScreen(
 
             Spacer(modifier = Modifier.height(DesignTokens.Spacing.MD))
 
-            // Notes
+            // Notes — the last field on the page, so it is the one the keyboard
+            // would cover. On focus we explicitly scroll it (plus a little breathing
+            // room) above the IME.
             OutlinedTextField(
                 value = notes,
                 onValueChange = { notes = InputValidator.limitLength(it, InputValidator.MaxLength.NOTES) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(100.dp),
+                    .height(100.dp)
+                    .bringIntoViewRequester(notesBringIntoView)
+                    .onFocusEvent { focusState ->
+                        if (focusState.isFocused) {
+                            scope.launch { notesBringIntoView.bringIntoView() }
+                        }
+                    },
                 label = { Text(stringResource(R.string.feedback_notes_label)) },
                 shape = RoundedCornerShape(DesignTokens.Radius.Base),
                 colors = OutlinedTextFieldDefaults.colors(

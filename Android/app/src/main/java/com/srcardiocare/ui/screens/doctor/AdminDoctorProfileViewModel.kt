@@ -108,7 +108,11 @@ class AdminDoctorProfileViewModel : ViewModel() {
                 onSuccess()
             } catch (e: Exception) {
                 _state.update { it.copy(isDeleting = false) }
-                onError(ErrorHandler.getDisplayMessage(e, "delete doctor"))
+                // The deleteUserAccount callable returns a message written for
+                // the admin reading it ("Admin accounts cannot be deleted from
+                // the app"). ErrorHandler would flatten that to a generic
+                // failure, so prefer it and fall back for everything else.
+                onError(e.message ?: ErrorHandler.getDisplayMessage(e, "delete doctor"))
             }
         }
     }

@@ -16,6 +16,13 @@ object InputValidator {
     object MaxLength {
         const val NAME = 100
         const val PHONE = 20
+        /**
+         * Account-creation phone fields accept a bare national mobile number
+         * only — no country code, no separators. The temporary password is
+         * derived from this exact string, so any stray character silently
+         * produces credentials the clinician cannot read back correctly.
+         */
+        const val MOBILE = 10
         const val EMAIL = 254
         const val TEXT_FIELD = 500
         const val NOTES = 2000
@@ -81,6 +88,63 @@ object InputValidator {
             return ValidationResult(false, "", "Please enter a valid phone number")
         }
         return ValidationResult(true, trimmed)
+    }
+
+    /**
+     * Validates the mobile number used when creating a patient or doctor
+     * account. Stricter than [validatePhone] on purpose: the temporary password
+     * is `<number>@srcardio`, so the stored number and the number the clinician
+     * reads off the screen have to be byte-identical. A country code, space or
+     * dash typed here produces a password nobody can guess.
+     *
+     * Required, exactly [MaxLength.MOBILE] digits, digits only.
+     */
+    fun validateMobileNumber(input: String): ValidationResult {
+        val digitsOnly = normalizeMobile(input)
+        if (digitsOnly.isBlank()) {
+            return ValidationResult(false, "", "Mobile number is required")
+        }
+        if (digitsOnly.length != MaxLength.MOBILE) {
+            return ValidationResult(
+                false,
+                "",
+                "Enter a ${MaxLength.MOBILE}-digit mobile number without country code"
+            )
+        }
+        return ValidationResult(true, digitsOnly)
+    }
+
+    /**
+     * Strips everything that is not a digit, then removes a leading country
+     * code or trunk prefix.
+     *
+     * Written for two different inputs. Typing: the field simply stops at ten
+     * digits, so an accidental eleventh keystroke is dropped rather than
+     * shifting the number. Pasting: a contact copied as "+91 98765 43210" or
+     * "09876543210" carries a prefix that has to come off the front, not the
+     * back — trimming the tail would silently produce a different number.
+     *
+     * Prefix removal is deliberately conditional on the resulting length. A
+     * ten-digit number that happens to start with 91 is a real number, not a
+     * country code, and must survive untouched.
+     */
+    fun normalizeMobile(input: String): String {
+        var digits = input.filter { it.isDigit() }
+
+        // "+91 9876543210" -> "919876543210" -> "9876543210"
+        if (digits.length == MaxLength.MOBILE + 2 && digits.startsWith("91")) {
+            digits = digits.substring(2)
+        }
+        // "09876543210" -> "9876543210"
+        if (digits.length == MaxLength.MOBILE + 1 && digits.startsWith("0")) {
+            digits = digits.substring(1)
+        }
+
+        return if (digits.length > MaxLength.MOBILE) {
+            digits.take(MaxLength.MOBILE)
+        } else {
+            digits
+        }
     }
 
     /**

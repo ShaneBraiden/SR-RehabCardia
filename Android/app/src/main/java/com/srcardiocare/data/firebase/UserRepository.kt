@@ -3,6 +3,7 @@ package com.srcardiocare.data.firebase
 
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.SetOptions
+import com.google.firebase.functions.FirebaseFunctionsException
 import com.srcardiocare.data.model.User
 import kotlinx.coroutines.tasks.await
 
@@ -67,9 +68,43 @@ object UserRepository {
         FirebaseClients.db.collection("users").document(uid).set(updates, SetOptions.merge()).await()
     }
 
-    /** Delete a user's Firestore document (for admin). Note: Auth account must be deleted via Admin SDK. */
+    /**
+     * Permanently deletes a user: Firestore documents *and* the Firebase Auth
+     * account, via the `deleteUserAccount` callable.
+     *
+     * The client SDK can only delete the Auth account it is signed in as, so
+     * the previous Firestore-only delete left the sign-in record behind and the
+     * email stayed claimed — re-adding the same person failed with "email
+     * already in use". The callable runs on the Admin SDK, which can actually
+     * remove it.
+     */
     suspend fun deleteUser(uid: String) {
-        FirebaseClients.db.collection("users").document(uid).delete().await()
+        callDeleteUserAccount(mapOf("uid" to uid))
+    }
+
+    /**
+     * Clears an Auth account that has no Firestore document left — the residue
+     * of a delete performed before this went through the backend. Admin only.
+     * Safe to call when nothing is there; the callable treats that as success.
+     */
+    suspend fun purgeOrphanedAccount(email: String) {
+        callDeleteUserAccount(mapOf("email" to email.trim().lowercase()))
+    }
+
+    /**
+     * Invokes the callable and unwraps its error. Callable failures surface as
+     * [FirebaseFunctionsException] whose `message` carries the server's text,
+     * which is already written for the clinician reading it.
+     */
+    private suspend fun callDeleteUserAccount(payload: Map<String, String>) {
+        try {
+            FirebaseClients.functions
+                .getHttpsCallable("deleteUserAccount")
+                .call(payload)
+                .await()
+        } catch (e: FirebaseFunctionsException) {
+            throw Exception(e.message ?: "Could not delete the account", e)
+        }
     }
 
     /** Fetch patients assigned to a specific doctor (for doctor role). */
@@ -104,50 +139,23 @@ object UserRepository {
     }
 
     /**
-     * Deletes a patient from Firestore: removes user doc + related plans,
-     * workouts, appointments, and notifications. Firebase client SDK cannot delete
-     * another user's Auth account, so only Firestore data is removed.
+     * Permanently deletes a patient: user document, every clinical record that
+     * references them, and their Firebase Auth account.
+     *
+     * All of it now runs in `deleteUserAccount` on the backend rather than as a
+     * client batch. Two reasons the batch had to go:
+     *
+     *  - the client SDK cannot delete another user's Auth account, so the email
+     *    stayed claimed and the patient could never be re-added;
+     *  - notifications are admin-delete-only, so a doctor's batch either
+     *    excluded them or rolled the whole deletion back. Running as the Admin
+     *    SDK removes that split entirely.
+     *
+     * Authorization is enforced server-side: a doctor may only delete a patient
+     * assigned to them.
      */
     suspend fun deletePatient(patientId: String) {
-        val batch = FirebaseClients.db.batch()
-
-        // Delete related plans
-        val plans = FirebaseClients.db.collection("plans")
-            .whereEqualTo("patientId", patientId).get().await()
-        for (doc in plans.documents) batch.delete(doc.reference)
-
-        // Delete related workouts
-        val workouts = FirebaseClients.db.collection("workouts")
-            .whereEqualTo("patientId", patientId).get().await()
-        for (doc in workouts.documents) batch.delete(doc.reference)
-
-        // Delete related appointments
-        val appointments = FirebaseClients.db.collection("appointments")
-            .whereEqualTo("patientId", patientId).get().await()
-        for (doc in appointments.documents) batch.delete(doc.reference)
-
-        // Delete the user document
-        batch.delete(FirebaseClients.db.collection("users").document(patientId))
-
-        batch.commit().await()
-
-        // Notifications are admin-delete-only, so a doctor removing their own
-        // patient cannot clear them. Kept out of the batch above deliberately:
-        // a batch is atomic, so bundling a write the caller is not permitted to
-        // make would roll the entire deletion back and leave the patient in
-        // place. Orphaned notification documents are harmless — they are only
-        // ever read back by `userId`, which no longer resolves to an account.
-        try {
-            val notifications = FirebaseClients.db.collection("notifications")
-                .whereEqualTo("userId", patientId).get().await()
-            if (!notifications.isEmpty) {
-                val notificationBatch = FirebaseClients.db.batch()
-                for (doc in notifications.documents) notificationBatch.delete(doc.reference)
-                notificationBatch.commit().await()
-            }
-        } catch (_: Exception) {
-            // Permission denied for a non-admin caller. Not fatal.
-        }
+        callDeleteUserAccount(mapOf("uid" to patientId))
     }
 
     // ── Typed reads ─────────────────────────────────────────────────────

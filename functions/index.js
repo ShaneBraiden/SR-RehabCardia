@@ -9,7 +9,14 @@
  *    token, never from Firestore, so a client that can write a user document
  *    still cannot grant itself privileges.
  *
- * 2. `fanOutNotification` — fan out every `notifications/{id}` document write
+ * 2. `deleteUserAccount` — permanently remove a user: their Firestore
+ *    documents *and* their Firebase Auth account. The Android client SDK can
+ *    only ever delete the account it is signed in as, so a client-side "delete"
+ *    left the Auth record behind and the email stayed taken — re-adding the
+ *    same person failed with "email already in use". Only the Admin SDK can
+ *    close that gap, so it has to happen here.
+ *
+ * 3. `fanOutNotification` — fan out every `notifications/{id}` document write
  *    as an FCM data-only message to each of the recipient user's registered
  *    device tokens (`users/{uid}.fcmTokens`).
  *
@@ -26,6 +33,7 @@ const {
   onDocumentCreated,
   onDocumentWritten,
 } = require("firebase-functions/v2/firestore");
+const {onCall, HttpsError} = require("firebase-functions/v2/https");
 const logger = require("firebase-functions/logger");
 const admin = require("firebase-admin");
 
@@ -175,6 +183,212 @@ async function restampPatientRecords(patientId, doctorId) {
     }
   }
 }
+
+// ───────────────────────────────────────────────────────────────────────────
+// Permanent account deletion
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * Collections holding documents that belong to a deleted user, keyed by the
+ * field that names them. Everything here is removed alongside the account.
+ *
+ * Kept deliberately explicit rather than derived: a wrong guess here deletes
+ * another patient's clinical history, so each entry is a decision, not a
+ * pattern match.
+ */
+const USER_OWNED_DOCUMENTS = [
+  {collection: "plans", fields: ["patientId", "doctorId"]},
+  {collection: "workouts", fields: ["patientId", "doctorId"]},
+  {collection: "appointments", fields: ["patientId", "doctorId"]},
+  {collection: "sessionLogs", fields: ["patientId", "doctorId"]},
+  {collection: "postWorkoutFeedback", fields: ["patientId", "doctorId"]},
+  {collection: "notifications", fields: ["userId"]},
+];
+
+/**
+ * Deletes every document a user owns across [USER_OWNED_DOCUMENTS].
+ * @param {string} uid The user whose documents should be removed.
+ * @return {Promise<number>} Total documents deleted.
+ */
+async function purgeUserDocuments(uid) {
+  const db = admin.firestore();
+  let deleted = 0;
+
+  for (const {collection, fields} of USER_OWNED_DOCUMENTS) {
+    for (const field of fields) {
+      try {
+        const snap = await db.collection(collection)
+            .where(field, "==", uid)
+            .get();
+        if (snap.empty) continue;
+
+        // Firestore caps a batch at 500 writes.
+        const docs = snap.docs;
+        for (let i = 0; i < docs.length; i += 450) {
+          const batch = db.batch();
+          for (const doc of docs.slice(i, i + 450)) batch.delete(doc.ref);
+          await batch.commit();
+        }
+        deleted += docs.length;
+      } catch (err) {
+        // One unreadable collection must not abort the whole deletion — the
+        // Auth account is the part that actually blocks re-adding the person.
+        logger.error("purgeUserDocuments: failed",
+            {collection, field, uid, message: err.message});
+      }
+    }
+  }
+  return deleted;
+}
+
+/**
+ * Permanently deletes a user account.
+ *
+ * Callable with either `{uid}` or `{email}`. The `email` form exists to clean
+ * up accounts orphaned by the old client-side delete, where the Firestore doc
+ * is already gone but the Auth record still holds the address hostage.
+ *
+ * Authorization:
+ *   - admin may delete any non-admin account;
+ *   - a doctor may delete a patient assigned to them;
+ *   - nobody may delete themselves through this path (use account settings),
+ *     which also stops an admin from locking the clinic out of its own console.
+ *
+ * Idempotent by design. A missing Auth user or missing Firestore doc is a
+ * success, not an error — the caller's goal is "this account no longer exists",
+ * and a half-deleted account is exactly the state we are here to repair.
+ */
+exports.deleteUserAccount = onCall(
+    {
+      // Flip to true once every client build in the field ships App Check.
+      // Enforcing early would lock out older installs mid-rollout.
+      enforceAppCheck: false,
+    },
+    async (request) => {
+      const caller = request.auth;
+      if (!caller) {
+        throw new HttpsError("unauthenticated", "Sign in required.");
+      }
+
+      const callerRole = caller.token.role;
+      if (callerRole !== "admin" && callerRole !== "doctor") {
+        throw new HttpsError(
+            "permission-denied",
+            "Only an admin or doctor can delete an account.",
+        );
+      }
+
+      const data = request.data || {};
+      const requestedUid = typeof data.uid === "string" ? data.uid.trim() : "";
+      const requestedEmail = typeof data.email === "string" ?
+        data.email.trim().toLowerCase() : "";
+
+      if (!requestedUid && !requestedEmail) {
+        throw new HttpsError(
+            "invalid-argument",
+            "Provide either uid or email.",
+        );
+      }
+
+      // Resolve the target. Prefer the uid; fall back to the email lookup for
+      // the orphan-cleanup case where no Firestore doc survives.
+      let uid = requestedUid;
+      let authUser = null;
+      try {
+        authUser = uid ?
+          await admin.auth().getUser(uid) :
+          await admin.auth().getUserByEmail(requestedEmail);
+        uid = authUser.uid;
+      } catch (err) {
+        if (err.code !== "auth/user-not-found") {
+          logger.error("deleteUserAccount: auth lookup failed",
+              {code: err.code, message: err.message});
+          throw new HttpsError("internal", "Could not look up the account.");
+        }
+        // No Auth record. If we were given an email and nothing else, there is
+        // genuinely nothing left to delete.
+        if (!uid) {
+          logger.info("deleteUserAccount: no account for that email");
+          return {deleted: false, reason: "not-found", documentsDeleted: 0};
+        }
+      }
+
+      if (uid === caller.uid) {
+        throw new HttpsError(
+            "failed-precondition",
+            "You cannot delete your own account here.",
+        );
+      }
+
+      const db = admin.firestore();
+      const userSnap = await db.collection("users").doc(uid).get();
+      const target = userSnap.exists ? userSnap.data() : null;
+
+      // Authorization against the target, where one still exists. An orphaned
+      // Auth record has no role to check, so admins alone may clear those.
+      if (target) {
+        if (target.role === "admin") {
+          throw new HttpsError(
+              "permission-denied",
+              "Admin accounts cannot be deleted from the app.",
+          );
+        }
+        if (callerRole === "doctor") {
+          const isOwnPatient = target.role === "patient" &&
+            target.assignedDoctorId === caller.uid;
+          if (!isOwnPatient) {
+            throw new HttpsError(
+                "permission-denied",
+                "You can only delete patients assigned to you.",
+            );
+          }
+        }
+      } else if (callerRole !== "admin") {
+        throw new HttpsError(
+            "permission-denied",
+            "Only an admin can clear an orphaned account.",
+        );
+      }
+
+      // Clinical data first. If the run dies partway the account still exists,
+      // so a retry finds a coherent state rather than an unreachable orphan.
+      const documentsDeleted = await purgeUserDocuments(uid);
+
+      if (userSnap.exists) {
+        await db.collection("users").doc(uid).delete();
+      }
+
+      // The Auth record is what actually frees the email address. Everything
+      // above is cleanup; this line is the fix.
+      if (authUser) {
+        try {
+          await admin.auth().revokeRefreshTokens(uid);
+          await admin.auth().deleteUser(uid);
+        } catch (err) {
+          if (err.code !== "auth/user-not-found") {
+            logger.error("deleteUserAccount: auth delete failed",
+                {uid, code: err.code, message: err.message});
+            throw new HttpsError(
+                "internal",
+                "Profile data was removed but the sign-in account could not " +
+                "be deleted. Please try again.",
+            );
+          }
+        }
+      }
+
+      logger.info("deleteUserAccount: account permanently deleted", {
+        uid,
+        by: caller.uid,
+        callerRole,
+        documentsDeleted,
+        hadUserDoc: userSnap.exists,
+        hadAuthAccount: authUser !== null,
+      });
+
+      return {deleted: true, documentsDeleted};
+    },
+);
 
 // ───────────────────────────────────────────────────────────────────────────
 // Push notification fan-out

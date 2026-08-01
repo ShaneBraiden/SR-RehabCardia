@@ -137,10 +137,15 @@ fun AddPatientScreen(onSaved: () -> Unit, onBack: () -> Unit) {
 
             OutlinedTextField(
                 value = phone,
-                onValueChange = { phone = InputValidator.limitLength(it, InputValidator.MaxLength.PHONE) },
-                label = { Text("Phone") }, placeholder = { Text("e.g. +1 555 123 4567") },
+                // Digits only, capped at 10. The temporary password is built
+                // from this exact string, so a country code or space typed here
+                // would produce credentials the doctor cannot read back.
+                onValueChange = { phone = InputValidator.normalizeMobile(it) },
+                label = { Text("Mobile Number") },
+                placeholder = { Text("e.g. 9876543210") },
+                supportingText = { Text("10 digits, no country code or spaces") },
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                 shape = RoundedCornerShape(DesignTokens.Radius.Base),
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = DesignTokens.Colors.Primary)
@@ -166,7 +171,7 @@ fun AddPatientScreen(onSaved: () -> Unit, onBack: () -> Unit) {
                 colors = CardDefaults.cardColors(containerColor = DesignTokens.Colors.PrimaryLight.copy(alpha = 0.3f))
             ) {
                 Text(
-                    "Default password: phone number + \"@srcardio\" (e.g. 0812345678@srcardio). Share it with the patient — they will be prompted to change it on first login.",
+                    "Default password: the 10-digit mobile number + \"@srcardio\" (e.g. 9876543210@srcardio). Do not include a country code. Share it with the patient — they will be prompted to change it on first login.",
                     modifier = Modifier.padding(DesignTokens.Spacing.MD),
                     style = MaterialTheme.typography.bodySmall,
                     color = DesignTokens.Colors.PrimaryDark
@@ -191,8 +196,9 @@ fun AddPatientScreen(onSaved: () -> Unit, onBack: () -> Unit) {
                         return@Button
                     }
 
-                    // Validate phone (optional but must be valid format if provided)
-                    val phoneValidation = InputValidator.validatePhone(phone)
+                    // Validate mobile — required and exactly 10 digits, because
+                    // the temporary password is derived from it.
+                    val phoneValidation = InputValidator.validateMobileNumber(phone)
                     if (!phoneValidation.isValid) {
                         errorMessage = phoneValidation.errorMessage
                         return@Button
@@ -213,8 +219,11 @@ fun AddPatientScreen(onSaved: () -> Unit, onBack: () -> Unit) {
 
                     scope.launch {
                         try {
-                            // Default password is phone number + "@srcardio"; user must change on first login
-                            val sanitizedPhone = phoneValidation.sanitizedValue.replace("\\s".toRegex(), "")
+                            // Default password is the 10-digit mobile + "@srcardio";
+                            // user must change it on first login. sanitizedValue is
+                            // already digits-only, so it matches the number shown
+                            // on screen exactly.
+                            val sanitizedPhone = phoneValidation.sanitizedValue
                             val temporaryPassword = if (sanitizedPhone.isNotBlank()) {
                                 "${sanitizedPhone}@srcardio"
                             } else {
