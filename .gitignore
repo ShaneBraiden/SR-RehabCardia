@@ -90,6 +90,8 @@ google-services.json
 local.properties
 Android/app/build/
 Android/build/
+.gradle/
+Android/.gradle/
 
 # Android signing — never commit real keystore or credentials
 keystore.properties
