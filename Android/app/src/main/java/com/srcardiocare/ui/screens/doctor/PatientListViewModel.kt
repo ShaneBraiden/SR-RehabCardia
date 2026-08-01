@@ -55,14 +55,15 @@ class PatientListViewModel : ViewModel() {
                 val today = LocalDate.now().toString()
                 users.filter { it.role.ifBlank { "patient" } == "patient" }.forEach { patient ->
                     try {
-                        val assignments = AssignmentRepository.getAssignments(patient.id)
+                        val assignments =
+                            AssignmentRepository.getAssignmentsFor(patient.id, uid, role)
                         patientStatusMap[patient.id] = when {
                             assignments.isEmpty() -> UserStatus.INACTIVE
                             else -> {
                                 val completedAssignmentsToday = assignments.count { assignment ->
                                     val dailyFrequency = assignment.dailyFrequency
                                     val completedSessionsToday = try {
-                                        SessionRepository.getSessionsForDate(assignment.id, today).count {
+                                        SessionRepository.getSessionsForDate(patient.id, assignment.id, today).count {
                                             it.status == SessionStatus.COMPLETED
                                         }
                                     } catch (_: Exception) {

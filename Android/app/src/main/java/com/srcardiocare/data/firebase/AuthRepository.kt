@@ -45,6 +45,10 @@ object AuthRepository {
      * queries can be authorised per document. The rules verify the stamp
      * against this same claim, so a client cannot write itself onto another
      * clinician's caseload.
+     *
+     * `syncUserClaims` writes an explicit `null` when a patient has no doctor,
+     * so the key can be present-but-null as well as absent; both normalise to
+     * the empty string here.
      */
     suspend fun assignedDoctorId(forceRefresh: Boolean = false): String =
         claims(forceRefresh)["assignedDoctorId"] as? String ?: ""
@@ -55,6 +59,37 @@ object AuthRepository {
      * changes the caller's own role, block state, or doctor assignment.
      */
     suspend fun refreshClaims(): Map<String, Any> = claims(forceRefresh = true)
+
+    // ── Claim propagation ───────────────────────────────────────────────
+    // `syncUserClaims` runs asynchronously after the user document is written,
+    // so a token minted at sign-in can predate the claims it is supposed to
+    // carry. Every security rule reads the token, so signing a user in before
+    // their role claim exists drops them into an app where every read is denied
+    // — which surfaces as "failed to load" on every screen rather than as an
+    // auth error. One refresh is not always enough: the function may not have
+    // finished. Retry a few times with backoff before giving up.
+
+    private const val CLAIM_SYNC_ATTEMPTS = 3
+    private const val CLAIM_SYNC_BACKOFF_MS = 1_200L
+
+    /**
+     * Blocks until the caller's `role` claim matches [expectedRole], refreshing
+     * the ID token between attempts.
+     *
+     * @return true when the token now carries the expected role.
+     */
+    suspend fun awaitRoleClaim(expectedRole: String): Boolean {
+        if (expectedRole.isBlank()) return false
+        if (claimedRole() == expectedRole) return true
+
+        repeat(CLAIM_SYNC_ATTEMPTS) { attempt ->
+            if (claimedRole(forceRefresh = true) == expectedRole) return true
+            if (attempt < CLAIM_SYNC_ATTEMPTS - 1) {
+                kotlinx.coroutines.delay(CLAIM_SYNC_BACKOFF_MS * (attempt + 1))
+            }
+        }
+        return claimedRole() == expectedRole
+    }
 
     suspend fun login(email: String, password: String): Map<String, Any?> {
         var loginHandled = false
@@ -105,11 +140,30 @@ object AuthRepository {
 
             // Custom claims are written asynchronously by the syncUserClaims
             // Cloud Function, so a freshly created account can sign in with a
-            // token that predates its own claims. Every security rule reads
-            // the token, so force one refresh when it disagrees with Firestore
-            // — otherwise the user lands in an app that denies every read.
-            if (role.isNotBlank() && claimedRole() != role) {
-                refreshClaims()
+            // token that predates its own claims. Every security rule reads the
+            // token, so a session whose role claim has not landed yet is denied
+            // everywhere — which the UI can only report as "failed to load" on
+            // one screen after another.
+            //
+            // Wait for the claim rather than assuming a single refresh caught
+            // it, and refuse the session outright if it never arrives. Failing
+            // at the sign-in screen with a specific message is far easier to
+            // diagnose than an app that loads into an empty, silently broken
+            // dashboard.
+            if (role.isNotBlank() && !awaitRoleClaim(role)) {
+                recordLoginLog(
+                    userId = uid,
+                    email = normalizedEmail,
+                    role = role,
+                    status = "claims_missing",
+                    message = "Role claim '$role' absent from ID token after refresh"
+                )
+                FirebaseClients.auth.signOut()
+                loginHandled = true
+                throw Exception(
+                    "Your account permissions are still being set up. " +
+                    "Please try again in a minute — if this keeps happening, contact support."
+                )
             }
 
             // Update last seen on login

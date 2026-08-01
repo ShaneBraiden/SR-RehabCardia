@@ -119,7 +119,7 @@ class AdminDashboardViewModel : ViewModel() {
                                 val completedAssignmentsToday = assignments.count { assignment ->
                                     val dailyFrequency = assignment.dailyFrequency
                                     val done = try {
-                                        SessionRepository.getSessionsForDate(assignment.id, today).count {
+                                        SessionRepository.getSessionsForDate(patient.id, assignment.id, today).count {
                                             it.status == SessionStatus.COMPLETED
                                         }
                                     } catch (_: Exception) { 0 }

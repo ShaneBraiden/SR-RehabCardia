@@ -206,12 +206,24 @@ object SessionRepository {
         }
     }
 
-    /** Fetch sessions for a specific assignment and date. */
+    /**
+     * Fetch sessions for a specific assignment and date.
+     *
+     * [patientId] is required. The `sessionLogs` list rule authorises a query
+     * per returned document — a patient only ever passes on their own
+     * `patientId`, and an unconstrained query over the whole collection is
+     * rejected wholesale (it would return other patients' logs). This query
+     * used to filter on `assignmentId` alone, which meant every caller silently
+     * caught a permission-denied and counted zero completed sessions, so the
+     * doctor and admin dashboards showed every patient as behind schedule.
+     */
     suspend fun fetchSessionsForDate(
+        patientId: String,
         assignmentId: String,
         sessionDate: String
     ): List<Pair<String, Map<String, Any?>>> {
         val snapshot = FirebaseClients.db.collection("sessionLogs")
+            .whereEqualTo("patientId", patientId)
             .whereEqualTo("assignmentId", assignmentId)
             .whereEqualTo("sessionDate", sessionDate)
             .get().await()
@@ -254,9 +266,17 @@ object SessionRepository {
         return snapshot.documents.firstOrNull()?.let { it.id to (it.data ?: emptyMap()) }
     }
 
-    /** Get session count for a specific assignment on a specific date. */
-    suspend fun getCompletedSessionCount(assignmentId: String, sessionDate: String): Int {
+    /**
+     * Get session count for a specific assignment on a specific date.
+     * [patientId] is required for the same reason as [fetchSessionsForDate].
+     */
+    suspend fun getCompletedSessionCount(
+        patientId: String,
+        assignmentId: String,
+        sessionDate: String
+    ): Int {
         val snapshot = FirebaseClients.db.collection("sessionLogs")
+            .whereEqualTo("patientId", patientId)
             .whereEqualTo("assignmentId", assignmentId)
             .whereEqualTo("sessionDate", sessionDate)
             .whereEqualTo("status", "COMPLETED")
@@ -266,8 +286,13 @@ object SessionRepository {
 
     // ── Typed reads ─────────────────────────────────────────────────────
 
-    suspend fun getSessionsForDate(assignmentId: String, sessionDate: String): List<SessionLog> =
-        fetchSessionsForDate(assignmentId, sessionDate).map { (id, data) -> data.toSessionLog(id) }
+    suspend fun getSessionsForDate(
+        patientId: String,
+        assignmentId: String,
+        sessionDate: String
+    ): List<SessionLog> =
+        fetchSessionsForDate(patientId, assignmentId, sessionDate)
+            .map { (id, data) -> data.toSessionLog(id) }
 
     suspend fun getAllSessionsForAssignment(patientId: String, assignmentId: String): List<SessionLog> =
         fetchAllSessionsForAssignment(patientId, assignmentId).map { (id, data) -> data.toSessionLog(id) }

@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#5A9EA6">
+<meta name="format-detection" content="telephone=no">
+<title>Testing Portal — RehabCardia</title>
+<meta name="description" content="Internal testing portal for RehabCardia testers — report bugs, request features, and suggest improvements.">
+<style>
+  :root {
+    --primary: #5A9EA6;
+    --primary-dark: #4A8A91;
+    --bg: #F7FAFA;
+    --surface: #FFFFFF;
+    --text: #2D3738;
+    --text-sub: #6B7D80;
+    --border: #E3E7E8;
+    --error: #D95959;
+    --bug: #D95959;
+    --bug-bg: #FDF5F5;
+    --feature: #4A8A91;
+    --feature-bg: #F0F7F8;
+    --improvement: #C08A34;
+    --improvement-bg: #FBF6EC;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html {
+    -webkit-text-size-adjust: 100%; text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text); background: var(--bg); line-height: 1.65;
+    overflow-wrap: break-word; word-break: break-word;
+    -webkit-tap-highlight-color: rgba(90,158,166,.18);
+    padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right);
+  }
+  img { max-width: 100%; }
+  .container { max-width: 920px; margin: 0 auto; padding: 0 24px; }
+
+  /* Header */
+  header {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 20;
+    padding-top: env(safe-area-inset-top);
+  }
+  .nav {
+    max-width: 920px; margin: 0 auto; padding: 14px 24px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    flex-wrap: wrap;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .brand img { width: 36px; height: 36px; object-fit: contain; }
+  .brand span { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+  .nav a.contact { color: var(--primary-dark); text-decoration: none; font-weight: 600; font-size: .92rem; }
+  .nav a.contact:hover { text-decoration: underline; }
+  .nav-right { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+  .who { font-size: .85rem; color: var(--text-sub); }
+  .who b { color: var(--text); }
+
+  /* Buttons */
+  button, .btn {
+    font: inherit; cursor: pointer; border-radius: 9px; border: 1px solid transparent;
+    padding: 10px 18px; font-weight: 600; font-size: .92rem; transition: .15s;
+    min-height: 44px; touch-action: manipulation;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-primary:disabled { background: #B9CFD1; cursor: not-allowed; }
+  .btn-ghost { background: transparent; color: var(--primary-dark); border-color: var(--border); }
+  .btn-ghost:hover { background: var(--bg); }
+  .btn-sm { padding: 6px 12px; font-size: .82rem; min-height: 36px; }
+  .btn-danger { background: transparent; color: var(--error); border-color: #F0C9C9; }
+  .btn-danger:hover { background: var(--bug-bg); }
+
+  /* Hero */
+  .hero { background: var(--surface); text-align: center; padding: 52px 24px 44px; border-bottom: 1px solid var(--border); }
+  .hero h1 { font-size: clamp(1.5rem, 4vw, 2rem); font-weight: 700; letter-spacing: -.3px; }
+  .hero p { max-width: 600px; margin: 12px auto 0; font-size: 1rem; color: var(--text-sub); }
+  .pill {
+    display: inline-block; background: var(--feature-bg); color: var(--primary-dark);
+    border: 1px solid #CFE3E5; border-radius: 999px;
+    padding: 3px 12px; font-size: .75rem; font-weight: 700;
+    letter-spacing: .5px; text-transform: uppercase; margin-bottom: 14px;
+  }
+
+  section { padding: 40px 0; }
+  h2 { font-size: 1.25rem; font-weight: 700; margin-bottom: 6px; }
+  .sub { font-size: .9rem; color: var(--text-sub); margin-bottom: 20px; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 24px;
+  }
+  .card + .card { margin-top: 18px; }
+
+  /* Forms */
+  label { display: block; font-size: .86rem; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+  input[type=text], input[type=email], textarea, select {
+    width: 100%; font-family: inherit; line-height: 1.5;
+    /* 16px minimum stops iOS Safari zooming in on focus */
+    font-size: 16px;
+    color: var(--text); background: var(--surface);
+    border: 1px solid var(--border); border-radius: 9px; padding: 11px 12px;
+    min-height: 46px; -webkit-appearance: none; appearance: none;
+    max-width: 100%;
+  }
+  select {
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236B7D80' d='M6 8 0 1.2 1.2 0 6 4.8 10.8 0 12 1.2z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center; padding-right: 34px;
+  }
+  input:focus, textarea:focus, select:focus { outline: 2px solid #CFE3E5; border-color: var(--primary); }
+  textarea { min-height: 130px; resize: vertical; }
+  .field { margin-bottom: 18px; }
+  .row { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+  .hint { font-size: .8rem; color: var(--text-sub); margin-top: 6px; }
+
+  /* Category radio cards */
+  .cats { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+  .cats-2 { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+  .cat { position: relative; }
+  .cat input { position: absolute; opacity: 0; pointer-events: none; }
+  .cat span {
+    display: block; text-align: center; cursor: pointer;
+    border: 1.5px solid var(--border); border-radius: 11px; padding: 14px 10px;
+    font-size: .9rem; font-weight: 600; color: var(--text-sub); transition: .15s;
+  }
+  .cat span small { display: block; font-weight: 400; font-size: .76rem; margin-top: 3px; }
+  .cat input:checked + span { border-color: var(--primary); background: var(--feature-bg); color: var(--primary-dark); }
+  .cat input:focus-visible + span { outline: 2px solid var(--primary); }
+
+  /* Drop zone */
+  .drop {
+    border: 1.5px dashed var(--border); border-radius: 11px; padding: 22px;
+    text-align: center; cursor: pointer; color: var(--text-sub); font-size: .9rem; transition: .15s;
+    min-height: 76px; display: flex; align-items: center; justify-content: center;
+    touch-action: manipulation; -webkit-user-select: none; user-select: none;
+  }
+  .drop:hover, .drop.over, .drop:active { border-color: var(--primary); background: var(--feature-bg); }
+  .thumbs { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+  .thumb { position: relative; width: 88px; height: 88px; border-radius: 9px; overflow: hidden; border: 1px solid var(--border); }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb button {
+    position: absolute; top: 2px; right: 2px; width: 30px; height: 30px; min-height: 0; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%; background: rgba(0,0,0,.62); color: #fff; font-size: 1rem; line-height: 1; border: none;
+  }
+
+  /* Alerts */
+  .alert { border-radius: 10px; padding: 12px 16px; font-size: .9rem; margin-bottom: 18px; }
+  .alert-ok   { background: #F1F8F2; border: 1px solid #CDE6D2; color: #2F6B3C; }
+  .alert-err  { background: var(--bug-bg); border: 1px solid #F0C9C9; color: #9C3838; }
+  .alert-info { background: var(--feature-bg); border: 1px solid #CFE3E5; color: var(--primary-dark); }
+
+  /* Tabs */
+  .tabs {
+    display: flex; gap: 6px; flex-wrap: wrap; border-bottom: 1px solid var(--border); margin-bottom: 22px;
+    overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    background: none; border: none; border-bottom: 2px solid transparent;
+    padding: 10px 14px; color: var(--text-sub); border-radius: 0; font-size: .92rem;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .tab.active { color: var(--primary-dark); border-bottom-color: var(--primary); }
+  .tab .count {
+    display: inline-block; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 999px; padding: 0 7px; font-size: .74rem; margin-left: 6px;
+  }
+
+  /* Report cards */
+  .report { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; margin-bottom: 14px; }
+  .report-top { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+  .report h3 { font-size: 1rem; font-weight: 700; }
+  .tag {
+    display: inline-block; border-radius: 999px; padding: 2px 10px;
+    font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
+  }
+  .tag-bug { background: var(--bug-bg); color: var(--bug); border: 1px solid #F0C9C9; }
+  .tag-feature { background: var(--feature-bg); color: var(--feature); border: 1px solid #CFE3E5; }
+  .tag-improvement { background: var(--improvement-bg); color: var(--improvement); border: 1px solid #EBD9B4; }
+  .tag-status { background: var(--bg); color: var(--text-sub); border: 1px solid var(--border); }
+  .report .meta { font-size: .8rem; color: var(--text-sub); margin-top: 4px; }
+  .report .body { font-size: .93rem; color: var(--text-sub); margin-top: 10px; white-space: pre-wrap; }
+  .shots { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .shots a { display: block; width: 76px; height: 76px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+  .shots img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .report-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+  .report-actions select { width: auto; min-width: 140px; padding: 8px 34px 8px 10px; min-height: 40px; }
+
+  .empty { text-align: center; color: var(--text-sub); font-size: .92rem; padding: 36px 20px; border: 1px dashed var(--border); border-radius: 12px; }
+
+  /* Tester list */
+  .tester-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 11px 0; border-bottom: 1px solid var(--border); font-size: .92rem;
+  }
+  .tester-row:last-child { border-bottom: none; }
+  .tester-row .email { font-weight: 600; word-break: break-all; }
+  .tester-row .when { font-size: .8rem; color: var(--text-sub); }
+
+  .stats { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); margin-bottom: 22px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 11px; padding: 14px 16px; }
+  .stat b { display: block; font-size: 1.5rem; line-height: 1.2; }
+  .stat span { font-size: .8rem; color: var(--text-sub); }
+
+  .hidden { display: none !important; }
+
+  footer {
+    background: var(--surface); border-top: 1px solid var(--border); padding: 28px 0; margin-top: 20px;
+    padding-bottom: calc(28px + env(safe-area-inset-bottom));
+  }
+  .footer-inner {
+    max-width: 920px; margin: 0 auto; padding: 0 24px;
+    display: flex; flex-wrap: wrap; gap: 14px; justify-content: space-between;
+    font-size: .86rem; color: var(--text-sub);
+  }
+  .footer-inner a { color: var(--primary-dark); text-decoration: none; margin-right: 16px; }
+  .footer-inner a:hover { text-decoration: underline; }
+
+  /* ============================================================
+     MOBILE  (phones / small tablets)
+     ============================================================ */
+  @media (max-width: 760px) {
+    .container { padding: 0 16px; }
+    section { padding: 24px 0; }
+
+    /* Header: brand on the left, actions wrap onto their own line */
+    .nav { padding: 10px 16px; gap: 10px; }
+    .brand img { width: 30px; height: 30px; }
+    .brand span { font-size: 1rem; }
+    .nav-right {
+      gap: 10px; width: 100%; justify-content: flex-start;
+      order: 2; row-gap: 8px;
+    }
+    .who { width: 100%; font-size: .8rem; }
+
+    /* Hero */
+    .hero { padding: 30px 18px 26px; }
+    .hero p { font-size: .95rem; }
+
+    h2 { font-size: 1.12rem; }
+
+    /* Cards get less padding so form fields keep their width */
+    .card { padding: 18px 16px; border-radius: 12px; }
+    .card + .card { margin-top: 14px; }
+
+    /* Stack every multi-column grid */
+    .row { grid-template-columns: 1fr; gap: 14px; }
+    .cats { grid-template-columns: 1fr; gap: 10px; }
+    .cats .cat span { text-align: left; padding: 13px 14px; min-height: 56px; }
+    .cats-2 { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .cats-2 .cat span { text-align: center; padding: 12px 8px; }
+    .stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .stat { padding: 12px 14px; }
+    .stat b { font-size: 1.3rem; }
+
+    /* Full-width primary actions are much easier to hit with a thumb */
+    #submitBtn, #addTesterForm button { width: 100%; }
+    #addTesterForm { grid-template-columns: 1fr; }
+
+    .tabs { margin-bottom: 16px; flex-wrap: nowrap; }
+    .tab { padding: 10px 12px; font-size: .88rem; }
+
+    /* Reports */
+    .report { padding: 15px 16px; }
+    .report-top { gap: 8px; }
+    .report h3 { font-size: .98rem; width: 100%; }
+    .report-actions select { flex: 1 1 auto; min-width: 0; }
+    .report-actions .btn-danger { flex: 0 0 auto; }
+    .shots a { width: 84px; height: 84px; }
+
+    /* Tester + access-request rows stack instead of squeezing */
+    .tester-row { flex-direction: column; align-items: stretch; gap: 10px; padding: 14px 0; }
+    .tester-row > span:last-child { justify-content: flex-start; }
+    .tester-row .btn-sm { flex: 1 1 0; }
+
+    .drop { padding: 20px 14px; }
+    .thumb { width: 76px; height: 76px; }
+
+    .footer-inner { flex-direction: column; gap: 10px; padding: 0 16px; }
+    .footer-inner a { display: inline-block; margin: 0 14px 6px 0; }
+  }
+
+  @media (max-width: 380px) {
+    .container { padding: 0 12px; }
+    .card { padding: 16px 13px; }
+    .stats { grid-template-columns: 1fr 1fr; }
+    .brand span { font-size: .95rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a class="brand" href="/">
+      <img src="/sr_logo.png" alt="RehabCardia logo">
+      <span>RehabCardia</span>
+    </a>
+    <span class="nav-right">
+      <span id="whoami" class="who hidden"></span>
+      <button id="switchBtn" class="btn-ghost btn-sm hidden" type="button">Submit a report</button>
+      <button id="signOutBtn" class="btn-ghost btn-sm hidden" type="button">Sign out</button>
+      <a class="contact" href="/user-manual.html">User Manual</a>
+      <a class="contact" href="mailto:sr.cardiocare@gmail.com">Contact us</a>
+    </span>
+  </nav>
+</header>
+
+<div class="hero">
+  <span class="pill">Internal</span>
+  <h1>Testing Portal</h1>
+  <p>Report bugs, request features, and suggest improvements for the RehabCardia app.</p>
+</div>
+
+<!-- ============ GATE ============ -->
+<section id="gateView">
+  <div class="container" style="max-width:520px;">
+    <div class="card">
+      <h2>Sign in</h2>
+      <p class="sub">Enter the email address that was added to the tester list. No password needed.</p>
+      <div id="gateAlert"></div>
+      <form id="gateForm">
+        <div class="field">
+          <label for="gateEmail">Email address</label>
+          <input id="gateEmail" type="email" inputmode="email" autocomplete="email"
+                 autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go"
+                 placeholder="you@example.com" required>
+          <p class="hint">Not on the list yet? Enter your email and you can request access.</p>
+        </div>
+        <button id="gateBtn" class="btn-primary" type="submit" style="width:100%">Continue</button>
+      </form>
+
+      <!-- shown when the email isn't on the list -->
+      <form id="requestForm" class="hidden" style="margin-top:22px;padding-top:22px;border-top:1px solid var(--border);">
+        <h2 style="font-size:1.05rem;">Request access</h2>
+        <p class="sub">We'll send this to the admin. You'll be able to sign in as soon as it's approved.</p>
+        <div class="field">
+          <label for="reqName">Your name</label>
+          <input id="reqName" type="text" maxlength="80" autocomplete="name" enterkeyhint="next" placeholder="Jane Doe" required>
+        </div>
+        <div class="field">
+          <label for="reqNote">Anything the admin should know? <span style="font-weight:400;color:var(--text-sub)">(optional)</span></label>
+          <input id="reqNote" type="text" maxlength="160" enterkeyhint="send" placeholder="e.g. QA on the doctor dashboard">
+        </div>
+        <button id="reqBtn" class="btn-primary" type="submit" style="width:100%">Send request</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TESTER ============ -->
+<section id="testerView" class="hidden">
+  <div class="container">
+    <div class="card">
+      <h2>Submit a report</h2>
+      <p class="sub">Tell us what happened. Screenshots make bugs far easier to fix.</p>
+      <div id="submitAlert"></div>
+      <form id="reportForm">
+        <div class="field">
+          <label>What kind of report is this?</label>
+          <div class="cats">
+            <label class="cat">
+              <input type="radio" name="category" value="bug" checked>
+              <span>Bug<small>Something is broken</small></span>
+            </label>
+            <label class="cat">
+              <input type="radio" name="category" value="feature">
+              <span>Feature request<small>Something is missing</small></span>
+            </label>
+            <label class="cat">
+              <input type="radio" name="category" value="improvement">
+              <span>Improvement<small>Something could be better</small></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Which side of the app were you testing?</label>
+          <div class="cats cats-2">
+            <label class="cat">
+              <input type="radio" name="role" value="patient" checked>
+              <span>Patient<small>Patient-facing screens</small></span>
+            </label>
+            <label class="cat">
+              <input type="radio" name="role" value="doctor">
+              <span>Doctor<small>Doctor / clinic screens</small></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="rPage">Which page or screen?</label>
+          <select id="rPage" required></select>
+          <p class="hint">Pick the screen where you saw it. Choose "Other" if it isn't listed.</p>
+        </div>
+
+        <div class="field hidden" id="pageOtherWrap">
+          <label for="rPageOther">Describe the screen</label>
+          <input id="rPageOther" type="text" maxlength="80" placeholder="e.g. Password reset email">
+        </div>
+
+        <div class="field">
+          <label for="rTitle">Title</label>
+          <input id="rTitle" type="text" maxlength="120" enterkeyhint="next" placeholder="Short summary — e.g. Workout timer resets on rotation" required>
+        </div>
+
+        <div class="field">
+          <label for="rDesc">Details</label>
+          <textarea id="rDesc" placeholder="Steps to reproduce, what you expected, what actually happened." required></textarea>
+        </div>
+
+        <div class="row field">
+          <div>
+            <label for="rSeverity">Severity</label>
+            <select id="rSeverity">
+              <option value="low">Low — cosmetic</option>
+              <option value="medium" selected>Medium — annoying</option>
+              <option value="high">High — blocks a task</option>
+              <option value="critical">Critical — app unusable</option>
+            </select>
+          </div>
+          <div>
+            <label for="rDevice">Device / OS</label>
+            <input id="rDevice" type="text" maxlength="80" enterkeyhint="done" placeholder="Pixel 7, Android 14">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Screenshots <span style="font-weight:400;color:var(--text-sub)">(optional, up to 5)</span></label>
+          <div id="drop" class="drop" tabindex="0" role="button">
+            <span id="dropText">Click to choose images, or drag &amp; drop here</span>
+          </div>
+          <input id="fileInput" type="file" accept="image/*" multiple class="hidden">
+          <div id="thumbs" class="thumbs"></div>
+        </div>
+
+        <button id="submitBtn" class="btn-primary" type="submit">Submit report</button>
+      </form>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============ ADMIN ============ -->
+<section id="adminView" class="hidden">
+  <div class="container">
+
+    <div class="stats" id="stats"></div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div>
+          <h2>Reports</h2>
+          <p class="sub" style="margin-bottom:0;">Submitted by testers, grouped by type.</p>
+        </div>
+        <button id="refreshAll" class="btn-ghost btn-sm" type="button">Refresh</button>
+      </div>
+
+      <div class="tabs" id="tabs" style="margin-top:20px;">
+        <button class="tab active" data-cat="all">All <span class="count" id="c-all">0</span></button>
+        <button class="tab" data-cat="bug">Bugs <span class="count" id="c-bug">0</span></button>
+        <button class="tab" data-cat="feature">Feature requests <span class="count" id="c-feature">0</span></button>
+        <button class="tab" data-cat="improvement">Improvements <span class="count" id="c-improvement">0</span></button>
+      </div>
+
+      <div class="field row" style="margin-bottom:18px;max-width:520px;">
+        <select id="statusFilter">
+          <option value="all">All statuses</option>
+          <option value="open">Open</option>
+          <option value="in_progress">In progress</option>
+          <option value="resolved">Resolved</option>
+          <option value="wont_fix">Won't fix</option>
+        </select>
+        <select id="roleFilter">
+          <option value="all">Patient &amp; doctor</option>
+          <option value="patient">Patient side only</option>
+          <option value="doctor">Doctor side only</option>
+        </select>
+      </div>
+
+      <div id="allReports"></div>
+    </div>
+
+    <div class="card" id="pendingCard" style="margin-top:24px;">
+      <h2>Access requests <span class="count" id="pendingCount" style="background:var(--bug-bg);border:1px solid #F0C9C9;color:var(--bug);border-radius:999px;padding:0 9px;font-size:.8rem;">0</span></h2>
+      <p class="sub">People who entered their email and asked to join. Approve to let them in.</p>
+      <div id="pendingList"></div>
+    </div>
+
+    <div class="card" style="margin-top:24px;">
+      <h2>Testers</h2>
+      <p class="sub">Only these email addresses can sign in and submit reports.</p>
+      <div id="testerAlert"></div>
+      <form id="addTesterForm" class="row" style="align-items:end;margin-bottom:20px;">
+        <div>
+          <label for="newTesterEmail">Email address</label>
+          <input id="newTesterEmail" type="email" inputmode="email" autocomplete="off"
+                 autocapitalize="off" autocorrect="off" spellcheck="false"
+                 placeholder="tester@example.com" required>
+        </div>
+        <div>
+          <label for="newTesterName">Name <span style="font-weight:400;color:var(--text-sub)">(optional)</span></label>
+          <input id="newTesterName" type="text" placeholder="Jane Doe">
+        </div>
+        <div><button class="btn-primary" type="submit" style="width:100%">Add tester</button></div>
+      </form>
+      <div id="testerList"></div>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <span>© 2026 RehabCardia. Powered by SRET-AIDA.</span>
+    <span>
+      <a href="/">Home</a>
+      <a href="/user-manual.html">User Manual</a>
+      <a href="/privacy-policy.html">Privacy Policy</a>
+      <a href="mailto:sr.cardiocare@gmail.com">sr.cardiocare@gmail.com</a>
+    </span>
+  </div>
+</footer>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+/* ============================================================
+   CONFIG
+   ============================================================ */
+const SUPABASE_URL = 'https://eilwwgahluubrrsjgroo.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_rDIjh1A_tuxmG3mc5nwsug_9dP53N3j';
+const BUCKET       = 'test-screenshots';
+
+// Emails that unlock the admin panel.
+const ADMIN_EMAILS = [
+  'shanebraiden48@gmail.com',
+  'sr.cardiocare@gmail.com'
+];
+
+const MAX_FILES = 5;
+// Phone camera shots are often 6–15 MB; they get downscaled before upload,
+// so the limit here only needs to catch genuinely huge files.
+const MAX_FILE_MB = 20;
+// Anything bigger than this is resized/re-encoded so uploads work on mobile data.
+const COMPRESS_ABOVE_KB = 400;
+const MAX_IMAGE_EDGE = 1600;
+
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* ============================================================
+   STATE + HELPERS
+   ============================================================ */
+let currentEmail = null;
+let isAdmin = false;
+let pendingFiles = [];
+let allReports = [];
+let activeCat = 'all';
+
+const $  = (id) => document.getElementById(id);
+const norm = (e) => (e || '').trim().toLowerCase();
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
+  ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+
+const CAT_LABEL = { bug: 'Bug', feature: 'Feature request', improvement: 'Improvement' };
+const ROLE_LABEL = { patient: 'Patient', doctor: 'Doctor' };
+const STATUS_LABEL = { open: 'Open', in_progress: 'In progress', resolved: 'Resolved', wont_fix: "Won't fix" };
+const SEV_LABEL = { low: 'Low', medium: 'Medium', high: 'High', critical: 'Critical' };
+
+function alertBox(el, msg, kind = 'err') {
+  el.innerHTML = msg ? `<div class="alert alert-${kind}">${esc(msg)}</div>` : '';
+}
+
+function when(ts) {
+  const d = new Date(ts);
+  return d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+}
+
+/* ============================================================
+   SIGN IN GATE
+   ============================================================ */
+$('gateForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = norm($('gateEmail').value);
+  const btn = $('gateBtn');
+  alertBox($('gateAlert'), '');
+
+  if (!email) return;
+
+  btn.disabled = true;
+  btn.textContent = 'Checking…';
+  $('requestForm').classList.add('hidden');
+
+  try {
+    if (ADMIN_EMAILS.map(norm).includes(email)) {
+      signIn(email, true);
+      return;
+    }
+    const { data, error } = await sb
+      .from('test_testers').select('email, status').eq('email', email).maybeSingle();
+    if (error) throw error;
+
+    if (data && data.status === 'approved') {
+      signIn(email, false);
+    } else if (data && data.status === 'pending') {
+      alertBox($('gateAlert'),
+        'Your request is still waiting for admin approval. Try again once it\'s been accepted.', 'info');
+    } else if (data && data.status === 'declined') {
+      alertBox($('gateAlert'), 'This email was not approved for testing access.');
+    } else {
+      alertBox($('gateAlert'),
+        'That email isn\'t on the tester list yet — request access below.', 'info');
+      $('requestForm').classList.remove('hidden');
+      $('reqName').focus();
+    }
+  } catch (err) {
+    alertBox($('gateAlert'), 'Could not reach the server: ' + (err.message || err));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Continue';
+  }
+});
+
+// Re-checking a different email hides any open request form.
+$('gateEmail').addEventListener('input', () => {
+  $('requestForm').classList.add('hidden');
+  alertBox($('gateAlert'), '');
+});
+
+/* ---------- Request access ---------- */
+$('requestForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = norm($('gateEmail').value);
+  const btn = $('reqBtn');
+  if (!email) return;
+
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+
+  try {
+    const { error } = await sb.from('test_testers').insert({
+      email,
+      name: $('reqName').value.trim() || null,
+      note: $('reqNote').value.trim() || null,
+      status: 'pending'
+    });
+    if (error) throw error;
+
+    $('requestForm').classList.add('hidden');
+    $('requestForm').reset();
+    alertBox($('gateAlert'),
+      'Request sent. You\'ll be able to sign in with this email once the admin approves it.', 'ok');
+  } catch (err) {
+    alertBox($('gateAlert'),
+      err.code === '23505'
+        ? 'A request for this email already exists.'
+        : 'Could not send the request: ' + (err.message || err));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Send request';
+  }
+});
+
+function signIn(email, admin) {
+  currentEmail = email;
+  isAdmin = admin;
+  try { localStorage.setItem('rc_test_email', email); } catch {}
+
+  $('gateView').classList.add('hidden');
+  $('whoami').classList.remove('hidden');
+  $('signOutBtn').classList.remove('hidden');
+  $('whoami').innerHTML = `${admin ? 'Admin' : 'Tester'} · <b>${esc(email)}</b>`;
+
+  if (admin) {
+    $('switchBtn').classList.remove('hidden');
+    $('adminView').classList.remove('hidden');
+    loadAllReports();
+    loadTesters();
+  } else {
+    $('testerView').classList.remove('hidden');
+  }
+}
+
+// Admins can flip between the dashboard and the report form.
+$('switchBtn').addEventListener('click', () => {
+  const onAdmin = !$('adminView').classList.contains('hidden');
+  $('adminView').classList.toggle('hidden', onAdmin);
+  $('testerView').classList.toggle('hidden', !onAdmin);
+  $('switchBtn').textContent = onAdmin ? 'Back to dashboard' : 'Submit a report';
+  if (!onAdmin) loadAllReports();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+$('signOutBtn').addEventListener('click', () => {
+  try { localStorage.removeItem('rc_test_email'); } catch {}
+  location.reload();
+});
+
+// Restore a previous session
+(async function restore() {
+  let saved = null;
+  try { saved = localStorage.getItem('rc_test_email'); } catch {}
+  if (!saved) return;
+  saved = norm(saved);
+  if (ADMIN_EMAILS.map(norm).includes(saved)) return signIn(saved, true);
+  const { data } = await sb.from('test_testers')
+    .select('email, status').eq('email', saved).maybeSingle();
+  if (data && data.status === 'approved') signIn(saved, false);
+})();
+
+/* ============================================================
+   ROLE → PAGE LIST
+   ============================================================ */
+const PAGES = {
+  patient: [
+    'Sign in / first-time setup',
+    'Onboarding (welcome, goals, injury)',
+    'Home dashboard',
+    'Exercise / assignment list',
+    'Workout player',
+    'Post-workout feedback',
+    'Progress & analytics',
+    'Schedule & appointments',
+    'Chat with doctor',
+    'Notifications',
+    'Profile & account settings'
+  ],
+  doctor: [
+    'Sign in / first-time setup',
+    'Doctor dashboard',
+    'Patient list',
+    'Patient profile',
+    'Add patient',
+    'Exercise library',
+    'Assigning exercises',
+    'Reviewing feedback',
+    'Chat with patient',
+    'Schedule management',
+    'Notifications',
+    'Profile & account settings'
+  ]
+};
+const EXTRA_PAGES = ['Whole app / not screen-specific', 'Other (describe below)'];
+
+function fillPages(role) {
+  const sel = $('rPage');
+  sel.innerHTML =
+    '<option value="" disabled selected>Choose a screen…</option>' +
+    PAGES[role].map((p) => `<option value="${esc(p)}">${esc(p)}</option>`).join('') +
+    EXTRA_PAGES.map((p) => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
+  togglePageOther();
+}
+
+function togglePageOther() {
+  const other = $('rPage').value.startsWith('Other');
+  $('pageOtherWrap').classList.toggle('hidden', !other);
+  $('rPageOther').required = other;
+}
+
+document.querySelectorAll('input[name=role]').forEach((r) =>
+  r.addEventListener('change', () => fillPages(r.value)));
+$('rPage').addEventListener('change', togglePageOther);
+fillPages('patient');
+
+// Touch devices have no hover and no drag & drop — some copy adapts to this.
+const isTouch = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+
+/* ============================================================
+   FILE PICKING
+   ============================================================ */
+const drop = $('drop');
+const fileInput = $('fileInput');
+
+// Phones and tablets have no drag & drop — say what actually works there.
+if (isTouch) {
+  $('dropText').textContent = 'Tap to add screenshots from your camera or gallery';
+}
+
+drop.addEventListener('click', () => fileInput.click());
+drop.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
+});
+['dragenter', 'dragover'].forEach((ev) =>
+  drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach((ev) =>
+  drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', (e) => addFiles(e.dataTransfer.files));
+fileInput.addEventListener('change', () => { addFiles(fileInput.files); fileInput.value = ''; });
+
+function addFiles(list) {
+  alertBox($('submitAlert'), '');
+  for (const f of list) {
+    if (pendingFiles.length >= MAX_FILES) {
+      alertBox($('submitAlert'), `You can attach up to ${MAX_FILES} images.`);
+      break;
+    }
+    if (!f.type.startsWith('image/')) {
+      alertBox($('submitAlert'), `"${f.name}" is not an image.`);
+      continue;
+    }
+    if (f.size > MAX_FILE_MB * 1024 * 1024) {
+      alertBox($('submitAlert'), `"${f.name}" is larger than ${MAX_FILE_MB} MB.`);
+      continue;
+    }
+    pendingFiles.push(f);
+  }
+  renderThumbs();
+}
+
+let thumbUrls = [];
+
+function renderThumbs() {
+  const box = $('thumbs');
+  // Release the previous previews — phones are tight on memory.
+  thumbUrls.forEach((u) => URL.revokeObjectURL(u));
+  thumbUrls = [];
+  box.innerHTML = '';
+  pendingFiles.forEach((f, i) => {
+    const div = document.createElement('div');
+    div.className = 'thumb';
+    const img = document.createElement('img');
+    const url = URL.createObjectURL(f);
+    thumbUrls.push(url);
+    img.src = url;
+    img.alt = f.name;
+    const rm = document.createElement('button');
+    rm.type = 'button';
+    rm.textContent = '×';
+    rm.title = 'Remove';
+    rm.addEventListener('click', () => { pendingFiles.splice(i, 1); renderThumbs(); });
+    div.append(img, rm);
+    box.appendChild(div);
+  });
+}
+
+/* ============================================================
+   IMAGE DOWNSCALING
+   A 12 MP phone screenshot is ~6 MB. Resizing it to 1600px and
+   re-encoding as JPEG usually lands under 300 KB, which is the
+   difference between a 2-second and a 40-second upload on mobile data.
+   ============================================================ */
+async function shrinkImage(file) {
+  if (file.size < COMPRESS_ABOVE_KB * 1024) return file;
+  if (!/^image\/(jpeg|png|webp)$/i.test(file.type)) return file;
+  if (typeof createImageBitmap !== 'function') return file;
+
+  try {
+    const bmp = await createImageBitmap(file);
+    const scale = Math.min(1, MAX_IMAGE_EDGE / Math.max(bmp.width, bmp.height));
+    const w = Math.max(1, Math.round(bmp.width * scale));
+    const h = Math.max(1, Math.round(bmp.height * scale));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(bmp, 0, 0, w, h);
+    if (bmp.close) bmp.close();
+
+    const blob = await new Promise((res) => canvas.toBlob(res, 'image/jpeg', 0.82));
+    canvas.width = canvas.height = 0; // free the backing store
+
+    if (!blob || blob.size >= file.size) return file;
+    const base = file.name.replace(/\.[^.]+$/, '') || 'screenshot';
+    return new File([blob], base + '.jpg', { type: 'image/jpeg' });
+  } catch {
+    return file; // if anything goes wrong, upload the original
+  }
+}
+
+/* ============================================================
+   SUBMIT REPORT
+   ============================================================ */
+$('reportForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = $('submitBtn');
+  alertBox($('submitAlert'), '');
+  btn.disabled = true;
+  btn.textContent = 'Submitting…';
+
+  try {
+    const urls = [];
+    for (let i = 0; i < pendingFiles.length; i++) {
+      btn.textContent = `Preparing image ${i + 1} of ${pendingFiles.length}…`;
+      const f = await shrinkImage(pendingFiles[i]);
+      btn.textContent = `Uploading image ${i + 1} of ${pendingFiles.length}…`;
+      const ext = (f.name.split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const path = `${currentEmail.replace(/[^a-z0-9]/gi, '_')}/${Date.now()}_${i}.${ext}`;
+      const { error: upErr } = await sb.storage.from(BUCKET)
+        .upload(path, f, { cacheControl: '3600', upsert: false });
+      if (upErr) throw new Error('Image upload failed: ' + upErr.message);
+      const { data: pub } = sb.storage.from(BUCKET).getPublicUrl(path);
+      urls.push(pub.publicUrl);
+    }
+
+    btn.textContent = 'Saving…';
+    const pageChoice = $('rPage').value;
+    const page = pageChoice.startsWith('Other')
+      ? ($('rPageOther').value.trim() || 'Other')
+      : pageChoice;
+
+    const { error } = await sb.from('test_reports').insert({
+      email:       currentEmail,
+      category:    document.querySelector('input[name=category]:checked').value,
+      role:        document.querySelector('input[name=role]:checked').value,
+      page,
+      title:       $('rTitle').value.trim(),
+      description: $('rDesc').value.trim(),
+      severity:    $('rSeverity').value,
+      device:      $('rDevice').value.trim() || null,
+      image_urls:  urls
+    });
+    if (error) throw error;
+
+    $('reportForm').reset();
+    fillPages('patient');
+    pendingFiles = [];
+    renderThumbs();
+    alertBox($('submitAlert'), 'Thanks — your report was submitted.', 'ok');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch (err) {
+    alertBox($('submitAlert'), err.message || String(err));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Submit report';
+  }
+});
+
+/* ============================================================
+   RENDER REPORTS
+   ============================================================ */
+function reportHTML(r, admin) {
+  const shots = (r.image_urls || []).map((u) =>
+    `<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="screenshot" loading="lazy"></a>`
+  ).join('');
+
+  const metaBits = [
+    admin ? esc(r.email) : null,
+    when(r.created_at),
+    r.page ? `${ROLE_LABEL[r.role] || esc(r.role)} · ${esc(r.page)}` : (ROLE_LABEL[r.role] || null),
+    r.severity ? `Severity: ${SEV_LABEL[r.severity] || r.severity}` : null,
+    r.device ? esc(r.device) : null
+  ].filter(Boolean).join(' · ');
+
+  const actions = admin ? `
+    <div class="report-actions">
+      <label style="margin:0;font-weight:400;font-size:.84rem;color:var(--text-sub)">Status</label>
+      <select data-status-for="${esc(r.id)}">
+        ${Object.entries(STATUS_LABEL).map(([v, l]) =>
+          `<option value="${v}"${r.status === v ? ' selected' : ''}>${l}</option>`).join('')}
+      </select>
+      <button class="btn-danger btn-sm" data-delete="${esc(r.id)}" type="button">Delete</button>
+    </div>` : '';
+
+  return `
+    <article class="report">
+      <div class="report-top">
+        <h3>${esc(r.title)}</h3>
+        <span>
+          <span class="tag tag-${esc(r.category)}">${CAT_LABEL[r.category] || esc(r.category)}</span>
+          <span class="tag tag-status">${STATUS_LABEL[r.status] || esc(r.status)}</span>
+        </span>
+      </div>
+      <div class="meta">${metaBits}</div>
+      <div class="body">${esc(r.description)}</div>
+      ${shots ? `<div class="shots">${shots}</div>` : ''}
+      ${actions}
+    </article>`;
+}
+
+/* ---------- Admin ---------- */
+async function loadAllReports() {
+  const box = $('allReports');
+  box.innerHTML = '<div class="empty">Loading…</div>';
+  const { data, error } = await sb.from('test_reports')
+    .select('*').order('created_at', { ascending: false });
+
+  if (error) { box.innerHTML = `<div class="alert alert-err">${esc(error.message)}</div>`; return; }
+  allReports = data;
+  renderStats();
+  renderAdminReports();
+}
+$('refreshAll').addEventListener('click', loadAllReports);
+
+function renderStats() {
+  const open = allReports.filter((r) => r.status === 'open').length;
+  const cells = [
+    ['Total', allReports.length],
+    ['Open', open],
+    ['Bugs', allReports.filter((r) => r.category === 'bug').length],
+    ['Features', allReports.filter((r) => r.category === 'feature').length],
+    ['Improvements', allReports.filter((r) => r.category === 'improvement').length]
+  ];
+  $('stats').innerHTML = cells
+    .map(([label, n]) => `<div class="stat"><b>${n}</b><span>${label}</span></div>`).join('');
+
+  ['all', 'bug', 'feature', 'improvement'].forEach((c) => {
+    $('c-' + c).textContent = c === 'all'
+      ? allReports.length
+      : allReports.filter((r) => r.category === c).length;
+  });
+}
+
+function renderAdminReports() {
+  const status = $('statusFilter').value;
+  const role = $('roleFilter').value;
+  const rows = allReports.filter((r) =>
+    (activeCat === 'all' || r.category === activeCat) &&
+    (status === 'all' || r.status === status) &&
+    (role === 'all' || r.role === role));
+
+  $('allReports').innerHTML = rows.length
+    ? rows.map((r) => reportHTML(r, true)).join('')
+    : '<div class="empty">Nothing here yet.</div>';
+}
+
+$('tabs').addEventListener('click', (e) => {
+  const tab = e.target.closest('.tab');
+  if (!tab) return;
+  document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
+  tab.classList.add('active');
+  activeCat = tab.dataset.cat;
+  renderAdminReports();
+});
+
+$('statusFilter').addEventListener('change', renderAdminReports);
+$('roleFilter').addEventListener('change', renderAdminReports);
+
+// Status change + delete (event delegation)
+$('allReports').addEventListener('change', async (e) => {
+  const id = e.target.dataset.statusFor;
+  if (!id) return;
+  const { error } = await sb.from('test_reports').update({ status: e.target.value }).eq('id', id);
+  if (error) return alert('Could not update: ' + error.message);
+  const r = allReports.find((x) => x.id === id);
+  if (r) r.status = e.target.value;
+  renderStats();
+  renderAdminReports();
+});
+
+$('allReports').addEventListener('click', async (e) => {
+  const btn = e.target.closest('[data-delete]');
+  if (!btn) return;
+  if (!confirm('Delete this report permanently?')) return;
+  const id = btn.dataset.delete;
+  const { error } = await sb.from('test_reports').delete().eq('id', id);
+  if (error) return alert('Could not delete: ' + error.message);
+  allReports = allReports.filter((r) => r.id !== id);
+  renderStats();
+  renderAdminReports();
+});
+
+/* ============================================================
+   TESTER MANAGEMENT (admin)
+   ============================================================ */
+async function loadTesters() {
+  const box = $('testerList');
+  const pend = $('pendingList');
+  box.innerHTML = '<div class="empty">Loading…</div>';
+  pend.innerHTML = '<div class="empty">Loading…</div>';
+
+  const { data, error } = await sb.from('test_testers')
+    .select('*').order('created_at', { ascending: false });
+
+  if (error) {
+    const msg = `<div class="alert alert-err">${esc(error.message)}</div>`;
+    box.innerHTML = msg; pend.innerHTML = '';
+    return;
+  }
+
+  const pending  = data.filter((t) => t.status === 'pending');
+  const approved = data.filter((t) => t.status !== 'pending');
+
+  $('pendingCount').textContent = pending.length;
+  $('pendingCard').style.opacity = pending.length ? '1' : '.75';
+
+  pend.innerHTML = pending.length
+    ? pending.map((t) => `
+        <div class="tester-row">
+          <span>
+            <span class="email">${esc(t.email)}</span>
+            ${t.name ? `<span class="when"> — ${esc(t.name)}</span>` : ''}
+            ${t.note ? `<div class="when">“${esc(t.note)}”</div>` : ''}
+            <div class="when">Requested ${when(t.created_at)}</div>
+          </span>
+          <span style="display:flex;gap:8px;flex-shrink:0;">
+            <button class="btn-primary btn-sm" data-approve="${esc(t.email)}" type="button">Approve</button>
+            <button class="btn-danger btn-sm" data-decline="${esc(t.email)}" type="button">Decline</button>
+          </span>
+        </div>`).join('')
+    : '<div class="empty">No pending requests.</div>';
+
+  box.innerHTML = approved.length
+    ? approved.map((t) => `
+        <div class="tester-row">
+          <span>
+            <span class="email">${esc(t.email)}</span>
+            ${t.name ? `<span class="when"> — ${esc(t.name)}</span>` : ''}
+            ${t.status === 'declined' ? '<span class="tag tag-status" style="margin-left:6px;">Declined</span>' : ''}
+            <div class="when">Added ${when(t.created_at)}</div>
+          </span>
+          <span style="display:flex;gap:8px;flex-shrink:0;">
+            ${t.status === 'declined'
+              ? `<button class="btn-ghost btn-sm" data-approve="${esc(t.email)}" type="button">Approve</button>`
+              : ''}
+            <button class="btn-danger btn-sm" data-remove="${esc(t.email)}" type="button">Remove</button>
+          </span>
+        </div>`).join('')
+    : '<div class="empty">No testers added yet.</div>';
+}
+
+// Approve / decline (works from either list)
+async function setTesterStatus(email, status) {
+  const { error } = await sb.from('test_testers').update({ status }).eq('email', email);
+  if (error) return alertBox($('testerAlert'), error.message);
+  alertBox($('testerAlert'),
+    status === 'approved'
+      ? `${email} can now sign in and submit reports.`
+      : `${email} was declined.`,
+    status === 'approved' ? 'ok' : 'info');
+  loadTesters();
+}
+
+$('pendingList').addEventListener('click', (e) => {
+  const ok = e.target.closest('[data-approve]');
+  const no = e.target.closest('[data-decline]');
+  if (ok) return setTesterStatus(ok.dataset.approve, 'approved');
+  if (no && confirm(`Decline ${no.dataset.decline}?`)) setTesterStatus(no.dataset.decline, 'declined');
+});
+
+$('addTesterForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = norm($('newTesterEmail').value);
+  const name = $('newTesterName').value.trim() || null;
+  alertBox($('testerAlert'), '');
+  if (!email) return;
+
+  // Manual adds are approved straight away; upsert so a pending request gets accepted.
+  const { error } = await sb.from('test_testers')
+    .upsert({ email, name, status: 'approved' }, { onConflict: 'email' });
+  if (error) { alertBox($('testerAlert'), error.message); return; }
+  $('addTesterForm').reset();
+  alertBox($('testerAlert'), `${email} can now sign in and submit reports.`, 'ok');
+  loadTesters();
+});
+
+$('testerList').addEventListener('click', async (e) => {
+  const ok = e.target.closest('[data-approve]');
+  if (ok) return setTesterStatus(ok.dataset.approve, 'approved');
+
+  const btn = e.target.closest('[data-remove]');
+  if (!btn) return;
+  const email = btn.dataset.remove;
+  if (!confirm(`Remove ${email} from the tester list?`)) return;
+  const { error } = await sb.from('test_testers').delete().eq('email', email);
+  if (error) return alertBox($('testerAlert'), error.message);
+  loadTesters();
+});
+</script>
+
+</body>
+</html>

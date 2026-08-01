@@ -229,10 +229,11 @@ object FirebaseService {
     suspend fun abandonSession(sessionId: String) = SessionRepository.abandonSession(sessionId)
 
     suspend fun fetchSessionsForDate(
+        patientId: String,
         assignmentId: String,
         sessionDate: String
     ): List<Pair<String, Map<String, Any?>>> =
-        SessionRepository.fetchSessionsForDate(assignmentId, sessionDate)
+        SessionRepository.fetchSessionsForDate(patientId, assignmentId, sessionDate)
 
     suspend fun fetchAllSessionsForAssignment(
         patientId: String,
@@ -246,6 +247,10 @@ object FirebaseService {
     suspend fun findInProgressSession(patientId: String): Pair<String, Map<String, Any?>>? =
         SessionRepository.findInProgressSession(patientId)
 
-    suspend fun getCompletedSessionCount(assignmentId: String, sessionDate: String): Int =
-        SessionRepository.getCompletedSessionCount(assignmentId, sessionDate)
+    suspend fun getCompletedSessionCount(
+        patientId: String,
+        assignmentId: String,
+        sessionDate: String
+    ): Int =
+        SessionRepository.getCompletedSessionCount(patientId, assignmentId, sessionDate)
 }

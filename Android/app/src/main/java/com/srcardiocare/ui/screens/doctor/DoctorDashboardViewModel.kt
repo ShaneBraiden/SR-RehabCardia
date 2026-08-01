@@ -93,14 +93,15 @@ class DoctorDashboardViewModel : ViewModel() {
                     patientRefs.map { patient ->
                         async {
                             try {
-                                val assignments = AssignmentRepository.getAssignments(patient.id)
+                                val assignments =
+                                    AssignmentRepository.getAssignmentsFor(patient.id, uid, role)
                                 val status = when {
                                     assignments.isEmpty() -> UserStatus.INACTIVE
                                     else -> {
                                         val completedAssignmentsToday = assignments.count { assignment ->
                                             val dailyFrequency = assignment.dailyFrequency
                                             val completedSessionsToday = try {
-                                                SessionRepository.getSessionsForDate(assignment.id, today).count {
+                                                SessionRepository.getSessionsForDate(patient.id, assignment.id, today).count {
                                                     it.status == SessionStatus.COMPLETED
                                                 }
                                             } catch (_: Exception) {

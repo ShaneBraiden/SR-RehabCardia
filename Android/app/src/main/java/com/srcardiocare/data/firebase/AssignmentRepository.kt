@@ -28,6 +28,29 @@ object AssignmentRepository {
         return snapshot.documents.map { it.id to (it.data ?: emptyMap()) }
     }
 
+    /**
+     * Fetch one patient's active assignments as the responsible doctor.
+     *
+     * A doctor is authorised on `assignments` per document, via the
+     * denormalised `doctorId`. Querying by `patientId` alone therefore fails
+     * *wholesale* the moment the patient holds an assignment written by a
+     * different clinician — which is exactly what a reassigned patient looks
+     * like, since `restampPatientRecords` does not rewrite `assignments`.
+     * Constraining on `doctorId` too returns the caller's own assignments
+     * instead of failing the whole read.
+     */
+    suspend fun fetchAssignmentsForDoctor(
+        patientId: String,
+        doctorId: String
+    ): List<Pair<String, Map<String, Any?>>> {
+        val snapshot = FirebaseClients.db.collection("assignments")
+            .whereEqualTo("patientId", patientId)
+            .whereEqualTo("doctorId", doctorId)
+            .whereEqualTo("isActive", true)
+            .get().await()
+        return snapshot.documents.map { it.id to (it.data ?: emptyMap()) }
+    }
+
     /** Fetch active assignments created by a doctor. */
     suspend fun fetchDoctorAssignments(doctorId: String): List<Pair<String, Map<String, Any?>>> {
         val snapshot = FirebaseClients.db.collection("assignments")
@@ -59,6 +82,24 @@ object AssignmentRepository {
 
     suspend fun getAssignments(patientId: String): List<Assignment> =
         fetchAssignments(patientId).map { (id, data) -> data.toAssignment(id) }
+
+    /**
+     * Assignments for [patientId] visible to [viewerId] in [viewerRole].
+     *
+     * Admins and the patient themselves may read the whole set; a doctor is
+     * scoped to the assignments they wrote. Use this from clinician screens so
+     * one foreign assignment does not blank out the entire list.
+     */
+    suspend fun getAssignmentsFor(
+        patientId: String,
+        viewerId: String,
+        viewerRole: String
+    ): List<Assignment> =
+        if (viewerRole == "doctor" && viewerId != patientId) {
+            fetchAssignmentsForDoctor(patientId, viewerId).map { (id, data) -> data.toAssignment(id) }
+        } else {
+            getAssignments(patientId)
+        }
 
     suspend fun getDoctorAssignments(doctorId: String): List<Assignment> =
         fetchDoctorAssignments(doctorId).map { (id, data) -> data.toAssignment(id) }

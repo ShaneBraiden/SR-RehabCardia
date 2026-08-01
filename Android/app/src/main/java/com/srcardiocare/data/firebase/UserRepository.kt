@@ -126,15 +126,28 @@ object UserRepository {
             .whereEqualTo("patientId", patientId).get().await()
         for (doc in appointments.documents) batch.delete(doc.reference)
 
-        // Delete related notifications
-        val notifications = FirebaseClients.db.collection("notifications")
-            .whereEqualTo("userId", patientId).get().await()
-        for (doc in notifications.documents) batch.delete(doc.reference)
-
         // Delete the user document
         batch.delete(FirebaseClients.db.collection("users").document(patientId))
 
         batch.commit().await()
+
+        // Notifications are admin-delete-only, so a doctor removing their own
+        // patient cannot clear them. Kept out of the batch above deliberately:
+        // a batch is atomic, so bundling a write the caller is not permitted to
+        // make would roll the entire deletion back and leave the patient in
+        // place. Orphaned notification documents are harmless — they are only
+        // ever read back by `userId`, which no longer resolves to an account.
+        try {
+            val notifications = FirebaseClients.db.collection("notifications")
+                .whereEqualTo("userId", patientId).get().await()
+            if (!notifications.isEmpty) {
+                val notificationBatch = FirebaseClients.db.batch()
+                for (doc in notifications.documents) notificationBatch.delete(doc.reference)
+                notificationBatch.commit().await()
+            }
+        } catch (_: Exception) {
+            // Permission denied for a non-admin caller. Not fatal.
+        }
     }
 
     // ── Typed reads ─────────────────────────────────────────────────────

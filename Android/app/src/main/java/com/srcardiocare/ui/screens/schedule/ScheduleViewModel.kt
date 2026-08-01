@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.srcardiocare.core.security.ErrorHandler
 import com.srcardiocare.data.firebase.AppointmentRepository
+import com.srcardiocare.data.firebase.AuthRepository
 import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.data.firebase.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -117,7 +118,15 @@ class ScheduleViewModel : ViewModel() {
                     it.copy(
                         currentUid = uid,
                         userRole = role,
-                        assignedDoctorId = currentUser.assignedDoctorId,
+                        // Prefer the claim: the appointments rule checks a
+                        // patient's requested doctorId against
+                        // request.auth.token.assignedDoctorId, not against the
+                        // user document. If the two disagree — the document was
+                        // just reassigned and the token has not refreshed yet —
+                        // booking against the document value is rejected.
+                        assignedDoctorId = AuthRepository.assignedDoctorId()
+                            .ifBlank { currentUser.assignedDoctorId.orEmpty() }
+                            .ifBlank { null },
                         patients = patients,
                         appointments = appts,
                         loadError = null,
