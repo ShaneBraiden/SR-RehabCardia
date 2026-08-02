@@ -1,20 +1,43 @@
 rules_version = '2';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SR-Cardiocare — Firestore security rules
+// SR-Cardiocare — Firestore security rules (revision 3)
 //
-// Authorization comes from Firebase Auth CUSTOM CLAIMS, not from Firestore.
-// The `syncUserClaims` Cloud Function mirrors users/{uid}.{role,isBlocked,
-// assignedDoctorId} into the ID token. Nothing below reads a role out of a
-// document, so a client that can write a user document still cannot grant
-// itself privileges.
+// Authorization reads from the user's own `users/{uid}` document again. The
+// previous revision read it from Firebase Auth CUSTOM CLAIMS, which is the
+// stronger design — but it depends on the `syncUserClaims` Cloud Function
+// being deployed to write those claims, and while that function is missing
+// every newly created account has an empty `role` claim and is denied
+// everywhere. This revision removes that dependency so account creation works
+// without the function.
 //
-// Two consequences worth knowing:
-//   * A claim change reaches the client on its next token refresh (hourly, or
-//     immediately via getIdToken(true)). syncUserClaims revokes refresh tokens
-//     whenever privileges shrink, so demotions and blocks cannot be outlived.
-//   * An account with no `role` claim is denied everywhere. Run
-//     functions/scripts/backfill-claims.js before deploying these rules.
+// Note: 'rules_version' 2 is not a typo. Firestore defines versions 1 and 2
+// only; there is no version 3. The "revision 3" above refers to this file, not
+// to the rules language.
+//
+// WHAT THIS DOES NOT FIX
+// ----------------------
+// The Android client refuses a sign-in whose ID token carries no `role` claim
+// (see `awaitRoleClaim` in AuthRepository.kt) and calls signOut() before
+// Firestore is ever contacted. That gate lives in the shipped APK, so these
+// rules cannot influence it. Until either the function is deployed or that
+// gate is removed in a new build, a newly created account still cannot log in.
+//
+// SECURITY NOTE
+// -------------
+// Roles living in Firestore is only safe because no client can write one:
+//   * `users` create requires an admin, or a doctor minting a patient
+//     assigned to themselves.
+//   * `users` update forbids anyone but an admin from touching `role`, and
+//     forbids self-writes of `isBlocked` and `assignedDoctorId`.
+// Those two rules are what stop privilege escalation here. Do not relax them.
+//
+// COST
+// ----
+// Each helper below resolves through get() on the caller's user document.
+// Firestore caches identical document reads within a single rule evaluation,
+// so this is roughly one extra read per request — billed, and slower than a
+// token lookup. This is the trade being made for not needing the function.
 //
 // Doctors are scoped to their own patients. Clinical collections carry a
 // denormalised `doctorId` so that list queries can be authorised per-document
@@ -34,17 +57,22 @@ service cloud.firestore {
       return request.auth.uid;
     }
 
-    function claims() {
-      return request.auth.token;
+    // The caller's own user document. An authenticated caller with no document
+    // makes this error, which denies — the same outcome as an explicit deny,
+    // so no existence guard is needed (and it would cost a second read).
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(uid())).data;
     }
 
     function role() {
-      return isAuthenticated() ? claims().get('role', '') : '';
+      return isAuthenticated() ? userDoc().get('role', '') : '';
     }
 
-    // Blocking an account revokes API access, not merely the UI.
+    // Blocking an account revokes API access, not merely the UI. Unlike the
+    // claims version, a block now takes effect on the next request rather than
+    // waiting for a token refresh.
     function isActive() {
-      return isAuthenticated() && claims().get('isBlocked', false) != true;
+      return isAuthenticated() && userDoc().get('isBlocked', false) != true;
     }
 
     function isAdmin()   { return isActive() && role() == 'admin';  }
@@ -52,9 +80,9 @@ service cloud.firestore {
     function isPatient() { return isActive() && role() == 'patient';}
     function isClinician() { return isDoctor() || isAdmin(); }
 
-    // The doctor this patient is assigned to, straight off their own token.
+    // The doctor this patient is assigned to, off their own user document.
     function myDoctorId() {
-      return isAuthenticated() ? claims().get('assignedDoctorId', '') : '';
+      return isAuthenticated() ? userDoc().get('assignedDoctorId', '') : '';
     }
 
     // ── Scoping ───────────────────────────────────────────────────────────
@@ -82,7 +110,9 @@ service cloud.firestore {
     // ── Users ─────────────────────────────────────────────────────────────
     match /users/{userId} {
       // Own doc is readable even while blocked, so the app can render the
-      // "account blocked" screen instead of hanging on a denied read.
+      // "account blocked" screen instead of hanging on a denied read. This
+      // also has to stay open to any authenticated caller reading themselves,
+      // because every helper above depends on being able to read this doc.
       // Doctors see their own patients, plus other doctors (needed by the
       // reassignment picker) — but never another doctor's patients.
       allow get: if isAuthenticated() && (
@@ -103,8 +133,9 @@ service cloud.firestore {
         resource.data.get('role', '') == 'doctor'
       ));
 
-      // Own profile updates cannot touch authorization fields. Doctors may
-      // administer their own patients but never write a role.
+      // This is the rule that keeps roles in Firestore safe. Own profile
+      // updates cannot touch authorization fields; doctors may administer
+      // their own patients but never write a role.
       allow update: if isAdmin() || (isActive() && (
         (uid() == userId &&
           !request.resource.data.diff(resource.data)
@@ -115,10 +146,8 @@ service cloud.firestore {
             .affectedKeys().hasAny(['role']))
       ));
 
-      // Roles are claims now, so a forged role field here is inert — but there
-      // is no reason to let one be written, and the value seeds the claim via
-      // syncUserClaims. Doctors may only ever mint patients assigned to
-      // themselves; only an admin can create a doctor or another admin.
+      // Doctors may only ever mint patients assigned to themselves; only an
+      // admin can create a doctor or another admin.
       allow create: if request.resource.data.role in ['patient','doctor','admin']
         && request.resource.data.get('isBlocked', false) == false
         && (
@@ -170,8 +199,8 @@ service cloud.firestore {
 
     // ── Session Logs ──────────────────────────────────────────────────────
     // Written by patients; `doctorId` is denormalised from the patient's own
-    // assignedDoctorId claim so it cannot be spoofed to reach another
-    // clinician's caseload.
+    // assignedDoctorId so it cannot be spoofed to reach another clinician's
+    // caseload.
     match /sessionLogs/{sessionId} {
       allow get:  if isActive() && (
         resource.data.patientId == uid() || ownsRecord()
@@ -248,8 +277,7 @@ service cloud.firestore {
       // A doctor books under their own name; only an admin may book on behalf
       // of another clinician. A patient may raise a *request* against their own
       // assigned doctor only, and it must start as 'pending' — they cannot
-      // self-confirm a slot. (This patient path exists in ScheduleScreen but
-      // was blocked outright by the previous ruleset.)
+      // self-confirm a slot.
       allow create: if isAdmin() ||
         (isDoctor() && request.resource.data.doctorId == uid()) ||
         (isPatient() &&
@@ -318,8 +346,10 @@ service cloud.firestore {
 
     // ── Login Logs ────────────────────────────────────────────────────────
     // Append-only audit trail. Entries are pinned to the caller so login
-    // history cannot be fabricated for another account. Deliberately NOT gated
-    // on isActive(), so a blocked user's attempts are still recorded.
+    // history cannot be fabricated for another account. Deliberately gated on
+    // isAuthenticated() alone — not isActive(), and not on any helper that
+    // reads the user document — so a blocked user's attempts are still
+    // recorded and an account with no user document can still be audited.
     match /loginLogs/{logId} {
       allow read:   if isAdmin();
       allow create: if isAuthenticated() &&

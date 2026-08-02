@@ -18,78 +18,74 @@ object AuthRepository {
     val currentUID: String? get() = FirebaseClients.auth.currentUser?.uid
     val isAuthenticated: Boolean get() = FirebaseClients.auth.currentUser != null
 
-    // ── Custom claims ───────────────────────────────────────────────────────
-    // Authorization lives in the ID token, written by the `syncUserClaims`
-    // Cloud Function. The security rules read these same values, so reading
-    // them here keeps client behaviour and server enforcement in agreement.
+    // ── Authorization source ────────────────────────────────────────────────
+    // Authorization is read from the caller's `users/{uid}` document, matching
+    // firestore.rules revision 3. It used to be read from Firebase Auth custom
+    // claims, which is the stronger design — but that depends on the
+    // `syncUserClaims` Cloud Function being deployed to write the claims, and
+    // while it is not, every new account has an empty token and is denied
+    // everywhere. Reading the document keeps client behaviour and server
+    // enforcement in agreement without that dependency.
     //
-    // `forceRefresh = true` costs a network round trip; use it only after a
-    // change that alters the caller's own claims.
+    // If `syncUserClaims` is ever deployed, move both this and the rules back
+    // to claims — the token check costs no read and cannot be raced.
 
-    /** Reads the caller's custom claims from their ID token. */
-    suspend fun claims(forceRefresh: Boolean = false): Map<String, Any> {
-        val user = FirebaseClients.auth.currentUser ?: return emptyMap()
-        return runCatching {
-            user.getIdToken(forceRefresh).await().claims
-        }.getOrDefault(emptyMap())
-    }
-
-    /** The caller's role, per their ID token. Empty until claims propagate. */
-    suspend fun claimedRole(forceRefresh: Boolean = false): String =
-        claims(forceRefresh)["role"] as? String ?: ""
+    /** Cached authorization fields for the signed-in user, keyed by UID. */
+    private var authFieldsUid: String? = null
+    private var authFieldsRole: String = ""
+    private var authFieldsDoctorId: String = ""
 
     /**
-     * The doctor this patient is assigned to, per their ID token.
+     * Reads the caller's authorization fields from their own user document.
+     *
+     * Cached per UID for the life of the session, because the values are
+     * written by an admin or doctor and cannot change under the user's own
+     * feet. [forceRefresh] re-reads, and is what to call after an operation
+     * that alters the caller's own role or doctor assignment.
+     */
+    private suspend fun authFields(forceRefresh: Boolean = false) {
+        val uid = currentUID
+        if (uid == null) {
+            authFieldsUid = null
+            authFieldsRole = ""
+            authFieldsDoctorId = ""
+            return
+        }
+        if (!forceRefresh && authFieldsUid == uid) return
+
+        runCatching {
+            FirebaseClients.db.collection("users").document(uid).get().await()
+        }.onSuccess { doc ->
+            authFieldsUid = uid
+            authFieldsRole = doc.getString("role")?.lowercase() ?: ""
+            authFieldsDoctorId = doc.getString("assignedDoctorId") ?: ""
+        }
+    }
+
+    /** The caller's role, per their user document. */
+    suspend fun claimedRole(forceRefresh: Boolean = false): String {
+        authFields(forceRefresh)
+        return authFieldsRole
+    }
+
+    /**
+     * The doctor this patient is assigned to, per their user document.
      *
      * Clinical documents are stamped with this value so doctor-scoped list
      * queries can be authorised per document. The rules verify the stamp
-     * against this same claim, so a client cannot write itself onto another
-     * clinician's caseload.
-     *
-     * `syncUserClaims` writes an explicit `null` when a patient has no doctor,
-     * so the key can be present-but-null as well as absent; both normalise to
-     * the empty string here.
+     * against this same field, read server-side, so a client cannot write
+     * itself onto another clinician's caseload by lying here.
      */
-    suspend fun assignedDoctorId(forceRefresh: Boolean = false): String =
-        claims(forceRefresh)["assignedDoctorId"] as? String ?: ""
-
-    /**
-     * Pulls a fresh ID token so newly written custom claims take effect now
-     * rather than at the next hourly refresh. Call after any operation that
-     * changes the caller's own role, block state, or doctor assignment.
-     */
-    suspend fun refreshClaims(): Map<String, Any> = claims(forceRefresh = true)
-
-    // ── Claim propagation ───────────────────────────────────────────────
-    // `syncUserClaims` runs asynchronously after the user document is written,
-    // so a token minted at sign-in can predate the claims it is supposed to
-    // carry. Every security rule reads the token, so signing a user in before
-    // their role claim exists drops them into an app where every read is denied
-    // — which surfaces as "failed to load" on every screen rather than as an
-    // auth error. One refresh is not always enough: the function may not have
-    // finished. Retry a few times with backoff before giving up.
-
-    private const val CLAIM_SYNC_ATTEMPTS = 3
-    private const val CLAIM_SYNC_BACKOFF_MS = 1_200L
-
-    /**
-     * Blocks until the caller's `role` claim matches [expectedRole], refreshing
-     * the ID token between attempts.
-     *
-     * @return true when the token now carries the expected role.
-     */
-    suspend fun awaitRoleClaim(expectedRole: String): Boolean {
-        if (expectedRole.isBlank()) return false
-        if (claimedRole() == expectedRole) return true
-
-        repeat(CLAIM_SYNC_ATTEMPTS) { attempt ->
-            if (claimedRole(forceRefresh = true) == expectedRole) return true
-            if (attempt < CLAIM_SYNC_ATTEMPTS - 1) {
-                kotlinx.coroutines.delay(CLAIM_SYNC_BACKOFF_MS * (attempt + 1))
-            }
-        }
-        return claimedRole() == expectedRole
+    suspend fun assignedDoctorId(forceRefresh: Boolean = false): String {
+        authFields(forceRefresh)
+        return authFieldsDoctorId
     }
+
+    /**
+     * Re-reads the caller's authorization fields. Call after any operation
+     * that changes the caller's own role, block state, or doctor assignment.
+     */
+    suspend fun refreshClaims(): String = claimedRole(forceRefresh = true)
 
     suspend fun login(email: String, password: String): Map<String, Any?> {
         var loginHandled = false
@@ -138,33 +134,21 @@ object AuthRepository {
                 throw Exception("Your account access is temporarily blocked by admin settings.")
             }
 
-            // Custom claims are written asynchronously by the syncUserClaims
-            // Cloud Function, so a freshly created account can sign in with a
-            // token that predates its own claims. Every security rule reads the
-            // token, so a session whose role claim has not landed yet is denied
-            // everywhere — which the UI can only report as "failed to load" on
-            // one screen after another.
+            // There is deliberately no custom-claim gate here any more.
             //
-            // Wait for the claim rather than assuming a single refresh caught
-            // it, and refuse the session outright if it never arrives. Failing
-            // at the sign-in screen with a specific message is far easier to
-            // diagnose than an app that loads into an empty, silently broken
-            // dashboard.
-            if (role.isNotBlank() && !awaitRoleClaim(role)) {
-                recordLoginLog(
-                    userId = uid,
-                    email = normalizedEmail,
-                    role = role,
-                    status = "claims_missing",
-                    message = "Role claim '$role' absent from ID token after refresh"
-                )
-                FirebaseClients.auth.signOut()
-                loginHandled = true
-                throw Exception(
-                    "Your account permissions are still being set up. " +
-                    "Please try again in a minute — if this keeps happening, contact support."
-                )
-            }
+            // It used to block sign-in until the `role` claim appeared in the
+            // ID token, because the rules read authorization from the token and
+            // a claimless session was denied everywhere. With firestore.rules
+            // revision 3 reading authorization from `users/{uid}` instead,
+            // there is nothing to wait for — the document was fetched above and
+            // is the same value the server will check.
+            //
+            // Prime the authorization cache from the document we already hold
+            // so the first clinical write of the session does not pay for a
+            // second read.
+            authFieldsUid = uid
+            authFieldsRole = role
+            authFieldsDoctorId = userData["assignedDoctorId"] as? String ?: ""
 
             // Update last seen on login
             UserRepository.updateLastSeen()
@@ -301,6 +285,12 @@ object AuthRepository {
     }
 
     fun logout() {
+        // Drop the cached authorization fields first: the object outlives the
+        // session, so leaving them set would hand the next user to sign in on
+        // this device the previous user's role and doctor assignment.
+        authFieldsUid = null
+        authFieldsRole = ""
+        authFieldsDoctorId = ""
         FirebaseClients.auth.signOut()
     }
 

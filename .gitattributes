@@ -1,0 +1,11 @@
+# The Cloud Functions lint config enforces LF line endings (eslint
+# linebreak-style). On Windows checkouts git can hand these files back as CRLF,
+# which fails `npm run lint` — and that lint is a firebase.json predeploy hook,
+# so a CRLF checkout blocks `firebase deploy --only functions` entirely.
+# Pin them to LF in the working tree so the hook stays deployable.
+functions/**/*.js text eol=lf
+functions/.eslintrc.js text eol=lf
+
+# Rules files are deployed verbatim; keep them stable across platforms too.
+firestore.rules text eol=lf
+storage.rules   text eol=lf

@@ -35,8 +35,8 @@ object FeedbackRepository {
      *
      * `patientId` and `doctorId` are stamped here rather than taken from the
      * caller's map: both are authorization-relevant, and the security rules
-     * check them against the caller's own ID token. Stamping them centrally
-     * means a screen cannot accidentally omit or contradict them.
+     * check them against the caller's own user document. Stamping them
+     * centrally means a screen cannot accidentally omit or contradict them.
      *
      * (Before this change no `doctorId` was written at all, which is why
      * fetchDoctorFeedbacks() has always returned an empty list.)
