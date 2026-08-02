@@ -10,6 +10,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,7 +27,6 @@ import com.srcardiocare.core.auth.AuthManager
 import com.srcardiocare.core.security.InputValidator
 import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.ui.components.InitialsAvatar
-import com.srcardiocare.ui.components.LanguageSettingRow
 import com.srcardiocare.ui.components.LegalLinksRow
 import com.srcardiocare.ui.components.LogoutConfirmDialog
 import com.srcardiocare.ui.components.ProfileFormSkeleton
@@ -47,6 +47,7 @@ fun PatientProfileSelfScreen(
     onBack: () -> Unit,
     onLogout: () -> Unit,
     onChangePassword: () -> Unit = {},
+    onSettings: () -> Unit = {},
     viewModel: PatientProfileSelfViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -272,9 +273,26 @@ fun PatientProfileSelfScreen(
                     Spacer(modifier = Modifier.height(DesignTokens.Spacing.MD))
                 }
 
-                LanguageSettingRow(
-                    modifier = Modifier.padding(horizontal = DesignTokens.Spacing.XL)
-                )
+                // Language now lives in Settings alongside theme and
+                // notifications, rather than being the one preference with a
+                // home of its own.
+                OutlinedButton(
+                    onClick = onSettings,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = DesignTokens.Spacing.XL)
+                        .height(52.dp),
+                    shape = RoundedCornerShape(DesignTokens.Radius.Base)
+                ) {
+                    Icon(
+                        Icons.Default.Settings,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                        tint = DesignTokens.Colors.Primary
+                    )
+                    Spacer(modifier = Modifier.width(DesignTokens.Spacing.SM))
+                    Text(stringResource(R.string.settings_title), fontWeight = FontWeight.SemiBold)
+                }
 
                 Spacer(modifier = Modifier.height(DesignTokens.Spacing.SM))
 

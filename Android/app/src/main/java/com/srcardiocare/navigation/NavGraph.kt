@@ -54,6 +54,7 @@ import com.srcardiocare.ui.screens.doctor.PatientListScreen
 import com.srcardiocare.ui.screens.patient.AssignmentListScreen
 import com.srcardiocare.ui.screens.workout.AssignmentWorkoutScreen
 import com.srcardiocare.ui.screens.notifications.NotificationsScreen
+import com.srcardiocare.ui.screens.settings.SettingsScreen
 import com.srcardiocare.data.model.Assignment
 
 /**
@@ -86,6 +87,15 @@ sealed class Route(val path: String) {
     object PatientChat : Route("patient/chat")
     object PatientList : Route("doctor/patients")
     object ChangePassword : Route("change-password")
+
+    /**
+     * Reachable from every role's profile. The language section inside is
+     * patient-only — see [SettingsScreen] — so the route carries the flag
+     * rather than the screen re-deriving the role it was navigated from.
+     */
+    object Settings : Route("settings/{patientMode}") {
+        fun createPath(isPatient: Boolean) = "settings/$isPatient"
+    }
     object PatientFeedbackChat : Route("doctor/patientChat/{patientId}") {
         fun createPath(patientId: String) = "doctor/patientChat/$patientId"
     }
@@ -342,7 +352,18 @@ fun SRCardiocareNavGraph(
                         popUpTo(0) { inclusive = true }
                     }
                 },
-                onChangePassword = { navController.navigate(Route.ChangePassword.path) }
+                onChangePassword = { navController.navigate(Route.ChangePassword.path) },
+                onSettings = { navController.navigate(Route.Settings.createPath(isPatient = false)) }
+            )
+        }
+
+        composable(
+            route = Route.Settings.path,
+            arguments = listOf(navArgument("patientMode") { type = NavType.BoolType })
+        ) { backStackEntry ->
+            SettingsScreen(
+                onBack = { navController.popBackStack() },
+                showLanguage = backStackEntry.arguments?.getBoolean("patientMode") ?: false
             )
         }
 
@@ -360,7 +381,8 @@ fun SRCardiocareNavGraph(
                         popUpTo(0) { inclusive = true }
                     }
                 },
-                onChangePassword = { navController.navigate(Route.ChangePassword.path) }
+                onChangePassword = { navController.navigate(Route.ChangePassword.path) },
+                onSettings = { navController.navigate(Route.Settings.createPath(isPatient = true)) }
             )
         }
 
@@ -513,7 +535,8 @@ private fun parseAssignmentFromMap(id: String, data: Map<String, Any?>): Assignm
         exerciseDifficulty = data["exerciseDifficulty"] as? String,
         startDate = data["startDate"] as? String ?: java.time.LocalDate.now().toString(),
         endDate = data["endDate"] as? String ?: java.time.LocalDate.now().plusDays(7).toString(),
-        dailyFrequency = ((data["dailyFrequency"] as? Number)?.toInt() ?: 3).coerceIn(1, 3),
+        dailyFrequency = ((data["dailyFrequency"] as? Number)?.toInt() ?: 3)
+            .coerceIn(1, com.srcardiocare.data.model.Assignment.MAX_DAILY_FREQUENCY),
         sets = (data["sets"] as? Number)?.toInt() ?: 3,
         reps = (data["reps"] as? Number)?.toInt() ?: 10,
         restSeconds = (data["restSeconds"] as? Number)?.toInt() ?: 45,

@@ -40,7 +40,6 @@ import com.srcardiocare.core.push.PushMessagingService
 import com.srcardiocare.core.auth.AuthManager
 import com.srcardiocare.core.security.ErrorHandler
 import com.srcardiocare.data.firebase.FirebaseService
-import com.srcardiocare.ui.components.LanguageToggle
 import com.srcardiocare.ui.theme.DesignTokens
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -191,14 +190,11 @@ fun LoginScreen(onLoginSuccess: (role: String) -> Unit, onChangePassword: () -> 
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            // Sits above the form so a Tamil-only patient can switch before
-            // having to read anything.
-            LanguageToggle(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .statusBarsPadding()
-                    .padding(DesignTokens.Spacing.MD)
-            )
+            // The language toggle that used to sit here is gone. It was solving
+            // the right problem in the wrong place: a Tamil-only patient met it
+            // *after* the app had already rendered a screen in English. The
+            // choice is now the first thing shown after install, and lives in
+            // Settings afterwards.
 
             Column(
                 modifier = Modifier

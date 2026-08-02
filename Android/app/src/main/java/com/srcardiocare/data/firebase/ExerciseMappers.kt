@@ -9,6 +9,7 @@ fun Map<String, Any?>.toExercise(id: String): Exercise = Exercise(
     name = this["name"] as? String ?: "",
     description = this["description"] as? String ?: "",
     category = this["category"] as? String ?: "",
+    group = this["group"] as? String ?: "",
     difficultyLevel = this["difficultyLevel"] as? String ?: "",
     durationSeconds = (this["durationSeconds"] as? Number)?.toInt() ?: 0,
     videoUrl = this["videoUrl"] as? String,

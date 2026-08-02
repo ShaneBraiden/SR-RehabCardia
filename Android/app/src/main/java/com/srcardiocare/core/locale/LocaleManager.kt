@@ -34,6 +34,7 @@ object LocaleManager {
 
     private const val PREFS = "rehabcardia_locale"
     private const val KEY_LANGUAGE = "language_tag"
+    private const val KEY_CHOSEN = "language_chosen"
 
     /**
      * Plain SharedPreferences, not [com.srcardiocare.core.security.SecurePreferences].
@@ -55,8 +56,24 @@ object LocaleManager {
      */
     fun setLanguage(context: Context, tag: String) {
         val safe = if (tag in SUPPORTED) tag else ENGLISH
-        prefs(context).edit().putString(KEY_LANGUAGE, safe).apply()
+        prefs(context).edit()
+            .putString(KEY_LANGUAGE, safe)
+            .putBoolean(KEY_CHOSEN, true)
+            .apply()
     }
+
+    /**
+     * Whether the user has ever picked a language on this install.
+     *
+     * Distinguishing "chose English" from "never asked" is the whole point:
+     * the stored tag defaults to English either way, so without this flag the
+     * first-run prompt could not tell a Tamil reader who has not been asked yet
+     * from an English reader who has. The prompt is shown once, on first launch
+     * after install, and never again — which is also why the login screen no
+     * longer needs a toggle of its own.
+     */
+    fun hasChosenLanguage(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_CHOSEN, false)
 
     fun isTamil(context: Context) = getLanguage(context) == TAMIL
 

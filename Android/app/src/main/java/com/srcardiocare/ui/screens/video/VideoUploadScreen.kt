@@ -43,6 +43,7 @@ fun VideoUploadScreen(onBack: () -> Unit, onUploaded: () -> Unit) {
     var selectedFileName by remember { mutableStateOf("") }
     var exerciseName by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("") }
+    var group by remember { mutableStateOf("") }
     var difficulty by remember { mutableStateOf("") }
     var duration by remember { mutableStateOf("") }
     var instructions by remember { mutableStateOf("") }
@@ -167,7 +168,19 @@ fun VideoUploadScreen(onBack: () -> Unit, onUploaded: () -> Unit) {
             OutlinedTextField(
                 value = category,
                 onValueChange = { category = InputValidator.limitLength(it, InputValidator.MaxLength.CATEGORY) },
-                label = { Text("Category") }, placeholder = { Text("e.g. Knee") },
+                label = { Text("Category (stage)") }, placeholder = { Text("e.g. 1st week, 3rd month") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(DesignTokens.Radius.Base),
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = DesignTokens.Colors.Primary)
+            )
+            Spacer(modifier = Modifier.height(DesignTokens.Spacing.MD))
+
+            OutlinedTextField(
+                value = group,
+                onValueChange = { group = InputValidator.limitLength(it, InputValidator.MaxLength.CATEGORY) },
+                label = { Text("Group (optional)") }, placeholder = { Text("e.g. Breathing, Upper body") },
+                supportingText = { Text("A second way to organise the library, independent of stage") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(DesignTokens.Radius.Base),
                 singleLine = true,
@@ -237,6 +250,7 @@ fun VideoUploadScreen(onBack: () -> Unit, onUploaded: () -> Unit) {
                                 "name" to exerciseName.trim(),
                                 "title" to exerciseName.trim(),
                                 "category" to category.trim(),
+                                "group" to group.trim(),
                                 "difficulty" to difficulty.trim(),
                                 "instructions" to instructions.trim(),
                                 "uploadedBy" to (FirebaseService.currentUID ?: "unknown"),

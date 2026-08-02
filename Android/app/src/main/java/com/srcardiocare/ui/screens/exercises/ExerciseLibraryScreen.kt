@@ -65,9 +65,10 @@ import kotlinx.coroutines.launch
 
 private data class ExLibItem(
     val id: String,
-    val name: String, 
-    val category: String, 
-    val difficulty: String, 
+    val name: String,
+    val category: String,
+    val group: String,
+    val difficulty: String,
     val duration: String,
     val uploadedBy: String,
     val videoUrl: String?
@@ -81,8 +82,12 @@ fun ExerciseLibraryScreen(onBack: () -> Unit, onUpload: () -> Unit) {
     // and the real category values are doctor-authored Firestore data that must
     // stay exactly as written.
     var selectedCategory by remember { mutableStateOf<String?>(null) }
+    // The second axis, filtered independently of category — a doctor looking
+    // for breathing work in month three wants both narrowed at once.
+    var selectedGroup by remember { mutableStateOf<String?>(null) }
     var allExercises by remember { mutableStateOf<List<ExLibItem>>(emptyList()) }
     var categories by remember { mutableStateOf<List<String>>(emptyList()) }
+    var groups by remember { mutableStateOf<List<String>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
     var currentUserId by remember { mutableStateOf("") }
@@ -109,17 +114,19 @@ fun ExerciseLibraryScreen(onBack: () -> Unit, onUpload: () -> Unit) {
                 val mins = durationSec / 60
                 val secs = durationSec % 60
                 val duration = if (secs > 0) "$mins:${secs.toString().padStart(2, '0')}" else "$mins:00"
-                ExLibItem(exercise.id, exercise.name, exercise.category, difficulty, duration, exercise.uploadedBy, exercise.videoUrl)
+                ExLibItem(exercise.id, exercise.name, exercise.category, exercise.group, difficulty, duration, exercise.uploadedBy, exercise.videoUrl)
             }
-            categories = allExercises.map { it.category }.distinct().sorted()
+            categories = allExercises.map { it.category }.filter { it.isNotBlank() }.distinct().sorted()
+            groups = allExercises.map { it.group }.filter { it.isNotBlank() }.distinct().sorted()
         } catch (_: Exception) { }
         isLoading = false
     }
 
     val filtered = allExercises.filter { ex ->
         val matchesCat = selectedCategory == null || ex.category == selectedCategory
+        val matchesGroup = selectedGroup == null || ex.group == selectedGroup
         val matchesSearch = searchQuery.isBlank() || ex.name.contains(searchQuery, ignoreCase = true)
-        matchesCat && matchesSearch
+        matchesCat && matchesGroup && matchesSearch
     }
 
     // Video player dialog
@@ -225,7 +232,7 @@ fun ExerciseLibraryScreen(onBack: () -> Unit, onUpload: () -> Unit) {
 
             Spacer(modifier = Modifier.height(DesignTokens.Spacing.MD))
 
-            // Category chips
+            // Category chips — the rehab stage (1st week, 3rd month, …)
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.SM),
                 contentPadding = PaddingValues(horizontal = DesignTokens.Spacing.XL)
@@ -242,6 +249,34 @@ fun ExerciseLibraryScreen(onBack: () -> Unit, onUpload: () -> Unit) {
                         ),
                         shape = RoundedCornerShape(DesignTokens.Radius.Full)
                     )
+                }
+            }
+
+            // Group chips — the second axis. The row is hidden entirely until
+            // at least one exercise carries a group, so a library that never
+            // adopts the field looks exactly as it did before.
+            if (groups.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(DesignTokens.Spacing.SM))
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.SM),
+                    contentPadding = PaddingValues(horizontal = DesignTokens.Spacing.XL)
+                ) {
+                    items(listOf<String?>(null) + groups) { grp ->
+                        FilterChip(
+                            selected = grp == selectedGroup,
+                            onClick = { selectedGroup = grp },
+                            label = { Text(grp ?: stringResource(R.string.filter_all_groups)) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                // Darker than the stage row's Primary so the two
+                                // filters read as different axes, without
+                                // dropping the white label below the contrast
+                                // the existing chips already hold.
+                                selectedContainerColor = DesignTokens.Colors.PrimaryDark,
+                                selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                            ),
+                            shape = RoundedCornerShape(DesignTokens.Radius.Full)
+                        )
+                    }
                 }
             }
 
@@ -361,7 +396,12 @@ fun ExerciseLibraryScreen(onBack: () -> Unit, onUpload: () -> Unit) {
                             }
                             Spacer(modifier = Modifier.height(DesignTokens.Spacing.SM))
                             Text(ex.name, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodyMedium)
-                            Text(ex.category, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(
+                                listOf(ex.category, ex.group).filter { it.isNotBlank() }.joinToString(" • "),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1
+                            )
                             Spacer(modifier = Modifier.height(4.dp))
                             // Difficulty badge
                             val badgeColor = when (ex.difficulty) {

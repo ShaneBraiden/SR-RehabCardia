@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircleOutline
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.FitnessCenter
@@ -44,6 +45,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.srcardiocare.data.model.Assignment
 import com.srcardiocare.ui.theme.DesignTokens
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -192,6 +194,67 @@ internal fun ChipPicker(
             trailing?.invoke()
         }
     }
+}
+
+/**
+ * Upper bound on times-per-day, shared with the read path so a prescription
+ * cannot be written at a value the patient app will silently clamp away.
+ */
+internal const val MAX_DAILY_FREQUENCY = Assignment.MAX_DAILY_FREQUENCY
+
+/**
+ * A chip picker that starts at the common values and grows on demand.
+ *
+ * The fixed 1/2/3 chips covered the usual prescription and nothing else — a
+ * doctor wanting four sessions a day had no way to say so. Rather than paint
+ * ten chips nobody reads, the extra values are reachable one tap at a time
+ * through the trailing +, and any value already selected stays on screen so an
+ * existing assignment never renders with its own frequency missing.
+ */
+@Composable
+internal fun ExpandableCountPicker(
+    label: String,
+    value: Int,
+    onSelect: (Int) -> Unit,
+    baseOptions: List<Int>,
+    max: Int,
+    renderOption: (Int) -> String,
+    modifier: Modifier = Modifier
+) {
+    val options = (baseOptions + value).distinct().sorted().filter { it <= max }
+    val highest = options.maxOrNull() ?: 0
+
+    val plusChip: (@Composable () -> Unit)? = if (highest < max) {
+        {
+            Surface(
+                modifier = Modifier.clickable { onSelect((highest + 1).coerceAtMost(max)) },
+                shape = RoundedCornerShape(DesignTokens.Radius.Chip),
+                color = MaterialTheme.colorScheme.surfaceVariant
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = "Add one more",
+                        tint = DesignTokens.Colors.Primary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+        }
+    } else null
+
+    ChipPicker(
+        label = label,
+        options = options,
+        selected = value,
+        onSelect = onSelect,
+        renderOption = renderOption,
+        modifier = modifier,
+        trailing = plusChip
+    )
 }
 
 @Composable

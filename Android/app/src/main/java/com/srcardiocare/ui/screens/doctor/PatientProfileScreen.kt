@@ -54,7 +54,6 @@ import com.srcardiocare.ui.components.tutorial.TutorialTours
 import com.srcardiocare.ui.components.tutorial.tutorialTarget
 import com.srcardiocare.ui.theme.DesignTokens
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -602,10 +601,18 @@ fun PatientProfileScreen(
                                                 showDoctorPicker = false
                                                 scope.launch {
                                                     try {
-                                                        com.google.firebase.firestore.FirebaseFirestore.getInstance()
-                                                            .collection("users").document(patientId)
-                                                            .update("assignedDoctorId", docId)
-                                                            .await()
+                                                        // Moves the patient *and* restamps the
+                                                        // doctorId denormalised onto their plans,
+                                                        // assignments and session logs. Without the
+                                                        // restamp the incoming doctor is unauthorised
+                                                        // on records the previous clinician (often
+                                                        // the admin who created the patient) wrote,
+                                                        // and every patientId-scoped query they run
+                                                        // fails wholesale — including the one that
+                                                        // starts the assign-exercise flow.
+                                                        val moved = com.srcardiocare.data.firebase
+                                                            .PatientTransferRepository
+                                                            .reassignPatient(patientId, docId)
                                                         com.srcardiocare.core.push.Notifier.send(
                                                             com.srcardiocare.core.push.NotificationEvent.DoctorAssigned(
                                                                 patientId = patientId,
@@ -613,7 +620,10 @@ fun PatientProfileScreen(
                                                             )
                                                         )
                                                         currentAssignedDoctorId = docId
-                                                        toast("Doctor changed to $docName")
+                                                        toast(
+                                                            if (moved > 0) "Doctor changed to $docName • $moved record(s) transferred"
+                                                            else "Doctor changed to $docName"
+                                                        )
                                                     } catch (e: Exception) {
                                                         toast("Failed to change doctor")
                                                     }

@@ -35,6 +35,12 @@ class PushMessagingService : FirebaseMessagingService() {
         val body = data["body"].orEmpty()
         val route = data["route"].orEmpty()
         val channelId = data["channelId"]?.takeIf { it.isNotBlank() } ?: PushChannels.GENERAL
+
+        // Respect the in-app category switches. The message is still delivered
+        // and still lands in the in-app notifications list — only the system
+        // notification is suppressed, so muting cannot lose a clinical update.
+        if (com.srcardiocare.core.prefs.AppPreferences.isChannelMuted(this, channelId)) return
+
         val notificationId = data["notificationId"].orEmpty()
         val paramsJson = data["params"].orEmpty()
         val params = parseParams(paramsJson)

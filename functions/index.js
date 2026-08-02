@@ -391,6 +391,136 @@ exports.deleteUserAccount = onCall(
 );
 
 // ───────────────────────────────────────────────────────────────────────────
+// User-initiated account deletion
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * Lets a signed-in user ask for their own account to be removed.
+ *
+ * Google Play requires an in-app route to account deletion, but every document
+ * this app holds was created under clinical supervision and may sit under a
+ * record-retention obligation the patient cannot waive. A one-tap hard delete
+ * would therefore either break that obligation or quietly not do what the
+ * button said. So this does the two things that are unambiguously the user's
+ * to decide — end the session and stop the collection — and files the
+ * retention decision with the clinic:
+ *
+ *   1. blocks the account and revokes refresh tokens, so access stops now
+ *      rather than in 30 days;
+ *   2. writes an `accountDeletionRequests/{uid}` record;
+ *   3. notifies the assigned clinician and every admin.
+ *
+ * This is the same commitment the published policy at /delete-account.html
+ * makes, so the in-app path and the web path cannot drift apart.
+ *
+ * Deliberately *not* callable for admins: an admin deleting themselves can
+ * leave a clinic with no console access and no way to get it back.
+ */
+exports.requestAccountDeletion = onCall(
+    {enforceAppCheck: false},
+    async (request) => {
+      const caller = request.auth;
+      if (!caller) {
+        throw new HttpsError("unauthenticated", "Sign in required.");
+      }
+
+      const uid = caller.uid;
+      const db = admin.firestore();
+      const userSnap = await db.collection("users").doc(uid).get();
+      if (!userSnap.exists) {
+        throw new HttpsError(
+            "not-found",
+            "No profile is attached to this account.",
+        );
+      }
+      const user = userSnap.data() || {};
+
+      if (user.role === "admin") {
+        throw new HttpsError(
+            "failed-precondition",
+            "Administrator accounts must be removed by another administrator.",
+        );
+      }
+
+      const raw = (request.data && request.data.reason) || "";
+      const reason = typeof raw === "string" ? raw.trim().slice(0, 500) : "";
+
+      const requestRef = db.collection("accountDeletionRequests").doc(uid);
+      const existing = await requestRef.get();
+      if (existing.exists && existing.get("status") === "pending") {
+        // Re-tapping must not mint a second request or reset the clock the
+        // clinic is working to.
+        return {requestId: uid, alreadyPending: true};
+      }
+
+      const fullName = [user.firstName, user.lastName]
+          .filter(Boolean).join(" ").trim();
+
+      await requestRef.set({
+        uid,
+        email: user.email || "",
+        name: fullName,
+        role: user.role || "",
+        assignedDoctorId: user.assignedDoctorId || "",
+        reason,
+        status: "pending",
+        requestedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      // Stop the collection before anything else. If the notification writes
+      // below fail, the user is still out — which is the correct direction for
+      // this call to fail in.
+      await db.collection("users").doc(uid).set({
+        isBlocked: true,
+        apiAccessBlocked: true,
+        blockedAt: admin.firestore.FieldValue.serverTimestamp(),
+        blockedBy: uid,
+        blockReason: "Account deletion requested by the user",
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, {merge: true});
+
+      try {
+        await admin.auth().revokeRefreshTokens(uid);
+      } catch (err) {
+        logger.error("requestAccountDeletion: token revoke failed",
+            {uid, message: err.message});
+      }
+
+      // Tell the humans who have to act on it.
+      try {
+        const recipients = new Set();
+        if (user.assignedDoctorId) recipients.add(user.assignedDoctorId);
+        const admins = await db.collection("users")
+            .where("role", "==", "admin").get();
+        admins.docs.forEach((d) => recipients.add(d.id));
+
+        const label = fullName || user.email || uid;
+        const batch = db.batch();
+        recipients.forEach((recipientId) => {
+          batch.set(db.collection("notifications").doc(), {
+            userId: recipientId,
+            title: "Account deletion requested",
+            body: `${label} has asked for their account to be deleted. ` +
+              "Their access is already blocked.",
+            type: "account_deletion",
+            route: "",
+            params: {},
+            isRead: false,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+        });
+        await batch.commit();
+      } catch (err) {
+        logger.error("requestAccountDeletion: notify failed",
+            {uid, message: err.message});
+      }
+
+      logger.info("requestAccountDeletion: filed", {uid, role: user.role});
+      return {requestId: uid, alreadyPending: false};
+    },
+);
+
+// ───────────────────────────────────────────────────────────────────────────
 // Push notification fan-out
 // ───────────────────────────────────────────────────────────────────────────
 

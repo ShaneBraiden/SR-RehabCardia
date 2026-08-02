@@ -450,4 +450,31 @@
     <string name="tour_notification_item_text">Tap an item to open what it\'s about.</string>
     <string name="tour_notification_read_title">Mark as read</string>
     <string name="tour_notification_read_text">Clear notifications once you\'ve seen them.</string>
+
+    <string name="filter_all_groups">All groups</string>
+    <string name="settings_title">Settings</string>
+
+    <!-- ===== Medical disclaimer & health-data disclosure =====
+      Shown once per account before any clinical content is reachable, and
+      re-shown whenever ConsentManager.CURRENT_VERSION is bumped. Treat this
+      block as legal copy: it is what the clinic and Google Play are told the
+      patient was shown. Any Tamil translation of it must be reviewed by the
+      clinic before it ships — a mistranslated warning sign is worse than an
+      untranslated one, and an untranslated key simply falls back to English. -->
+    <string name="consent_title">Before you start</string>
+    <string name="consent_intro">Please read this. You only need to do it once.</string>
+
+    <string name="consent_medical_heading">This app supports your care — it does not replace it</string>
+    <string name="consent_medical_body">RehabCardia is a tool your cardiac rehabilitation team uses to give you exercises and follow your progress. It is not a medical device. It does not diagnose, monitor your heart, or detect a medical emergency, and nothing it shows you is a substitute for the advice of your doctor, physiotherapist, or nurse.\n\nOnly do the exercises your clinician has assigned to you, at the effort level they agreed with you. If anything in the app disagrees with what your care team told you in person, follow your care team.</string>
+
+    <string name="consent_safety_heading">Stop exercising and get help</string>
+    <string name="consent_safety_body">Stop straight away and contact your care team if you get chest pain or tightness, unusual breathlessness, dizziness or faintness, an irregular or racing heartbeat, cold sweats, or pain that is new or getting worse.\n\nIf symptoms are severe, do not use the app to report them — call your local emergency number or go to the nearest emergency department.</string>
+
+    <string name="consent_data_heading">What we collect, and who can see it</string>
+    <string name="consent_data_body">To let your clinician follow your recovery, this app collects health information you enter: the exercises you complete, your pain level, how difficult each session felt, and any notes you add, along with your name, email address, and appointment details.\n\nThis information is shared with the clinician and clinic administrator responsible for your care. It is stored encrypted, is never sold, and is never used for advertising. You can ask for your account and data to be deleted at any time from Settings.</string>
+
+    <string name="consent_privacy_link">Read the full Privacy Policy</string>
+    <string name="consent_accept">I have read and understood this</string>
+    <string name="consent_decline">I do not agree — sign me out</string>
+    <string name="consent_reopen">You can read this again any time from Settings.</string>
 </resources>

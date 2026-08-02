@@ -474,6 +474,17 @@ private fun UserListRow(user: UserItem, isAdmin: Boolean, onClick: () -> Unit, m
             Column(modifier = Modifier.weight(1f)) {
                 Text(user.name, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
                 Text(user.subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                // Age • sex • rehab week. Sits on its own line rather than
+                // being appended to the subtitle so the week number stays
+                // legible next to a long injury description.
+                if (user.meta.isNotBlank()) {
+                    Text(
+                        user.meta,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Medium,
+                        color = DesignTokens.Colors.Primary
+                    )
+                }
             }
 
             if (isAdmin) {

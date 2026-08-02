@@ -26,6 +26,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.srcardiocare.core.security.ErrorHandler
 import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.ui.components.rememberToast
 import com.srcardiocare.ui.theme.DesignTokens
@@ -102,6 +103,7 @@ fun AssignExerciseScreen(
             "exerciseId" to item.first,
             "name" to exName,
             "category" to (data["category"] as? String ?: ""),
+            "group" to (data["group"] as? String ?: ""),
             "difficulty" to (data["difficulty"] as? String ?: ""),
             "customSets" to sets,
             "customReps" to reps,
@@ -125,7 +127,9 @@ fun AssignExerciseScreen(
                 toast("Assigned: $exName")
                 onAssigned()
             } catch (e: Exception) {
-                toast("Failed to assign exercise")
+                // A bare "failed" hid the only detail worth having here — a
+                // denied write reads very differently from a dropped network.
+                toast(ErrorHandler.getDisplayMessage(e, "assign exercise"))
                 isAssigning = false
             }
         }
@@ -210,7 +214,7 @@ private fun ExercisePicker(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = DesignTokens.Spacing.XL, vertical = DesignTokens.Spacing.SM),
-            placeholder = { Text("Search exercises") },
+            placeholder = { Text("Search name, stage or group") },
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
             singleLine = true,
             shape = RoundedCornerShape(DesignTokens.Radius.Input)
@@ -224,9 +228,22 @@ private fun ExercisePicker(
             exercises.isEmpty() -> EmptyLibrary()
 
             else -> {
-                val filtered = exercises.filter { (_, d) ->
-                    val name = d["name"] as? String ?: d["title"] as? String ?: ""
-                    name.contains(searchQuery, ignoreCase = true)
+                // Searching the two organising axes as well as the name lets a
+                // doctor type "3rd month" or "breathing" and get the shortlist
+                // they'd otherwise have to scroll for.
+                val filtered = if (searchQuery.isBlank()) exercises else {
+                    // The blank case is handled above rather than relying on
+                    // "".contains(""): an exercise with no name, category or
+                    // group produces an empty list, and `any {}` on that is
+                    // false — which would have hidden it from the unfiltered
+                    // list entirely.
+                    exercises.filter { (_, d) ->
+                        listOfNotNull(
+                            d["name"] as? String ?: d["title"] as? String,
+                            d["category"] as? String,
+                            d["group"] as? String
+                        ).any { it.contains(searchQuery, ignoreCase = true) }
+                    }
                 }
                 if (filtered.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -262,6 +279,7 @@ private fun ExercisePickRow(item: Pair<String, Map<String, Any?>>, onClick: () -
     val data = item.second
     val name = data["name"] as? String ?: data["title"] as? String ?: "Unnamed Exercise"
     val category = data["category"] as? String ?: ""
+    val group = data["group"] as? String ?: ""
     val difficulty = data["difficulty"] as? String ?: ""
 
     Card(
@@ -288,7 +306,11 @@ private fun ExercisePickRow(item: Pair<String, Map<String, Any?>>, onClick: () -
             Spacer(modifier = Modifier.width(DesignTokens.Spacing.MD))
             Column(modifier = Modifier.weight(1f)) {
                 Text(name, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
-                val sub = listOfNotNull(category.ifBlank { null }, difficulty.ifBlank { null }).joinToString(" • ")
+                val sub = listOfNotNull(
+                    category.ifBlank { null },
+                    group.ifBlank { null },
+                    difficulty.ifBlank { null }
+                ).joinToString(" • ")
                 if (sub.isNotBlank()) {
                     Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
@@ -328,11 +350,12 @@ private fun PrescriptionConfig(
         StepperRow(label = "Reps per set", value = reps, min = 1, max = 99, onChange = onReps, icon = Icons.Default.FitnessCenter)
 
         SectionTitle("Frequency")
-        ChipPicker(
+        ExpandableCountPicker(
             label = "Times per day",
-            options = listOf(1, 2, 3),
-            selected = dailyFrequency,
+            value = dailyFrequency,
             onSelect = onFrequency,
+            baseOptions = listOf(1, 2, 3),
+            max = MAX_DAILY_FREQUENCY,
             renderOption = { "${it}×" }
         )
 

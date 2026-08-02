@@ -9,6 +9,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -43,6 +44,7 @@ fun DoctorProfileScreen(
     onBack: () -> Unit,
     onLogout: () -> Unit,
     onChangePassword: () -> Unit = {},
+    onSettings: () -> Unit = {},
     viewModel: DoctorProfileViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -264,6 +266,23 @@ fun DoctorProfileScreen(
                 }
                 Spacer(modifier = Modifier.height(DesignTokens.Spacing.MD))
             }
+
+            OutlinedButton(
+                onClick = onSettings,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(DesignTokens.Radius.Button)
+            ) {
+                Icon(
+                    Icons.Default.Settings,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = DesignTokens.Colors.Primary
+                )
+                Spacer(modifier = Modifier.width(DesignTokens.Spacing.SM))
+                Text("Settings", fontWeight = FontWeight.SemiBold)
+            }
+
+            Spacer(modifier = Modifier.height(DesignTokens.Spacing.MD))
 
             Button(
                 onClick = onChangePassword,

@@ -434,4 +434,7 @@
     <string name="tour_notification_item_text">எதைப் பற்றியது என்பதைத் திறக்க ஒரு உருப்படியைத் தட்டவும்.</string>
     <string name="tour_notification_read_title">படித்ததாகக் குறி</string>
     <string name="tour_notification_read_text">பார்த்த பிறகு அறிவிப்புகளை அழிக்கவும்.</string>
+
+    <string name="filter_all_groups">அனைத்து குழுக்கள்</string>
+    <string name="settings_title">அமைப்புகள்</string>
 </resources>

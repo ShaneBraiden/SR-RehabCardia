@@ -87,6 +87,7 @@ class DoctorDashboardViewModel : ViewModel() {
 
                 val patientRefs = users.filter { it.role.ifBlank { "patient" } == "patient" }
                 val patientStatusMap = mutableMapOf<String, UserStatus>()
+                val patientWeekMap = mutableMapOf<String, Int>()
                 val today = LocalDate.now().toString()
 
                 coroutineScope {
@@ -95,6 +96,7 @@ class DoctorDashboardViewModel : ViewModel() {
                             try {
                                 val assignments =
                                     AssignmentRepository.getAssignmentsFor(patient.id, uid, role)
+                                val week = rehabWeek(assignments)
                                 val status = when {
                                     assignments.isEmpty() -> UserStatus.INACTIVE
                                     else -> {
@@ -112,13 +114,14 @@ class DoctorDashboardViewModel : ViewModel() {
                                         if (completedAssignmentsToday == assignments.size) UserStatus.ON_TRACK else UserStatus.NEEDS_ATTENTION
                                     }
                                 }
-                                patient.id to status
+                                Triple(patient.id, status, week)
                             } catch (_: Exception) {
-                                patient.id to UserStatus.INACTIVE
+                                Triple(patient.id, UserStatus.INACTIVE, null)
                             }
                         }
-                    }.awaitAll().forEach { (id, status) ->
+                    }.awaitAll().forEach { (id, status, week) ->
                         patientStatusMap[id] = status
+                        week?.let { patientWeekMap[id] = it }
                     }
                 }
 
@@ -146,7 +149,14 @@ class DoctorDashboardViewModel : ViewModel() {
                         role = userRoleStr,
                         status = status,
                         isOnline = user.isOnline,
-                        initials = initials.ifBlank { "?" }
+                        initials = initials.ifBlank { "?" },
+                        meta = if (userRoleStr == "patient") {
+                            patientMetaLine(
+                                age = ageFrom(user.dateOfBirth),
+                                sex = sexInitial(user.gender),
+                                weekNumber = patientWeekMap[user.id]
+                            )
+                        } else ""
                     )
                 }
 

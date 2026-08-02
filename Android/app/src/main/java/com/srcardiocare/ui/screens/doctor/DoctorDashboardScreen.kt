@@ -81,7 +81,9 @@ data class UserItem(
     val role: String,
     val status: UserStatus,
     val isOnline: Boolean = false,
-    val initials: String
+    val initials: String,
+    /** `62 • M • Week 3`. Blank for doctors/admins and for sparse patient records. */
+    val meta: String = ""
 )
 
 private fun formatWorkoutDate(epochMs: Long?): String {
@@ -715,6 +717,14 @@ private fun UserRow(user: UserItem, isAdmin: Boolean, onClick: () -> Unit) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(user.name, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
                 Text(user.subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (user.meta.isNotBlank()) {
+                    Text(
+                        user.meta,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Medium,
+                        color = DesignTokens.Colors.Primary
+                    )
+                }
             }
 
             // Role badge (for admin view) or status badge

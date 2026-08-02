@@ -80,7 +80,7 @@ fun EditAssignmentScreen(
                 patientId = assignment.patientId
                 sets = assignment.sets.coerceIn(1, 20)
                 reps = assignment.reps.coerceIn(1, 99)
-                dailyFrequency = assignment.dailyFrequency.coerceIn(1, 3)
+                dailyFrequency = assignment.dailyFrequency.coerceIn(1, MAX_DAILY_FREQUENCY)
                 restSeconds = assignment.restSeconds.coerceIn(5, 600)
                 startDateInput = runCatching { LocalDate.parse(assignment.startDate).format(DisplayDate) }
                     .getOrDefault(startDateInput)
@@ -295,11 +295,12 @@ fun EditAssignmentScreen(
             )
 
             SectionTitle("Frequency")
-            ChipPicker(
+            ExpandableCountPicker(
                 label = "Times per day",
-                options = listOf(1, 2, 3),
-                selected = dailyFrequency,
+                value = dailyFrequency,
                 onSelect = { dailyFrequency = it },
+                baseOptions = listOf(1, 2, 3),
+                max = MAX_DAILY_FREQUENCY,
                 renderOption = { "${it}×" },
                 modifier = Modifier.tutorialTarget(TutorialIds.EA_FREQUENCY)
             )

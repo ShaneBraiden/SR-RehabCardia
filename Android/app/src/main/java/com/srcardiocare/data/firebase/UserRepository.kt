@@ -92,6 +92,56 @@ object UserRepository {
     }
 
     /**
+     * Files the signed-in user's own request to have their account deleted.
+     *
+     * Deliberately a *request* rather than an immediate delete. Everything in
+     * this app is a clinical record created under a clinician's supervision,
+     * and record-retention law generally outlives a patient's wish to leave —
+     * so a one-tap hard delete would either break that obligation or lie about
+     * what it did. The callable blocks the account immediately, which is the
+     * part the user actually feels, and hands the retention decision to the
+     * clinic. The published deletion policy at /delete-account.html describes
+     * exactly this, so the in-app path and the web path agree.
+     */
+    suspend fun requestOwnAccountDeletion(reason: String = ""): String {
+        try {
+            val result = FirebaseClients.functions
+                .getHttpsCallable("requestAccountDeletion")
+                .call(mapOf("reason" to reason.trim().take(500)))
+                .await()
+            @Suppress("UNCHECKED_CAST")
+            val data = result.data as? Map<String, Any?>
+            return data?.get("requestId") as? String ?: ""
+        } catch (e: FirebaseFunctionsException) {
+            throw Exception(e.message ?: "Could not submit the deletion request", e)
+        }
+    }
+
+    /**
+     * Stamps the user's own document with the disclosure version they accepted.
+     *
+     * Best-effort by design: the local record in
+     * [com.srcardiocare.core.consent.ConsentManager] is what gates the UI, and
+     * a patient who has just tapped "I understand" should not be held at a
+     * blocking screen because the ward's wifi dropped. A failure here re-prompts
+     * on a later launch, which is the safe direction to fail in.
+     */
+    suspend fun recordConsent(version: Int) {
+        val uid = AuthRepository.currentUID ?: return
+        runCatching {
+            FirebaseClients.db.collection("users").document(uid).set(
+                mapOf(
+                    "consent" to mapOf(
+                        "version" to version,
+                        "acceptedAt" to FieldValue.serverTimestamp()
+                    )
+                ),
+                SetOptions.merge()
+            ).await()
+        }
+    }
+
+    /**
      * Invokes the callable and unwraps its error. Callable failures surface as
      * [FirebaseFunctionsException] whose `message` carries the server's text,
      * which is already written for the clinician reading it.

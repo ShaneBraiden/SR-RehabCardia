@@ -49,6 +49,16 @@ data class Exercise(
     val name: String = "",
     val description: String = "",
     val category: String = "",
+    /**
+     * Second, independent axis for organising the library.
+     *
+     * `category` is already spoken for by the rehab stage the exercise belongs
+     * to (1st week, 1st month, 3rd month, 6th month), which leaves nowhere to
+     * record what the exercise actually *is*. `group` is that: body region,
+     * modality, condition — whatever the clinic settles on. Free text, like
+     * `category`, so existing documents need no migration and read back blank.
+     */
+    val group: String = "",
     val difficultyLevel: String = "",
     val durationSeconds: Int = 0,
     val videoUrl: String? = null,
@@ -183,7 +193,20 @@ data class Assignment(
     val completionThreshold: Float = 0.8f, // 0.0-1.0, what % = "fully completed"
     val isActive: Boolean = true,       // Soft delete / reassignment
     val createdAt: String? = null       // Server timestamp
-)
+) {
+    companion object {
+        /**
+         * Upper bound on [dailyFrequency].
+         *
+         * Lives here rather than in the prescribing screen because the read
+         * path clamps too: the mappers used to pin the field to 1..3, so a
+         * prescription of four sessions a day would have been written
+         * faithfully and then read back as three — the patient would simply
+         * have been shown the wrong plan, with nothing to indicate it.
+         */
+        const val MAX_DAILY_FREQUENCY = 10
+    }
+}
 
 /** Status of an assignment after it expires (for history) */
 enum class AssignmentHistoryStatus {

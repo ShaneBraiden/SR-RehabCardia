@@ -52,11 +52,16 @@ class PatientListViewModel : ViewModel() {
 
                 // Compute status based on today's assignment completion for patients
                 val patientStatusMap = mutableMapOf<String, UserStatus>()
+                // Rehab week counts from the patient's earliest assignment, so
+                // it comes off the same read the status already needs — no
+                // extra round trip per patient.
+                val patientWeekMap = mutableMapOf<String, Int>()
                 val today = LocalDate.now().toString()
                 users.filter { it.role.ifBlank { "patient" } == "patient" }.forEach { patient ->
                     try {
                         val assignments =
                             AssignmentRepository.getAssignmentsFor(patient.id, uid, role)
+                        rehabWeek(assignments)?.let { patientWeekMap[patient.id] = it }
                         patientStatusMap[patient.id] = when {
                             assignments.isEmpty() -> UserStatus.INACTIVE
                             else -> {
@@ -101,7 +106,15 @@ class PatientListViewModel : ViewModel() {
                         else -> user.injuries.firstOrNull() ?: user.primaryGoal ?: "Patient"
                     } + if (user.isBlocked) " • Blocked" else ""
 
-                    UserItem(user.id, name, subtitle, r, status, isOnline, initials)
+                    val meta = if (r == "patient") {
+                        patientMetaLine(
+                            age = ageFrom(user.dateOfBirth),
+                            sex = sexInitial(user.gender),
+                            weekNumber = patientWeekMap[user.id]
+                        )
+                    } else ""
+
+                    UserItem(user.id, name, subtitle, r, status, isOnline, initials, meta)
                 }
 
                 _state.update {

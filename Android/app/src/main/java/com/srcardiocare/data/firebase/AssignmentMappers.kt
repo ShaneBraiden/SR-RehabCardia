@@ -21,7 +21,8 @@ fun Map<String, Any?>.toAssignment(id: String): Assignment = Assignment(
     exerciseDifficulty = this["exerciseDifficulty"] as? String,
     startDate = this["startDate"] as? String ?: LocalDate.now().toString(),
     endDate = this["endDate"] as? String ?: LocalDate.now().plusDays(7).toString(),
-    dailyFrequency = ((this["dailyFrequency"] as? Number)?.toInt() ?: 3).coerceIn(1, 3),
+    dailyFrequency = ((this["dailyFrequency"] as? Number)?.toInt() ?: 3)
+        .coerceIn(1, Assignment.MAX_DAILY_FREQUENCY),
     sets = (this["sets"] as? Number)?.toInt() ?: 3,
     reps = (this["reps"] as? Number)?.toInt() ?: 10,
     restSeconds = (this["restSeconds"] as? Number)?.toInt() ?: 45,

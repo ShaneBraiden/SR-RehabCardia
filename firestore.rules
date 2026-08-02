@@ -160,6 +160,18 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // ── Account deletion requests ─────────────────────────────────────────
+    // Written only by the `requestAccountDeletion` callable, which runs on the
+    // Admin SDK and bypasses these rules. No client write path exists on
+    // purpose: the request also blocks the account, and a client that could
+    // author these documents could block anyone it could name. Clinicians read
+    // them because they are the ones who have to action the deletion.
+    match /accountDeletionRequests/{userId} {
+      allow get, list:              if isAdmin() ||
+        (isDoctor() && resource.data.get('assignedDoctorId', '') == uid());
+      allow create, update, delete: if false;
+    }
+
     // ── Exercise library (shared clinical content, not patient data) ───────
     match /exercises/{exerciseId} {
       allow read:                    if isActive();

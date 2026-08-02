@@ -12,10 +12,12 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,12 +26,15 @@ import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.rememberNavController
 import com.srcardiocare.core.locale.LocaleManager
+import com.srcardiocare.core.prefs.AppPreferences
+import com.srcardiocare.ui.screens.onboarding.LanguagePickerScreen
 import com.srcardiocare.core.push.PendingRoute
 import com.srcardiocare.core.push.PushMessagingService
 import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.navigation.SRCardiocareNavGraph
 import com.srcardiocare.navigation.Route
 import com.srcardiocare.ui.components.AppUpdateGate
+import com.srcardiocare.ui.components.ConsentGate
 import com.srcardiocare.ui.theme.SRCardiocareTheme
 
 class MainActivity : ComponentActivity() {
@@ -47,7 +52,37 @@ class MainActivity : ComponentActivity() {
         capturePushIntent(intent)
 
         setContent {
-            SRCardiocareTheme {
+            // Theme is observed rather than read once, so the Settings screen
+            // repaints the app the moment it changes — unlike language, which
+            // has to recreate the activity to re-resolve resources. The direct
+            // read comes first because it hydrates the flow from disk, so the
+            // very first frame is already correct rather than a flash of the
+            // default.
+            val storedTheme = remember { AppPreferences.getThemeMode(this) }
+            val liveTheme by AppPreferences.themeMode.collectAsState()
+            val darkTheme = when (liveTheme ?: storedTheme) {
+                AppPreferences.ThemeMode.LIGHT -> false
+                AppPreferences.ThemeMode.DARK -> true
+                else -> isSystemInDarkTheme()
+            }
+
+            SRCardiocareTheme(darkTheme = darkTheme) {
+                // Asked once, before anything else is rendered: this is the one
+                // screen whose own language cannot be assumed.
+                var languageChosen by remember {
+                    mutableStateOf(LocaleManager.hasChosenLanguage(this@MainActivity))
+                }
+                if (!languageChosen) {
+                    LanguagePickerScreen(onChoose = { tag ->
+                        LocaleManager.setLanguage(this@MainActivity, tag)
+                        languageChosen = true
+                        // Resources are bound in attachBaseContext, so the new
+                        // locale only takes hold on a fresh activity.
+                        recreate()
+                    })
+                    return@SRCardiocareTheme
+                }
+
                 // Wraps everything, including login. A build pulled because it
                 // mishandles clinical data must not reach a dashboard, and the
                 // sign-in screen is app content like any other. While a forced
@@ -93,12 +128,28 @@ class MainActivity : ComponentActivity() {
                                 .background(MaterialTheme.colorScheme.background)
                         )
                     } else {
-                        val navController = rememberNavController()
-                        Box(modifier = Modifier.fillMaxSize()) {
-                            SRCardiocareNavGraph(
-                                navController = navController,
-                                startDestination = startDest!!
-                            )
+                        // Nothing clinical is reachable until the signed-in user
+                        // has accepted the current disclaimer and health-data
+                        // disclosure. Placed here rather than inside the nav
+                        // graph so no deep link from a push notification can
+                        // route around it.
+                        ConsentGate(
+                            uid = FirebaseService.currentUID,
+                            onDecline = {
+                                FirebaseService.logout()
+                                // Recreating re-runs the auth resolution above,
+                                // which lands on Login. Navigating instead would
+                                // leave the authenticated back stack intact.
+                                recreate()
+                            }
+                        ) {
+                            val navController = rememberNavController()
+                            Box(modifier = Modifier.fillMaxSize()) {
+                                SRCardiocareNavGraph(
+                                    navController = navController,
+                                    startDestination = startDest!!
+                                )
+                            }
                         }
                     }
                 }
