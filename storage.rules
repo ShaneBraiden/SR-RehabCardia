@@ -3,10 +3,21 @@ rules_version = '2';
 // ─────────────────────────────────────────────────────────────────────────────
 // SR-Cardiocare — Cloud Storage security rules
 //
-// Roles come from Firebase Auth custom claims (see firestore.rules and the
-// syncUserClaims Cloud Function). Storage paths are addressed by patient UID
-// and carry no metadata to authorise against, so doctor scoping needs one
-// cross-service lookup of the patient's user document.
+// Roles are read from the caller's `users/{uid}` document via cross-service
+// rules, matching firestore.rules revision 3.
+//
+// The previous revision of this file read roles from Firebase Auth CUSTOM
+// CLAIMS. firestore.rules was moved off claims because the `syncUserClaims`
+// Cloud Function is not deployed, so no token carries a `role` claim — but
+// this file was left on claims. The result was role() == '' for every caller,
+// isActive() false, and therefore EVERY read and write in Storage denied:
+// exercise video uploads failed, and screens that load media failed to load.
+// If syncUserClaims is ever deployed, both files should move back to claims
+// together — never one without the other.
+//
+// Storage paths are addressed by patient UID and carry no metadata to
+// authorise against, so doctor scoping also needs a lookup of the patient's
+// user document.
 // ─────────────────────────────────────────────────────────────────────────────
 
 service firebase.storage {
@@ -18,16 +29,22 @@ service firebase.storage {
       return request.auth != null;
     }
 
-    function claims() {
-      return request.auth.token;
+    // The caller's own user document, via cross-service rules. An authenticated
+    // caller with no document makes this error, which denies — the same
+    // outcome as an explicit deny.
+    function userDoc() {
+      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data;
     }
 
     function role() {
-      return isAuth() ? claims().get('role', '') : '';
+      return isAuth() ? userDoc().get('role', '') : '';
     }
 
+    // No `role() != ''` term here. Authorisation for a given path is decided by
+    // isOwner/isDoctor/isAdmin below; requiring a non-empty role on top of that
+    // is what turned a missing role source into a total lockout.
     function isActive() {
-      return isAuth() && claims().get('isBlocked', false) != true && role() != '';
+      return isAuth() && userDoc().get('isBlocked', false) != true;
     }
 
     function isOwner(uid) {
@@ -44,6 +61,8 @@ service firebase.storage {
         firestore.exists(/databases/(default)/documents/users/$(patientId)) &&
         firestore.get(/databases/(default)/documents/users/$(patientId))
           .data.get('assignedDoctorId', '') == request.auth.uid);
+      // Note: patientId is a path segment, so this is one extra Firestore read
+      // per request on doctor-scoped paths. Same trade firestore.rules makes.
     }
 
     // ── Content type / size guards ────────────────────────────────────────

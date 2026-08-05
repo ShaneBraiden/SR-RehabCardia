@@ -53,6 +53,10 @@ import com.srcardiocare.data.model.Assignment
 import com.srcardiocare.ui.components.AppLogoWatermark
 import com.srcardiocare.ui.components.FullscreenToggleButton
 import com.srcardiocare.ui.components.FullscreenVideoEffect
+import com.srcardiocare.ui.components.PlayerLifecycleEffect
+import com.srcardiocare.ui.components.VideoLoadingOverlay
+import com.srcardiocare.ui.components.WebViewLifecycleEffect
+import com.srcardiocare.ui.components.rememberVideoLoadingState
 import com.srcardiocare.ui.components.rememberToast
 import com.srcardiocare.ui.components.tutorial.TutorialHelpButton
 import com.srcardiocare.ui.components.tutorial.TutorialHost
@@ -157,6 +161,12 @@ fun AssignmentWorkoutScreen(
     }
     LaunchedEffect(exoPlayer, isMuted) { exoPlayer?.volume = if (isMuted) 0f else 1f }
     DisposableEffect(exoPlayer) { onDispose { exoPlayer?.release() } }
+
+    // The demo loops forever. Backgrounding the app without this leaves it
+    // decoding video and pulling audio until the screen is left — on a workout
+    // the patient may background mid-set, so this is the app's single largest
+    // avoidable drain.
+    PlayerLifecycleEffect(exoPlayer)
 
     // Rest-countdown ticker
     LaunchedEffect(phase) {
@@ -406,10 +416,19 @@ private fun VideoSurface(
     onToggleMute: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // The demo video is the whole point of this screen, so a black rectangle
+    // while it loads is the difference between "buffering" and "broken".
+    var webLoading by remember { mutableStateOf(true) }
+    val exoLoading by rememberVideoLoadingState(exoPlayer)
+
     Box(modifier = modifier.background(Color.Black)) {
         when {
             videoUrl.isNullOrBlank() -> NoVideoPlaceholder()
-            isYoutube -> YouTubeWebPlayer(html = playerHtml, modifier = Modifier.fillMaxSize())
+            isYoutube -> YouTubeWebPlayer(
+                html = playerHtml,
+                modifier = Modifier.fillMaxSize(),
+                onLoadingChange = { webLoading = it }
+            )
             exoPlayer != null -> AndroidView(
                 factory = { ctx ->
                     PlayerView(ctx).apply {
@@ -420,6 +439,13 @@ private fun VideoSurface(
                     }
                 },
                 update = { it.player = exoPlayer },
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+
+        if (!videoUrl.isNullOrBlank()) {
+            VideoLoadingOverlay(
+                visible = if (isYoutube) webLoading else exoLoading,
                 modifier = Modifier.fillMaxSize()
             )
         }
@@ -822,7 +848,16 @@ private fun playBeep(short: Boolean) {
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-private fun YouTubeWebPlayer(html: String, modifier: Modifier = Modifier) {
+private fun YouTubeWebPlayer(
+    html: String,
+    modifier: Modifier = Modifier,
+    onLoadingChange: (Boolean) -> Unit = {}
+) {
+    // Held so the embed can be paused when the app goes to the background —
+    // a YouTube iframe left running keeps playing audio behind the launcher.
+    var webViewRef by remember { mutableStateOf<WebView?>(null) }
+    WebViewLifecycleEffect(webViewRef)
+
     AndroidView(
         factory = { context: Context ->
             WebView(context).apply {
@@ -843,9 +878,30 @@ private fun YouTubeWebPlayer(html: String, modifier: Modifier = Modifier) {
                             host.endsWith("googlevideo.com")
                         return !allowed  // true = block, false = allow
                     }
+
+                    override fun onPageFinished(view: WebView, url: String?) {
+                        // The embed document is up. The iframe inside it still
+                        // has its own buffering to do, but from here YouTube's
+                        // own player chrome takes over the waiting — stacking
+                        // our spinner on top of theirs is worse than either.
+                        onLoadingChange(false)
+                    }
+
+                    override fun onReceivedError(
+                        view: WebView,
+                        request: WebResourceRequest,
+                        error: android.webkit.WebResourceError
+                    ) {
+                        // Only the main document failing means we will never
+                        // get an onPageFinished; a stray sub-resource 404 is
+                        // not a reason to give up on the spinner.
+                        if (request.isForMainFrame) onLoadingChange(false)
+                    }
                 }
                 tag = html
+                onLoadingChange(true)
                 loadDataWithBaseURL("https://www.youtube.com", html, "text/html", "utf-8", null)
+                webViewRef = this
             }
         },
         // Only reload when the document actually changed (e.g. the mute toggle).
@@ -853,8 +909,16 @@ private fun YouTubeWebPlayer(html: String, modifier: Modifier = Modifier) {
         update = { webView ->
             if (webView.tag != html) {
                 webView.tag = html
+                onLoadingChange(true)
                 webView.loadDataWithBaseURL("https://www.youtube.com", html, "text/html", "utf-8", null)
             }
+        },
+        // Tears the player down for good when the surface leaves composition,
+        // rather than leaving a detached WebView holding a media session.
+        onRelease = { webView ->
+            webViewRef = null
+            webView.loadUrl("about:blank")
+            webView.destroy()
         },
         modifier = modifier
     )

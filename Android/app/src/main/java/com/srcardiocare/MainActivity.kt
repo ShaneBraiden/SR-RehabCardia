@@ -16,6 +16,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -67,61 +68,59 @@ class MainActivity : ComponentActivity() {
             }
 
             SRCardiocareTheme(darkTheme = darkTheme) {
-                // Asked once, before anything else is rendered: this is the one
-                // screen whose own language cannot be assumed.
-                var languageChosen by remember {
-                    mutableStateOf(LocaleManager.hasChosenLanguage(this@MainActivity))
-                }
-                if (!languageChosen) {
-                    LanguagePickerScreen(onChoose = { tag ->
-                        LocaleManager.setLanguage(this@MainActivity, tag)
-                        languageChosen = true
-                        // Resources are bound in attachBaseContext, so the new
-                        // locale only takes hold on a fresh activity.
-                        recreate()
-                    })
-                    return@SRCardiocareTheme
+                // Auth resolution is hoisted above every gate on purpose.
+                //
+                // It used to live inside AppUpdateGate's content lambda, which
+                // meant an update-status flip — re-checked on *every* resume —
+                // moved the whole authenticated subtree to a different call
+                // site, disposing it. That threw away the session, re-ran the
+                // Firestore auth read, and rebuilt the consent gate from
+                // scratch; a repaint the user only asked for by changing the
+                // theme could take the same path. State that outlives a gate
+                // must not be owned by the gate.
+                var session by remember { mutableStateOf<Session?>(null) }
+
+                // Request POST_NOTIFICATIONS permission on Android 13+
+                val notifPermissionLauncher = rememberLauncherForActivityResult(
+                    ActivityResultContracts.RequestPermission()
+                ) { /* granted or denied — notifications are optional */ }
+
+                LaunchedEffect(Unit) {
+                    val auth = (application as SRCardiocareApp).awaitAuth()
+                    val role = auth.userRole.orEmpty()
+
+                    session = Session(
+                        role = role,
+                        startDestination = when {
+                            !auth.isLoggedIn -> Route.Login.path
+                            role == "ADMIN" -> Route.AdminDashboard.path
+                            role == "DOCTOR" -> Route.DoctorDashboard.path
+                            else -> Route.PatientHome.path
+                        },
+                        isLoggedIn = auth.isLoggedIn
+                    )
+
+                    // Refresh FCM token on every startup so Firestore always has a valid token.
+                    FirebaseService.currentUID?.let { PushMessagingService.saveFcmToken(it) }
+
+                    // Request notification permission after auth resolves (non-blocking)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        val granted = ContextCompat.checkSelfPermission(
+                            this@MainActivity,
+                            Manifest.permission.POST_NOTIFICATIONS
+                        ) == PackageManager.PERMISSION_GRANTED
+                        if (!granted) {
+                            notifPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                    }
                 }
 
                 // Wraps everything, including login. A build pulled because it
                 // mishandles clinical data must not reach a dashboard, and the
-                // sign-in screen is app content like any other. While a forced
-                // update is showing, the block below never composes — auth is
-                // not resolved and no Firestore read is issued.
+                // sign-in screen is app content like any other.
                 AppUpdateGate {
-                    var startDest by remember { mutableStateOf<String?>(null) }
-
-                    // Request POST_NOTIFICATIONS permission on Android 13+
-                    val notifPermissionLauncher = rememberLauncherForActivityResult(
-                        ActivityResultContracts.RequestPermission()
-                    ) { /* granted or denied — notifications are optional */ }
-
-                    LaunchedEffect(Unit) {
-                        val auth = (application as SRCardiocareApp).awaitAuth()
-
-                        startDest = when {
-                            !auth.isLoggedIn -> Route.Login.path
-                            auth.userRole == "ADMIN" -> Route.AdminDashboard.path
-                            auth.userRole == "DOCTOR" -> Route.DoctorDashboard.path
-                            else -> Route.PatientHome.path
-                        }
-
-                        // Refresh FCM token on every startup so Firestore always has a valid token.
-                        FirebaseService.currentUID?.let { PushMessagingService.saveFcmToken(it) }
-
-                        // Request notification permission after auth resolves (non-blocking)
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            val granted = ContextCompat.checkSelfPermission(
-                                this@MainActivity,
-                                Manifest.permission.POST_NOTIFICATIONS
-                            ) == PackageManager.PERMISSION_GRANTED
-                            if (!granted) {
-                                notifPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                            }
-                        }
-                    }
-
-                    if (startDest == null) {
+                    val current = session
+                    if (current == null) {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -143,18 +142,61 @@ class MainActivity : ComponentActivity() {
                                 recreate()
                             }
                         ) {
-                            val navController = rememberNavController()
-                            Box(modifier = Modifier.fillMaxSize()) {
-                                SRCardiocareNavGraph(
-                                    navController = navController,
-                                    startDestination = startDest!!
-                                )
+                            // Language is a patient-facing choice: doctor and
+                            // admin screens are not localised, so asking a
+                            // clinician would offer them a half-translated app.
+                            // Gated on a resolved session so it lands *after*
+                            // first login rather than in front of it.
+                            LanguageGate(
+                                enabled = current.isLoggedIn && current.role == "PATIENT"
+                            ) {
+                                val navController = rememberNavController()
+                                Box(modifier = Modifier.fillMaxSize()) {
+                                    SRCardiocareNavGraph(
+                                        navController = navController,
+                                        startDestination = current.startDestination
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
         }
+    }
+
+    /** Everything the shell needs from auth, resolved once per activity. */
+    private data class Session(
+        val role: String,
+        val startDestination: String,
+        val isLoggedIn: Boolean
+    )
+
+    /**
+     * Shows the one-time language choice when [enabled], then gets out of the way.
+     *
+     * [enabled] false is a pass-through rather than a "chosen" marker: a doctor
+     * signing out of a shared handset must not consume the prompt that the
+     * patient signing in after them is owed.
+     */
+    @Composable
+    private fun LanguageGate(enabled: Boolean, content: @Composable () -> Unit) {
+        var chosen by remember {
+            mutableStateOf(LocaleManager.hasChosenLanguage(this@MainActivity))
+        }
+
+        if (!enabled || chosen) {
+            content()
+            return
+        }
+
+        LanguagePickerScreen(onChoose = { tag ->
+            LocaleManager.setLanguage(this@MainActivity, tag)
+            chosen = true
+            // Resources are bound in attachBaseContext, so the new locale only
+            // takes hold on a fresh activity.
+            recreate()
+        })
     }
 
     override fun onNewIntent(intent: Intent) {

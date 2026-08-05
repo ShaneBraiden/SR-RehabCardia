@@ -39,10 +39,29 @@ object ConsentManager {
      *  over to the next person who signs in. */
     private fun key(uid: String) = "consent_v${CURRENT_VERSION}_$uid"
 
-    fun hasAccepted(context: Context, uid: String): Boolean =
-        prefs(context).getBoolean(key(uid), false)
+    /**
+     * Uids known to have accepted, for the life of the process.
+     *
+     * The gate is read during composition, and composition happens far more
+     * often than anyone changes their mind — a theme switch alone repaints the
+     * whole tree. Answering from memory keeps a blocking decision off the disk
+     * path and, more importantly, makes it monotonic within a session: once a
+     * user has accepted, nothing that merely re-renders can walk that back.
+     * SharedPreferences remains the source of truth across launches.
+     */
+    private val acceptedInSession = mutableSetOf<String>()
+
+    fun hasAccepted(context: Context, uid: String): Boolean {
+        synchronized(acceptedInSession) {
+            if (uid in acceptedInSession) return true
+        }
+        val stored = prefs(context).getBoolean(key(uid), false)
+        if (stored) synchronized(acceptedInSession) { acceptedInSession.add(uid) }
+        return stored
+    }
 
     fun markAccepted(context: Context, uid: String) {
+        synchronized(acceptedInSession) { acceptedInSession.add(uid) }
         prefs(context).edit().putBoolean(key(uid), true).apply()
     }
 
@@ -51,6 +70,7 @@ object ConsentManager {
      * declines, so that a decline is never mistaken for silent acceptance.
      */
     fun clear(context: Context, uid: String) {
+        synchronized(acceptedInSession) { acceptedInSession.remove(uid) }
         prefs(context).edit().remove(key(uid)).apply()
     }
 }

@@ -400,6 +400,67 @@ private val donutChartColors = listOf(
     Color(0xFFFF5722)   // Deep Orange
 )
 
+// ── Empty Donut ────────────────────────────────────────────────────────────────
+
+/**
+ * The donut with nothing in it yet.
+ *
+ * A doctor whose patients have not logged a session sees the same ring in the
+ * same place at the same size as a doctor whose have — just unfilled. Replacing
+ * the chart with a line of text, which is what this used to do, made an empty
+ * dashboard look like a broken one: the card collapsed, the layout shifted, and
+ * there was nothing to suggest the chart would ever appear. Drawing the track
+ * says "no data yet" and "this is where it will go" at once.
+ *
+ * Deliberately not a [SkeletonDonutChart]: that one shimmers, and shimmer means
+ * "loading, wait". This state is settled.
+ */
+@Composable
+private fun EmptyDonutChart() {
+    val trackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.14f)
+
+    Box(
+        modifier = Modifier
+            .size(240.dp)
+            .padding(8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            // Same geometry as the populated chart, so the ring does not move
+            // or resize the moment the first session lands.
+            val strokeWidth = 40.dp.toPx()
+            val padding = strokeWidth / 2 + 8.dp.toPx()
+            val radius = (size.minDimension - padding * 2) / 2
+            val center = Offset(size.width / 2, size.height / 2)
+
+            drawArc(
+                color = trackColor,
+                startAngle = -90f,
+                sweepAngle = 360f,
+                useCenter = false,
+                topLeft = Offset(center.x - radius, center.y - radius),
+                size = Size(radius * 2, radius * 2),
+                style = Stroke(width = strokeWidth)
+            )
+        }
+
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                "0",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                "No sessions yet",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1
+            )
+        }
+    }
+}
+
 // ── Workout Donut Chart Card ───────────────────────────────────────────────────
 @Composable
 private fun WorkoutChartCard(
@@ -432,18 +493,7 @@ private fun WorkoutChartCard(
             Spacer(modifier = Modifier.height(DesignTokens.Spacing.LG))
 
             if (stats.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .size(240.dp)
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        "No workout data yet.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                EmptyDonutChart()
             } else {
                 val totalSessions = stats.sumOf { it.completedSessions }.toFloat()
                 val sweepAngles = if (totalSessions > 0) {

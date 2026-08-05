@@ -53,6 +53,10 @@ import com.srcardiocare.data.firebase.ExerciseRepository
 import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.data.firebase.UserRepository
 import com.srcardiocare.ui.components.ShimmerBox
+import com.srcardiocare.ui.components.PlayerLifecycleEffect
+import com.srcardiocare.ui.components.VideoLoadingOverlay
+import com.srcardiocare.ui.components.WebViewLifecycleEffect
+import com.srcardiocare.ui.components.rememberVideoLoadingState
 import com.srcardiocare.ui.components.rememberToast
 import com.srcardiocare.ui.components.tutorial.TutorialHelpButton
 import com.srcardiocare.ui.components.tutorial.TutorialHost
@@ -481,6 +485,14 @@ private fun VideoPlayerDialog(
                               </iframe>
                             </body></html>
                         """.trimIndent()
+                        // A full-screen black dialog with no spinner is
+                        // indistinguishable from a crash on a slow connection.
+                        var webLoading by remember(videoId) { mutableStateOf(true) }
+                        // Paused when the app is backgrounded; a YouTube iframe
+                        // otherwise keeps playing audio behind the launcher.
+                        var webViewRef by remember(videoId) { mutableStateOf<WebView?>(null) }
+                        WebViewLifecycleEffect(webViewRef)
+
                         AndroidView(
                             factory = { context: Context ->
                                 WebView(context).apply {
@@ -501,8 +513,23 @@ private fun VideoPlayerDialog(
                                                 host.endsWith("googlevideo.com")
                                             return !allowed  // true = block, false = allow
                                         }
+
+                                        override fun onPageFinished(view: WebView, url: String?) {
+                                            webLoading = false
+                                        }
+
+                                        override fun onReceivedError(
+                                            view: WebView,
+                                            request: WebResourceRequest,
+                                            error: android.webkit.WebResourceError
+                                        ) {
+                                            // Only a main-frame failure means no
+                                            // onPageFinished is coming.
+                                            if (request.isForMainFrame) webLoading = false
+                                        }
                                     }
                                     loadDataWithBaseURL("https://www.youtube.com", html, "text/html", "utf-8", null)
+                                    webViewRef = this
                                 }
                             },
                             // The dialog is already full-screen, so give the player the
@@ -510,6 +537,17 @@ private fun VideoPlayerDialog(
                             // Shorts in particular) letterbox down to a small centred
                             // box; the embed scales to fit whatever box it is given, so
                             // a full-screen box maximises the picture at any ratio.
+                            modifier = Modifier.fillMaxSize(),
+                            // Closing the dialog must stop playback outright, not
+                            // leave a detached WebView holding a media session.
+                            onRelease = { webView ->
+                                webViewRef = null
+                                webView.loadUrl("about:blank")
+                                webView.destroy()
+                            }
+                        )
+                        VideoLoadingOverlay(
+                            visible = webLoading,
                             modifier = Modifier.fillMaxSize()
                         )
                     }
@@ -535,6 +573,9 @@ private fun VideoPlayerDialog(
                         onDispose { exoPlayer.release() }
                     }
 
+                    val exoLoading by rememberVideoLoadingState(exoPlayer)
+                    PlayerLifecycleEffect(exoPlayer)
+
                     AndroidView(
                         factory = { ctx ->
                             PlayerView(ctx).apply {
@@ -547,6 +588,10 @@ private fun VideoPlayerDialog(
                             }
                         },
                         update = { it.player = exoPlayer },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    VideoLoadingOverlay(
+                        visible = exoLoading,
                         modifier = Modifier.fillMaxSize()
                     )
                 }

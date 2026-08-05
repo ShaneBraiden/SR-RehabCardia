@@ -18,7 +18,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 
 data class PatientWorkoutStat(
     val patientId: String,
@@ -69,9 +68,16 @@ class DoctorDashboardViewModel : ViewModel() {
                 val fullName = currentUser.fullName
                 val doctorName = when (role) {
                     "doctor" -> {
-                        // Prefer "Dr. <last name>", but fall back to first name / full
-                        // name when last name is missing so we never render a bare "Dr.".
-                        val nameForDoctor = lastName.ifBlank { fullName }
+                        // Full name: "Dr. <first> <last>". Surname-only reads as
+                        // formal address, but on a dashboard the clinician is
+                        // looking at their *own* record — seeing the whole name
+                        // is how they confirm they are in the right account on a
+                        // shared ward device. Falls back through whatever parts
+                        // exist so we never render a bare "Dr.".
+                        val nameForDoctor = listOf(firstName, lastName)
+                            .filter { it.isNotBlank() }
+                            .joinToString(" ")
+                            .ifBlank { fullName }
                         if (nameForDoctor.isBlank()) "Doctor" else "Dr. $nameForDoctor"
                     }
                     "admin" -> if (fullName.isBlank()) "Admin" else "$fullName (Admin)"
@@ -88,7 +94,6 @@ class DoctorDashboardViewModel : ViewModel() {
                 val patientRefs = users.filter { it.role.ifBlank { "patient" } == "patient" }
                 val patientStatusMap = mutableMapOf<String, UserStatus>()
                 val patientWeekMap = mutableMapOf<String, Int>()
-                val today = LocalDate.now().toString()
 
                 coroutineScope {
                     patientRefs.map { patient ->
@@ -100,16 +105,27 @@ class DoctorDashboardViewModel : ViewModel() {
                                 val status = when {
                                     assignments.isEmpty() -> UserStatus.INACTIVE
                                     else -> {
+                                        // One query per patient, not one per
+                                        // assignment. This used to fan out to
+                                        // patients × assignments round trips on
+                                        // every dashboard load *and* every
+                                        // pull-to-refresh — a doctor with 30
+                                        // patients on 4 exercises each paid 120
+                                        // queries to colour some status dots.
+                                        // Today's sessions for a patient are a
+                                        // single indexed read; the per-assignment
+                                        // split is arithmetic we can do locally.
+                                        val completedToday = try {
+                                            SessionRepository.getTodaysSessions(patient.id)
+                                                .filter { it.status == SessionStatus.COMPLETED }
+                                                .groupingBy { it.assignmentId }
+                                                .eachCount()
+                                        } catch (_: Exception) {
+                                            emptyMap<String, Int>()
+                                        }
+
                                         val completedAssignmentsToday = assignments.count { assignment ->
-                                            val dailyFrequency = assignment.dailyFrequency
-                                            val completedSessionsToday = try {
-                                                SessionRepository.getSessionsForDate(patient.id, assignment.id, today).count {
-                                                    it.status == SessionStatus.COMPLETED
-                                                }
-                                            } catch (_: Exception) {
-                                                0
-                                            }
-                                            completedSessionsToday >= dailyFrequency
+                                            (completedToday[assignment.id] ?: 0) >= assignment.dailyFrequency
                                         }
                                         if (completedAssignmentsToday == assignments.size) UserStatus.ON_TRACK else UserStatus.NEEDS_ATTENTION
                                     }

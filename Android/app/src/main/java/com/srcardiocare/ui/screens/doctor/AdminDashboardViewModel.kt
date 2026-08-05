@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 
 class AdminDashboardViewModel : ViewModel() {
 
@@ -98,7 +97,6 @@ class AdminDashboardViewModel : ViewModel() {
                 }
 
                 // Compute patient workout status (On Track / Attention / Not Assigned)
-                val today = LocalDate.now().toString()
                 val patients = allUsers.filter { it.role.ifBlank { "patient" } == "patient" }
 
                 var onTrack = 0
@@ -116,14 +114,19 @@ class AdminDashboardViewModel : ViewModel() {
                             try {
                                 val assignments = AssignmentRepository.getAssignments(patient.id)
                                 if (assignments.isEmpty()) return@async "not_assigned"
+                                // One read per patient rather than one per
+                                // assignment: today's sessions come back in a
+                                // single query and the per-assignment tally is
+                                // arithmetic, not I/O.
+                                val completedToday = try {
+                                    SessionRepository.getTodaysSessions(patient.id)
+                                        .filter { it.status == SessionStatus.COMPLETED }
+                                        .groupingBy { it.assignmentId }
+                                        .eachCount()
+                                } catch (_: Exception) { emptyMap<String, Int>() }
+
                                 val completedAssignmentsToday = assignments.count { assignment ->
-                                    val dailyFrequency = assignment.dailyFrequency
-                                    val done = try {
-                                        SessionRepository.getSessionsForDate(patient.id, assignment.id, today).count {
-                                            it.status == SessionStatus.COMPLETED
-                                        }
-                                    } catch (_: Exception) { 0 }
-                                    done >= dailyFrequency
+                                    (completedToday[assignment.id] ?: 0) >= assignment.dailyFrequency
                                 }
                                 if (completedAssignmentsToday == assignments.size) "on_track" else "attention"
                             } catch (_: Exception) { "not_assigned" }

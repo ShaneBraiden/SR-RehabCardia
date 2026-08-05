@@ -77,8 +77,12 @@ fun AppUpdateGate(content: @Composable () -> Unit) {
     // process restarts, not forever.
     var optionalDismissed by remember { mutableStateOf(false) }
 
-    fun refresh() {
+    fun refresh(force: Boolean = false) {
         scope.launch {
+            // The resume-driven check is allowed to answer from cache; an
+            // explicit "I've already updated" is the one case where the user is
+            // telling us the cached answer is stale.
+            if (force) AppVersionRepository.invalidateCache()
             val result = AppVersionRepository.checkForUpdate(context)
             // A newly-raised floor must override a dismissal — "later" was
             // consent to skip a suggestion, not to ignore a hard requirement.
@@ -97,28 +101,37 @@ fun AppUpdateGate(content: @Composable () -> Unit) {
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    when (val current = status) {
-        is UpdateStatus.Required -> UpdateRequiredScreen(
-            message = current.message,
-            onUpdate = { openPlayStore(context, current.storeUrl) },
-            onRecheck = { refresh() },
+    // `content()` is invoked from exactly one call site.
+    //
+    // It used to appear in both the Optional and the UpToDate branch of a
+    // `when`. Those are two different positions in the composition, so every
+    // flip between "an update is available" and "you're up to date" — and the
+    // check re-runs on each resume — moved the entire app subtree, disposing it
+    // and every `remember` inside it. Screens lost their state and gates that
+    // had already been satisfied composed again from scratch. The optional
+    // dialog is now an overlay instead, which is what it always was visually.
+    val required = status as? UpdateStatus.Required
+
+    if (required != null) {
+        UpdateRequiredScreen(
+            message = required.message,
+            onUpdate = { openPlayStore(context, required.storeUrl) },
+            onRecheck = { refresh(force = true) },
         )
+    } else {
+        content()
+    }
 
-        is UpdateStatus.Optional -> {
-            content()
-            if (!optionalDismissed) {
-                UpdateAvailableDialog(
-                    message = current.message,
-                    onUpdate = {
-                        optionalDismissed = true
-                        openPlayStore(context, current.storeUrl)
-                    },
-                    onDismiss = { optionalDismissed = true },
-                )
-            }
-        }
-
-        UpdateStatus.UpToDate -> content()
+    val optional = status as? UpdateStatus.Optional
+    if (optional != null && !optionalDismissed) {
+        UpdateAvailableDialog(
+            message = optional.message,
+            onUpdate = {
+                optionalDismissed = true
+                openPlayStore(context, optional.storeUrl)
+            },
+            onDismiss = { optionalDismissed = true },
+        )
     }
 }
 

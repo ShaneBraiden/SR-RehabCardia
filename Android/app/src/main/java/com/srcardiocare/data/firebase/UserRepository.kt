@@ -110,7 +110,7 @@ object UserRepository {
                 .call(mapOf("reason" to reason.trim().take(500)))
                 .await()
             @Suppress("UNCHECKED_CAST")
-            val data = result.data as? Map<String, Any?>
+            val data = result.getData() as? Map<String, Any?>
             return data?.get("requestId") as? String ?: ""
         } catch (e: FirebaseFunctionsException) {
             throw Exception(e.message ?: "Could not submit the deletion request", e)

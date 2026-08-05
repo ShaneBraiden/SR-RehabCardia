@@ -86,7 +86,30 @@ object AppVersionRepository {
     }
 
     /**
+     * How long a gate result stays good for.
+     *
+     * The check runs on every resume, and "resume" fires every time the user
+     * glances at a notification and comes back — on a ward round that is dozens
+     * of times an hour, each one a Firestore round trip and a radio wake for a
+     * document that changes when we cut a release. Five minutes keeps the kill
+     * switch effectively immediate while collapsing that traffic to almost
+     * nothing.
+     */
+    private const val CACHE_TTL_MS = 5 * 60 * 1000L
+
+    @Volatile private var cachedStatus: UpdateStatus? = null
+    @Volatile private var cachedAtMs = 0L
+
+    /** Forces the next [checkForUpdate] to go to the network. */
+    fun invalidateCache() {
+        cachedStatus = null
+        cachedAtMs = 0L
+    }
+
+    /**
      * Fetches the gate and compares it against the installed build.
+     *
+     * Answers from a short-lived cache when one is warm; see [CACHE_TTL_MS].
      *
      * **Fails open.** A missing document, offline device, or malformed config
      * returns [UpdateStatus.UpToDate]. Locking a clinician out of a patient's
@@ -95,6 +118,17 @@ object AppVersionRepository {
      * exists to retire old versions, not to be a second authentication layer.
      */
     suspend fun checkForUpdate(context: Context): UpdateStatus {
+        cachedStatus?.let { cached ->
+            if (System.currentTimeMillis() - cachedAtMs < CACHE_TTL_MS) return cached
+        }
+
+        val fresh = fetchStatus(context)
+        cachedStatus = fresh
+        cachedAtMs = System.currentTimeMillis()
+        return fresh
+    }
+
+    private suspend fun fetchStatus(context: Context): UpdateStatus {
         val doc = try {
             FirebaseClients.db
                 .collection(CONFIG_COLLECTION)

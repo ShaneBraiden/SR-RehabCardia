@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 
 class PatientListViewModel : ViewModel() {
 
@@ -56,7 +55,6 @@ class PatientListViewModel : ViewModel() {
                 // it comes off the same read the status already needs — no
                 // extra round trip per patient.
                 val patientWeekMap = mutableMapOf<String, Int>()
-                val today = LocalDate.now().toString()
                 users.filter { it.role.ifBlank { "patient" } == "patient" }.forEach { patient ->
                     try {
                         val assignments =
@@ -65,16 +63,21 @@ class PatientListViewModel : ViewModel() {
                         patientStatusMap[patient.id] = when {
                             assignments.isEmpty() -> UserStatus.INACTIVE
                             else -> {
+                                // One read per patient rather than one per
+                                // assignment: today's sessions come back in a
+                                // single query and the per-assignment tally is
+                                // arithmetic, not I/O.
+                                val completedToday = try {
+                                    SessionRepository.getTodaysSessions(patient.id)
+                                        .filter { it.status == SessionStatus.COMPLETED }
+                                        .groupingBy { it.assignmentId }
+                                        .eachCount()
+                                } catch (_: Exception) {
+                                    emptyMap<String, Int>()
+                                }
+
                                 val completedAssignmentsToday = assignments.count { assignment ->
-                                    val dailyFrequency = assignment.dailyFrequency
-                                    val completedSessionsToday = try {
-                                        SessionRepository.getSessionsForDate(patient.id, assignment.id, today).count {
-                                            it.status == SessionStatus.COMPLETED
-                                        }
-                                    } catch (_: Exception) {
-                                        0
-                                    }
-                                    completedSessionsToday >= dailyFrequency
+                                    (completedToday[assignment.id] ?: 0) >= assignment.dailyFrequency
                                 }
                                 if (completedAssignmentsToday == assignments.size) UserStatus.ON_TRACK else UserStatus.NEEDS_ATTENTION
                             }
