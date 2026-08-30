@@ -20,8 +20,8 @@ android {
         applicationId = "com.srcardiocare"
         minSdk = 26
         targetSdk = 36
-        versionCode = 8
-        versionName = "1.1.1"
+        versionCode = 10
+        versionName = "1.1.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -62,6 +62,19 @@ android {
         // Ship only the locales we actually translate. AGP 9 removed
         // defaultConfig.resourceConfigurations — localeFilters replaces it.
         localeFilters += listOf("en", "ta")
+    }
+
+    bundle {
+        language {
+            // MUST stay false. Play delivers language splits by *device* locale,
+            // so with splitting on, a handset whose system language is English
+            // never receives values-ta at all and the in-app Tamil switch
+            // silently renders English. The bug cannot be seen in a debug APK —
+            // it only appears once the app is installed from a bundle.
+            // This app chooses its own language, so every locale we ship has to
+            // be in the base APK.
+            enableSplit = false
+        }
     }
 
     compileOptions {

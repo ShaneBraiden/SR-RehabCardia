@@ -116,16 +116,39 @@ fun PatientProfileScreen(
     val scope = rememberCoroutineScope()
     val toast = rememberToast()
 
+    // The viewer's own role, resolved once and reused. `assignments` is
+    // authorised per document for a doctor, so the read below has to know
+    // whether it may query the patient's whole set (admin, or the patient
+    // themselves) or must constrain to the caller's own doctorId.
+    suspend fun resolveViewerRole(): String {
+        if (currentUserRole.isBlank()) {
+            val uid = FirebaseService.currentUID
+            if (uid != null) {
+                currentUserRole = runCatching { UserRepository.getUser(uid).role }.getOrDefault("")
+            }
+        }
+        return currentUserRole
+    }
+
     // Reload patient profile + assignments (source of truth the patient reads).
     suspend fun loadPatientData() {
         try {
+            val viewerId = FirebaseService.currentUID
+            val viewerRole = resolveViewerRole()
             val patient = UserRepository.getUser(patientId)
             patientName = patient.fullName
             patientInitials = "${patient.firstName.firstOrNull() ?: ""}${patient.lastName.firstOrNull() ?: ""}".uppercase()
             patientCondition = patient.injuries.firstOrNull() ?: ""
             careStatus = patient.careStatus ?: ""
 
-            assignments = try { AssignmentRepository.getAssignments(patientId) } catch (_: Exception) { emptyList() }
+            // Doctors are authorised on `assignments` per document via the
+            // denormalised doctorId, so an unconstrained query by patientId is
+            // rejected *wholesale* — which showed up as "No exercises assigned
+            // yet" even straight after a successful assign.
+            assignments = try {
+                if (viewerId == null) emptyList()
+                else AssignmentRepository.getAssignmentsFor(patientId, viewerId, viewerRole)
+            } catch (_: Exception) { emptyList() }
             feedbacks = try { FeedbackRepository.getPatientFeedbacks(patientId) } catch (_: Exception) { emptyList() }
 
             // Build completed-workout durations (total = wall-clock incl. rest;
@@ -133,7 +156,10 @@ fun PatientProfileScreen(
             val durations = mutableListOf<WorkoutDuration>()
             assignments.forEach { a ->
                 val sessions = try {
-                    SessionRepository.getAllSessionsForAssignment(patientId, a.id)
+                    if (viewerId == null) emptyList()
+                    else SessionRepository.getAllSessionsForAssignmentFor(
+                        patientId, a.id, viewerId, viewerRole
+                    )
                 } catch (_: Exception) { emptyList() }
                 sessions.forEach { s ->
                     val start = s.startedAtMs
@@ -152,13 +178,6 @@ fun PatientProfileScreen(
     }
 
     LaunchedEffect(patientId) {
-        try {
-            val uid = FirebaseService.currentUID
-            if (uid != null) {
-                currentUserRole = UserRepository.getUser(uid).role
-            }
-        } catch (_: Exception) { }
-
         loadPatientData()
 
         // Fetch assigned doctor and all doctors (for admin picker)

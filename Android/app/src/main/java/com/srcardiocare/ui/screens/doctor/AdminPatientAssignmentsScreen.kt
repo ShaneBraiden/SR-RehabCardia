@@ -85,6 +85,9 @@ fun AdminPatientAssignmentsScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var showAllWorkouts by remember { mutableStateOf(false) }
     var expandedDates by remember { mutableStateOf<Set<LocalDate>>(emptySet()) }
+    // Cached across pull-to-refresh and ON_RESUME so the viewer's own user
+    // document is read once, not on every reload.
+    var viewerRole by remember { mutableStateOf("") }
 
     val scope = rememberCoroutineScope()
     val today = LocalDate.now()
@@ -99,8 +102,18 @@ fun AdminPatientAssignmentsScreen(
             val lastName = patient.lastName
             patientName = "$firstName $lastName".trim().ifBlank { "Patient" }
 
-            // Fetch all assignments for patient
-            val assignments = AssignmentRepository.getAssignments(patientId)
+            // Fetch all assignments for patient.
+            //
+            // `assignments` authorises a doctor per document via the
+            // denormalised doctorId, so a query constrained on patientId alone
+            // is rejected *wholesale* for a clinician — which surfaced here as
+            // the red "Error" card even when the patient did have exercises.
+            val viewerId = com.srcardiocare.data.firebase.FirebaseService.currentUID
+                ?: throw Exception("Not authenticated")
+            if (viewerRole.isBlank()) {
+                viewerRole = runCatching { UserRepository.getUser(viewerId).role }.getOrDefault("")
+            }
+            val assignments = AssignmentRepository.getAssignmentsFor(patientId, viewerId, viewerRole)
 
             // Group by end date
             val dateMap = mutableMapOf<LocalDate, MutableList<PatientAssignmentItem>>()
@@ -118,7 +131,9 @@ fun AdminPatientAssignmentsScreen(
 
                 // Fetch sessions for this assignment
                 val allSessions = try {
-                    SessionRepository.getAllSessionsForAssignment(patientId, assignment.id)
+                    SessionRepository.getAllSessionsForAssignmentFor(
+                        patientId, assignment.id, viewerId, viewerRole
+                    )
                 } catch (_: Exception) { emptyList() }
 
                 val completedSessions = allSessions.count { it.status == com.srcardiocare.data.model.SessionStatus.COMPLETED }

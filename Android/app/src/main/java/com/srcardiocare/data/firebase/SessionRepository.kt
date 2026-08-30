@@ -246,12 +246,50 @@ object SessionRepository {
         return snapshot.documents.map { it.id to (it.data ?: emptyMap()) }
     }
 
+    /**
+     * As [fetchAllSessionsForAssignment], but for a doctor reading someone
+     * else's logs.
+     *
+     * A patient's own `patientId` satisfies the list rule; a doctor's does not.
+     * Their branch of the rule authorises per document on the denormalised
+     * `doctorId`, so a query that does not constrain it is rejected wholesale —
+     * the same trap `assignments` and `plans` already carry a doctor-scoped
+     * read for. Without this the clinician screens silently caught the denial
+     * and rendered every prescription as never once completed.
+     */
+    suspend fun fetchAllSessionsForAssignmentAsDoctor(
+        patientId: String,
+        assignmentId: String,
+        doctorId: String
+    ): List<Pair<String, Map<String, Any?>>> {
+        val snapshot = FirebaseClients.db.collection("sessionLogs")
+            .whereEqualTo("patientId", patientId)
+            .whereEqualTo("assignmentId", assignmentId)
+            .whereEqualTo("doctorId", doctorId)
+            .get().await()
+        return snapshot.documents.map { it.id to (it.data ?: emptyMap()) }
+    }
+
     /** Fetch today's sessions for a patient (across all assignments). */
     suspend fun fetchTodaysSessions(patientId: String): List<Pair<String, Map<String, Any?>>> {
         val today = java.time.LocalDate.now().toString()
         val snapshot = FirebaseClients.db.collection("sessionLogs")
             .whereEqualTo("patientId", patientId)
             .whereEqualTo("sessionDate", today)
+            .get().await()
+        return snapshot.documents.map { it.id to (it.data ?: emptyMap()) }
+    }
+
+    /** As [fetchTodaysSessions], scoped for a doctor — see [fetchAllSessionsForAssignmentAsDoctor]. */
+    suspend fun fetchTodaysSessionsAsDoctor(
+        patientId: String,
+        doctorId: String
+    ): List<Pair<String, Map<String, Any?>>> {
+        val today = java.time.LocalDate.now().toString()
+        val snapshot = FirebaseClients.db.collection("sessionLogs")
+            .whereEqualTo("patientId", patientId)
+            .whereEqualTo("sessionDate", today)
+            .whereEqualTo("doctorId", doctorId)
             .get().await()
         return snapshot.documents.map { it.id to (it.data ?: emptyMap()) }
     }
@@ -299,6 +337,36 @@ object SessionRepository {
 
     suspend fun getTodaysSessions(patientId: String): List<SessionLog> =
         fetchTodaysSessions(patientId).map { (id, data) -> data.toSessionLog(id) }
+
+    /**
+     * [patientId]'s sessions for one assignment, as seen by [viewerId] in
+     * [viewerRole]. Admins and the patient themselves may read the whole set;
+     * a doctor is scoped to the logs stamped with their own id.
+     */
+    suspend fun getAllSessionsForAssignmentFor(
+        patientId: String,
+        assignmentId: String,
+        viewerId: String,
+        viewerRole: String
+    ): List<SessionLog> =
+        if (viewerRole == "doctor" && viewerId != patientId) {
+            fetchAllSessionsForAssignmentAsDoctor(patientId, assignmentId, viewerId)
+                .map { (id, data) -> data.toSessionLog(id) }
+        } else {
+            getAllSessionsForAssignment(patientId, assignmentId)
+        }
+
+    /** Today's sessions for [patientId] as seen by [viewerId] — see [getAllSessionsForAssignmentFor]. */
+    suspend fun getTodaysSessionsFor(
+        patientId: String,
+        viewerId: String,
+        viewerRole: String
+    ): List<SessionLog> =
+        if (viewerRole == "doctor" && viewerId != patientId) {
+            fetchTodaysSessionsAsDoctor(patientId, viewerId).map { (id, data) -> data.toSessionLog(id) }
+        } else {
+            getTodaysSessions(patientId)
+        }
 
     suspend fun getInProgressSession(patientId: String): SessionLog? =
         findInProgressSession(patientId)?.let { (id, data) -> data.toSessionLog(id) }

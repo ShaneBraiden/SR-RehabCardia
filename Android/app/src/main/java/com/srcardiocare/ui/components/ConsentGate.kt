@@ -224,7 +224,7 @@ fun DisclaimerScreen(
                         if (!readToEnd) {
                             Spacer(modifier = Modifier.height(DesignTokens.Spacing.XS))
                             Text(
-                                "Scroll to the end to continue.",
+                                stringResource(R.string.consent_scroll_hint),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.fillMaxWidth()
@@ -255,7 +255,7 @@ fun DisclaimerScreen(
                                 containerColor = DesignTokens.Colors.Primary
                             )
                         ) {
-                            Text("Close", fontWeight = FontWeight.SemiBold)
+                            Text(stringResource(R.string.action_close), fontWeight = FontWeight.SemiBold)
                         }
                     }
                 }

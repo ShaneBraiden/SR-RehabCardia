@@ -68,7 +68,7 @@ class PatientListViewModel : ViewModel() {
                                 // single query and the per-assignment tally is
                                 // arithmetic, not I/O.
                                 val completedToday = try {
-                                    SessionRepository.getTodaysSessions(patient.id)
+                                    SessionRepository.getTodaysSessionsFor(patient.id, uid, role)
                                         .filter { it.status == SessionStatus.COMPLETED }
                                         .groupingBy { it.assignmentId }
                                         .eachCount()

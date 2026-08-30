@@ -63,17 +63,39 @@ object LocaleManager {
     }
 
     /**
-     * Whether the user has ever picked a language on this install.
+     * Whether the signed-in user has picked a language yet.
      *
      * Distinguishing "chose English" from "never asked" is the whole point:
      * the stored tag defaults to English either way, so without this flag the
      * first-run prompt could not tell a Tamil reader who has not been asked yet
      * from an English reader who has. The prompt is shown once, on first launch
-     * after install, and never again — which is also why the login screen no
-     * longer needs a toggle of its own.
+     * after signing in, and not again until the next sign-out clears it via
+     * [reset] — which is also why the login screen needs no toggle of its own.
      */
     fun hasChosenLanguage(context: Context): Boolean =
         prefs(context).getBoolean(KEY_CHOSEN, false)
+
+    /**
+     * Clears the language choice: back to English, and the first-run prompt
+     * armed again for whoever signs in next.
+     *
+     * Called on every sign-out. The locale is a device-wide, process-wide
+     * setting but the person it was chosen for is not — on a shared clinic
+     * handset the next user is routinely a different patient, or a clinician
+     * whose screens are English-only. Leaving Tamil applied would hand them an
+     * app in a language they may not read, with no visible control to change it
+     * (the switch lives behind a patient login). Resetting here is what makes
+     * [hasChosenLanguage] mean "chosen by the person currently signed in".
+     *
+     * Takes effect on the next activity creation, exactly like [setLanguage] —
+     * callers sign out and recreate.
+     */
+    fun reset(context: Context) {
+        prefs(context).edit()
+            .remove(KEY_LANGUAGE)
+            .remove(KEY_CHOSEN)
+            .apply()
+    }
 
     fun isTamil(context: Context) = getLanguage(context) == TAMIL
 

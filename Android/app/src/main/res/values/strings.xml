@@ -274,8 +274,9 @@
     <string name="schedule_date_in_past">Please choose today or a later date</string>
     <string name="schedule_request">Send Request</string>
     <string name="schedule_time">Time</string>
-    <string name="schedule_hour" translatable="false">HH</string>
-    <string name="schedule_minute" translatable="false">MM</string>
+    <string name="schedule_pick_time">Pick a time</string>
+    <string name="schedule_time_switch_to_keyboard">Switch to text input</string>
+    <string name="schedule_time_switch_to_clock">Switch to clock</string>
     <string name="schedule_notes_optional">Notes (optional)</string>
     <string name="schedule_create">Create</string>
     <string name="schedule_load_error">Could not load schedule</string>
@@ -454,6 +455,57 @@
     <string name="filter_all_groups">All groups</string>
     <string name="settings_title">Settings</string>
 
+    <!-- ===== Settings =====
+      Shared with the Doctor/Admin build of the same screen, which simply never
+      runs in Tamil: the language section is patient-only and a clinician's
+      locale is reset to English on sign-out. -->
+    <string name="settings_section_appearance">Appearance</string>
+    <string name="settings_theme_system">Follow device</string>
+    <string name="settings_theme_system_caption">Match your phone\'s day/night setting</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_light_caption">Always use the light theme</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_theme_dark_caption">Easier on the eyes at night</string>
+
+    <string name="settings_language_selected">Currently selected</string>
+    <string name="settings_language_switch">Tap to switch</string>
+    <string name="settings_language_restart_note">Changing the language restarts the app screen.</string>
+
+    <string name="settings_section_notifications">Notifications</string>
+    <string name="settings_notif_general">Exercises &amp; updates</string>
+    <string name="settings_notif_general_caption">New prescriptions, reminders and feedback</string>
+    <string name="settings_notif_chat">Messages</string>
+    <string name="settings_notif_chat_caption">Direct messages with your clinician</string>
+    <string name="settings_notif_appointments">Appointments</string>
+    <string name="settings_notif_appointments_caption">Bookings, changes and confirmations</string>
+    <string name="settings_notif_sound">In-app sounds</string>
+    <string name="settings_notif_sound_caption">Play a sound for confirmations inside the app</string>
+    <string name="settings_notif_tone">Notification tone &amp; vibration</string>
+    <string name="settings_notif_tone_caption">Opens Android\'s notification settings</string>
+
+    <string name="settings_section_legal">Legal &amp; safety</string>
+    <string name="settings_legal_disclaimer">Medical disclaimer &amp; safety information</string>
+    <string name="settings_legal_disclaimer_caption">What this app is for, and when to stop and get help</string>
+    <string name="settings_legal_privacy">Privacy policy</string>
+    <string name="settings_legal_privacy_caption">What we collect and who it is shared with</string>
+    <string name="settings_legal_terms">Terms of service</string>
+    <string name="settings_legal_terms_caption">The terms you agreed to when your account was created</string>
+
+    <string name="settings_section_account">Account</string>
+    <string name="settings_delete_row">Delete my account</string>
+    <string name="settings_delete_row_caption">Request permanent removal of your account and app data</string>
+    <string name="settings_delete_title">Delete your account?</string>
+    <string name="settings_delete_body">This ends your access to RehabCardia. Your profile, exercise assignments, session history, feedback and messages will be deleted. Records your clinic is legally required to keep may be retained — see the privacy policy.</string>
+    <string name="settings_delete_reason_label">Reason (optional)</string>
+    <!-- %1$s is the confirmation word, which stays English in every locale
+         because it is compared literally against what the user typed. -->
+    <string name="settings_delete_type_label">Type %1$s to confirm</string>
+    <string name="settings_delete_confirm">Delete my account</string>
+    <string name="settings_delete_submitting">Submitting…</string>
+    <string name="settings_delete_error_generic">Could not submit the request.</string>
+    <string name="settings_delete_done_title">Request received</string>
+    <string name="settings_delete_done_body">Your account has been deactivated and your clinic has been notified. Your profile and app data will be deleted, and we will confirm by email within 30 days.\n\nSome clinical records may be kept where your provider is required by law to retain them.</string>
+
     <!-- ===== Medical disclaimer & health-data disclosure =====
       Shown once per account before any clinical content is reachable, and
       re-shown whenever ConsentManager.CURRENT_VERSION is bumped. Treat this
@@ -477,4 +529,17 @@
     <string name="consent_accept">I have read and understood this</string>
     <string name="consent_decline">I do not agree — sign me out</string>
     <string name="consent_reopen">You can read this again any time from Settings.</string>
+    <!-- ===== Forced / optional update gate =====
+      Wraps every screen including login, so a patient can meet it before the
+      app has rendered anything else. The message body itself is authored by the
+      clinic in Firestore and is shown exactly as written. -->
+    <string name="update_required_title">Update Required</string>
+    <string name="update_now">Update Now</string>
+    <string name="update_recheck">I\'ve already updated — check again</string>
+    <string name="update_installed_version">Installed version %1$s</string>
+    <string name="update_available_title">Update Available</string>
+    <string name="update_action">Update</string>
+    <string name="update_maybe_later">Maybe later</string>
+
+    <string name="consent_scroll_hint">Scroll to the end to continue.</string>
 </resources>

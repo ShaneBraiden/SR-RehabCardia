@@ -37,11 +37,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import com.srcardiocare.R
 import com.srcardiocare.data.firebase.AppVersionRepository
 import com.srcardiocare.data.firebase.AppVersionRepository.UpdateStatus
 import com.srcardiocare.ui.theme.DesignTokens
@@ -166,7 +168,7 @@ private fun UpdateRequiredScreen(
             Spacer(modifier = Modifier.height(DesignTokens.Spacing.LG))
 
             Text(
-                text = "Update Required",
+                text = stringResource(R.string.update_required_title),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground,
@@ -194,7 +196,7 @@ private fun UpdateRequiredScreen(
                     containerColor = DesignTokens.Colors.Primary,
                 ),
             ) {
-                Text("Update Now", fontWeight = FontWeight.SemiBold)
+                Text(stringResource(R.string.update_now), fontWeight = FontWeight.SemiBold)
             }
 
             Spacer(modifier = Modifier.height(DesignTokens.Spacing.SM))
@@ -202,14 +204,16 @@ private fun UpdateRequiredScreen(
             // For the user who has already updated through the Play Store app
             // and does not want to wait for the next resume event.
             TextButton(onClick = onRecheck) {
-                Text("I've already updated — check again")
+                Text(stringResource(R.string.update_recheck))
             }
 
             Spacer(modifier = Modifier.height(DesignTokens.Spacing.MD))
 
             Text(
-                text = "Installed version " +
-                    AppVersionRepository.installedVersionName(context),
+                text = stringResource(
+                    R.string.update_installed_version,
+                    AppVersionRepository.installedVersionName(context)
+                ),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -226,19 +230,24 @@ private fun UpdateAvailableDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Update Available", fontWeight = FontWeight.Bold) },
+        title = {
+            Text(
+                stringResource(R.string.update_available_title),
+                fontWeight = FontWeight.Bold
+            )
+        },
         text = { Text(message) },
         confirmButton = {
             TextButton(onClick = onUpdate) {
                 Text(
-                    "Update",
+                    stringResource(R.string.update_action),
                     color = DesignTokens.Colors.Primary,
                     fontWeight = FontWeight.SemiBold,
                 )
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Maybe later") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.update_maybe_later)) }
         },
         shape = RoundedCornerShape(DesignTokens.Radius.LG),
     )

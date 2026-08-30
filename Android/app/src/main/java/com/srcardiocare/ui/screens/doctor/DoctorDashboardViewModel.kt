@@ -116,7 +116,7 @@ class DoctorDashboardViewModel : ViewModel() {
                                         // single indexed read; the per-assignment
                                         // split is arithmetic we can do locally.
                                         val completedToday = try {
-                                            SessionRepository.getTodaysSessions(patient.id)
+                                            SessionRepository.getTodaysSessionsFor(patient.id, uid, role)
                                                 .filter { it.status == SessionStatus.COMPLETED }
                                                 .groupingBy { it.assignmentId }
                                                 .eachCount()

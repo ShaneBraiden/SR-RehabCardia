@@ -54,6 +54,7 @@ import com.srcardiocare.ui.screens.doctor.PatientListScreen
 import com.srcardiocare.ui.screens.patient.AssignmentListScreen
 import com.srcardiocare.ui.screens.workout.AssignmentWorkoutScreen
 import com.srcardiocare.ui.screens.notifications.NotificationsScreen
+import com.srcardiocare.ui.components.findActivity
 import com.srcardiocare.ui.screens.settings.SettingsScreen
 import com.srcardiocare.data.model.Assignment
 
@@ -138,15 +139,20 @@ fun SRCardiocareNavGraph(
     Box(modifier = Modifier.fillMaxSize()) {
     NavHost(navController = navController, startDestination = startDestination) {
         composable(Route.Login.path) {
+            val context = LocalContext.current
             LoginScreen(
-                onLoginSuccess = { role ->
-                    val dest = when (role) {
-                        "ADMIN" -> Route.AdminDashboard.path
-                        "DOCTOR" -> Route.DoctorDashboard.path
-                        else -> Route.PatientHome.path
-                    }
-                    navController.navigate(dest) { popUpTo(Route.Login.path) { inclusive = true } }
-                },
+                // Recreate the activity rather than navigate to the dashboard.
+                //
+                // MainActivity resolves the role once, in a LaunchedEffect that
+                // ran before this sign-in, and everything gated on that snapshot
+                // still believes nobody is signed in. Navigating leaves the
+                // snapshot stale for the rest of the process, so the patient who
+                // just signed in was never offered the language choice — it only
+                // appeared on the next cold start, which reads as the switch
+                // being broken. LoginScreen caches the role before calling this,
+                // so the recreated activity resolves it immediately and computes
+                // the same start destination this branch used to navigate to.
+                onLoginSuccess = { context.findActivity()?.recreate() },
                 onChangePassword = { navController.navigate(Route.ChangePassword.path) }
             )
         }
@@ -347,11 +353,6 @@ fun SRCardiocareNavGraph(
         composable(Route.DoctorProfile.path) {
             DoctorProfileScreen(
                 onBack = { navController.popBackStack() },
-                onLogout = {
-                    navController.navigate(Route.Login.path) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                },
                 onChangePassword = { navController.navigate(Route.ChangePassword.path) },
                 onSettings = { navController.navigate(Route.Settings.createPath(isPatient = false)) }
             )
@@ -376,11 +377,6 @@ fun SRCardiocareNavGraph(
         composable(Route.PatientProfileSelf.path) {
             PatientProfileSelfScreen(
                 onBack = { navController.popBackStack() },
-                onLogout = {
-                    navController.navigate(Route.Login.path) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                },
                 onChangePassword = { navController.navigate(Route.ChangePassword.path) },
                 onSettings = { navController.navigate(Route.Settings.createPath(isPatient = true)) }
             )

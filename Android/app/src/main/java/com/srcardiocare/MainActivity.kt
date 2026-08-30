@@ -26,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.rememberNavController
+import com.srcardiocare.core.auth.signOutAndRestart
 import com.srcardiocare.core.locale.LocaleManager
 import com.srcardiocare.core.prefs.AppPreferences
 import com.srcardiocare.ui.screens.onboarding.LanguagePickerScreen
@@ -89,6 +90,21 @@ class MainActivity : ComponentActivity() {
                     val auth = (application as SRCardiocareApp).awaitAuth()
                     val role = auth.userRole.orEmpty()
 
+                    // A clinician must never inherit a patient's language.
+                    // Signing out resets it, but a session that ended because
+                    // the app was killed — or one carried over from a build
+                    // older than that reset — can still leave Tamil applied to
+                    // screens that were never translated. Correct it before the
+                    // first frame. The recreate re-enters attachBaseContext with
+                    // English, so this branch cannot run twice.
+                    if (auth.isLoggedIn && role != "PATIENT" &&
+                        LocaleManager.getLanguage(this@MainActivity) != LocaleManager.ENGLISH
+                    ) {
+                        LocaleManager.reset(this@MainActivity)
+                        recreate()
+                        return@LaunchedEffect
+                    }
+
                     session = Session(
                         role = role,
                         startDestination = when {
@@ -134,13 +150,7 @@ class MainActivity : ComponentActivity() {
                         // route around it.
                         ConsentGate(
                             uid = FirebaseService.currentUID,
-                            onDecline = {
-                                FirebaseService.logout()
-                                // Recreating re-runs the auth resolution above,
-                                // which lands on Login. Navigating instead would
-                                // leave the authenticated back stack intact.
-                                recreate()
-                            }
+                            onDecline = { signOutAndRestart(this@MainActivity) }
                         ) {
                             // Language is a patient-facing choice: doctor and
                             // admin screens are not localised, so asking a

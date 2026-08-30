@@ -20,9 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.srcardiocare.core.auth.AuthManager
+import com.srcardiocare.core.auth.signOutAndRestart
 import com.srcardiocare.core.security.InputValidator
-import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.ui.components.InitialsAvatar
 import com.srcardiocare.ui.components.LegalLinksRow
 import com.srcardiocare.ui.components.LogoutConfirmDialog
@@ -42,7 +41,6 @@ import kotlinx.coroutines.launch
 @Composable
 fun DoctorProfileScreen(
     onBack: () -> Unit,
-    onLogout: () -> Unit,
     onChangePassword: () -> Unit = {},
     onSettings: () -> Unit = {},
     viewModel: DoctorProfileViewModel = viewModel()
@@ -65,11 +63,7 @@ fun DoctorProfileScreen(
     LogoutConfirmDialog(
         show = showLogoutDialog,
         onDismiss = { showLogoutDialog = false },
-        onConfirm = {
-            FirebaseService.logout()
-            AuthManager(context).clearAll()
-            onLogout()
-        }
+        onConfirm = { signOutAndRestart(context) }
     )
 
     fun beginEdit() {

@@ -27,6 +27,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Keyboard
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -52,9 +54,12 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimeInput
+import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -203,6 +208,79 @@ private fun ScheduleDatePickerDialog(
 }
 
 /**
+ * Modal 12-hour clock picker for the appointment time.
+ *
+ * `is24Hour = false` deliberately: appointments are rendered as "h:mm a"
+ * everywhere else in the app, so 24-hour entry made the clinician do the
+ * conversion in their head between typing a time and reading it back. The
+ * keyboard toggle keeps fast numeric entry for anyone who preferred the old
+ * two-field form.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ScheduleTimePickerDialog(
+    initial: LocalTime,
+    onDismiss: () -> Unit,
+    onPick: (LocalTime) -> Unit
+) {
+    val state = rememberTimePickerState(
+        initialHour = initial.hour,
+        initialMinute = initial.minute,
+        is24Hour = false
+    )
+    var keyboardEntry by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.schedule_pick_time), modifier = Modifier.weight(1f))
+                IconButton(onClick = { keyboardEntry = !keyboardEntry }) {
+                    Icon(
+                        imageVector = if (keyboardEntry) Icons.Default.Schedule else Icons.Default.Keyboard,
+                        contentDescription = stringResource(
+                            if (keyboardEntry) R.string.schedule_time_switch_to_clock
+                            else R.string.schedule_time_switch_to_keyboard
+                        ),
+                        tint = DesignTokens.Colors.Primary
+                    )
+                }
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // `state.hour` stays 0..23 whichever mode is showing, so
+                // nothing downstream has to know about the 12-hour display.
+                if (keyboardEntry) TimeInput(state = state) else TimePicker(state = state)
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                onPick(LocalTime.of(state.hour, state.minute))
+                onDismiss()
+            }) {
+                Text(stringResource(R.string.action_ok), color = DesignTokens.Colors.Primary)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+        }
+    )
+}
+
+/** How an appointment time is shown to the user - 12-hour, everywhere. */
+private val ApptTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("h:mm a")
+
+/** Same clock, plus the day, for notification copy. */
+private val ApptWhenFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("h:mm a, dd/MM/yyyy")
+
+/** Seeded into the form each time it opens. */
+private val DefaultApptTime: LocalTime = LocalTime.of(10, 0)
+
+/**
  * The only appointment type. Persisted to Firestore as `type` and interpolated
  * into notification copy, so it must stay in English — see
  * R.string.appointment_type_consultation for the display label.
@@ -261,13 +339,13 @@ fun ScheduleScreen(onBack: () -> Unit) {
     val assignedDoctorId = ui.assignedDoctorId
 
     var showAddDialog by remember { mutableStateOf(false) }
-    var apptHour by remember { mutableStateOf("10") }
-    var apptMinute by remember { mutableStateOf("00") }
+    var apptTime by remember { mutableStateOf(DefaultApptTime) }
     var apptNotes by remember { mutableStateOf("") }
     // The date being requested/booked. Independent of the day strip so the form
     // is self-contained — the strip only seeds its initial value.
     var apptDate by remember { mutableStateOf(today) }
     var showApptDatePicker by remember { mutableStateOf(false) }
+    var showApptTimePicker by remember { mutableStateOf(false) }
     var showJumpDatePicker by remember { mutableStateOf(false) }
     var selectedPatientId by remember { mutableStateOf<String?>(null) }
     var patientQuery by remember { mutableStateOf("") }
@@ -294,6 +372,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
         // A new appointment can never be in the past, so a past day in the strip
         // seeds today instead.
         apptDate = if (selectedDate.isBefore(today)) today else selectedDate
+        apptTime = DefaultApptTime
         selectedPatientId = null
         patientQuery = ""
         patientMenuExpanded = false
@@ -340,6 +419,14 @@ fun ScheduleScreen(onBack: () -> Unit) {
                 maxDate = rangeEnd,
                 onDismiss = { showApptDatePicker = false },
                 onPick = { apptDate = it }
+            )
+        }
+
+        if (showApptTimePicker) {
+            ScheduleTimePickerDialog(
+                initial = apptTime,
+                onDismiss = { showApptTimePicker = false },
+                onPick = { apptTime = it }
             )
         }
 
@@ -466,44 +553,21 @@ fun ScheduleScreen(onBack: () -> Unit) {
                     }
 
                     Text(stringResource(R.string.schedule_time), fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    OutlinedButton(
+                        onClick = { if (!isSaving) showApptTimePicker = true },
+                        enabled = !isSaving,
+                        shape = RoundedCornerShape(DesignTokens.Radius.Base),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        OutlinedTextField(
-                            value = apptHour,
-                            onValueChange = { newVal ->
-                                if (newVal.length <= 2 && newVal.all { it.isDigit() }) {
-                                    val hourInt = newVal.toIntOrNull()
-                                    if (hourInt == null || hourInt <= 23) {
-                                        apptHour = newVal
-                                    }
-                                }
-                            },
-                            label = { Text("HH") },
-                            modifier = Modifier.weight(1f),
-                            singleLine = true,
-                            shape = RoundedCornerShape(DesignTokens.Radius.Base),
-                            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = DesignTokens.Colors.Primary)
+                        Icon(
+                            Icons.Default.Schedule,
+                            contentDescription = stringResource(R.string.schedule_pick_time),
+                            tint = DesignTokens.Colors.Primary
                         )
-
-                        Text(":", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge)
-
-                        OutlinedTextField(
-                            value = apptMinute,
-                            onValueChange = { newVal ->
-                                if (newVal.length <= 2 && newVal.all { it.isDigit() }) {
-                                    val minInt = newVal.toIntOrNull()
-                                    if (minInt == null || minInt <= 59) {
-                                        apptMinute = newVal
-                                    }
-                                }
-                            },
-                            label = { Text("MM") },
-                            modifier = Modifier.weight(1f),
-                            singleLine = true,
-                            shape = RoundedCornerShape(DesignTokens.Radius.Base),
-                            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = DesignTokens.Colors.Primary)
+                        Spacer(modifier = Modifier.width(DesignTokens.Spacing.SM))
+                        Text(
+                            apptTime.format(ApptTimeFormatter),
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
 
@@ -521,13 +585,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
                 TextButton(
                     onClick = {
                         val type = APPOINTMENT_TYPE_CONSULTATION
-                        val hour = apptHour.toIntOrNull() ?: 10
-                        val minute = apptMinute.toIntOrNull() ?: 0
-                        val dateTime = ZonedDateTime.of(
-                            apptDate,
-                            LocalTime.of(hour.coerceIn(0, 23), minute.coerceIn(0, 59)),
-                            ZoneId.systemDefault()
-                        )
+                        val dateTime = ZonedDateTime.of(apptDate, apptTime, ZoneId.systemDefault())
 
                         isSaving = true
                         scope.launch {
@@ -562,7 +620,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
                                         com.srcardiocare.core.push.NotificationEvent.AppointmentScheduled(
                                             patientId = patientId,
                                             appointmentType = type,
-                                            whenText = dateTime.format(DateTimeFormatter.ofPattern("h:mm a, dd/MM/yyyy")),
+                                            whenText = dateTime.format(ApptWhenFormatter),
                                             appointmentId = appointmentId
                                         )
                                     )
@@ -584,7 +642,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
                                         com.srcardiocare.core.push.NotificationEvent.AppointmentRequested(
                                             doctorId = doctorId,
                                             appointmentType = type,
-                                            whenText = dateTime.format(DateTimeFormatter.ofPattern("h:mm a, dd/MM/yyyy")),
+                                            whenText = dateTime.format(ApptWhenFormatter),
                                             appointmentId = appointmentId
                                         )
                                     )
@@ -594,8 +652,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
 
                                 showAddDialog = false
                                 apptNotes = ""
-                                apptHour = "10"
-                                apptMinute = "00"
+                                apptTime = DefaultApptTime
                                 selectedPatientId = null
                                 patientQuery = ""
                                 // Jump the list to the day just booked, so the new

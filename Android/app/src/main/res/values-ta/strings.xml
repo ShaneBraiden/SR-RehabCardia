@@ -274,6 +274,9 @@
     <string name="schedule_date_in_past">இன்று அல்லது அதற்குப் பிந்தைய தேதியைத் தேர்ந்தெடுக்கவும்</string>
     <string name="schedule_request">கோரிக்கையை அனுப்பு</string>
     <string name="schedule_time">நேரம்</string>
+    <string name="schedule_pick_time">நேரத்தைத் தேர்ந்தெடுக்கவும்</string>
+    <string name="schedule_time_switch_to_keyboard">உரை உள்ளீட்டிற்கு மாறுக</string>
+    <string name="schedule_time_switch_to_clock">கடிகாரத்திற்கு மாறுக</string>
     <string name="schedule_notes_optional">குறிப்புகள் (விருப்பத்தேர்வு)</string>
     <string name="schedule_create">உருவாக்கு</string>
     <string name="schedule_load_error">அட்டவணையை ஏற்ற முடியவில்லை</string>
@@ -437,4 +440,81 @@
 
     <string name="filter_all_groups">அனைத்து குழுக்கள்</string>
     <string name="settings_title">அமைப்புகள்</string>
+    <!-- ===== Settings ===== -->
+    <string name="settings_section_appearance">தோற்றம்</string>
+    <string name="settings_theme_system">சாதனத்தைப் பின்பற்று</string>
+    <string name="settings_theme_system_caption">உங்கள் தொலைபேசியின் பகல்/இரவு அமைப்புக்கு ஏற்ப</string>
+    <string name="settings_theme_light">வெளிர்</string>
+    <string name="settings_theme_light_caption">எப்போதும் வெளிர் தோற்றத்தைப் பயன்படுத்து</string>
+    <string name="settings_theme_dark">அடர்</string>
+    <string name="settings_theme_dark_caption">இரவில் கண்களுக்கு இதமானது</string>
+
+    <string name="settings_language_selected">தற்போது தேர்ந்தெடுக்கப்பட்டது</string>
+    <string name="settings_language_switch">மாற்ற தட்டவும்</string>
+    <string name="settings_language_restart_note">மொழியை மாற்றினால் திரை மீண்டும் தொடங்கும்.</string>
+
+    <string name="settings_section_notifications">அறிவிப்புகள்</string>
+    <string name="settings_notif_general">பயிற்சிகளும் புதுப்பிப்புகளும்</string>
+    <string name="settings_notif_general_caption">புதிய பயிற்சிகள், நினைவூட்டல்கள் மற்றும் கருத்துகள்</string>
+    <string name="settings_notif_chat">செய்திகள்</string>
+    <string name="settings_notif_chat_caption">உங்கள் மருத்துவருடன் நேரடிச் செய்திகள்</string>
+    <string name="settings_notif_appointments">சந்திப்புகள்</string>
+    <string name="settings_notif_appointments_caption">பதிவுகள், மாற்றங்கள் மற்றும் உறுதிப்படுத்தல்கள்</string>
+    <string name="settings_notif_sound">செயலிக்குள் ஒலி</string>
+    <string name="settings_notif_sound_caption">செயலிக்குள் உறுதிப்படுத்தல்களுக்கு ஒலி எழுப்பு</string>
+    <string name="settings_notif_tone">அறிவிப்பு ஒலியும் அதிர்வும்</string>
+    <string name="settings_notif_tone_caption">Android இன் அறிவிப்பு அமைப்புகளைத் திறக்கும்</string>
+
+    <string name="settings_section_legal">சட்டமும் பாதுகாப்பும்</string>
+    <string name="settings_legal_disclaimer">மருத்துவப் பொறுப்புத் துறப்பும் பாதுகாப்புத் தகவலும்</string>
+    <string name="settings_legal_disclaimer_caption">இந்தச் செயலி எதற்காக, எப்போது நிறுத்தி உதவி பெற வேண்டும்</string>
+    <string name="settings_legal_privacy">தனியுரிமை கொள்கை</string>
+    <string name="settings_legal_privacy_caption">நாங்கள் என்ன சேகரிக்கிறோம், அது யாருடன் பகிரப்படுகிறது</string>
+    <string name="settings_legal_terms">சேவை விதிமுறைகள்</string>
+    <string name="settings_legal_terms_caption">உங்கள் கணக்கு உருவாக்கப்பட்டபோது நீங்கள் ஒப்புக்கொண்ட விதிமுறைகள்</string>
+
+    <string name="settings_section_account">கணக்கு</string>
+    <string name="settings_delete_row">எனது கணக்கை நீக்கு</string>
+    <string name="settings_delete_row_caption">உங்கள் கணக்கையும் செயலித் தரவையும் நிரந்தரமாக நீக்கக் கோரவும்</string>
+    <string name="settings_delete_title">உங்கள் கணக்கை நீக்கவா?</string>
+    <string name="settings_delete_body">இது RehabCardia க்கான உங்கள் அணுகலை முடிவுக்குக் கொண்டுவரும். உங்கள் சுயவிவரம், பயிற்சி ஒதுக்கீடுகள், அமர்வு வரலாறு, கருத்துகள் மற்றும் செய்திகள் நீக்கப்படும். உங்கள் மருத்துவமனை சட்டப்படி வைத்திருக்க வேண்டிய பதிவுகள் தக்கவைக்கப்படலாம் — தனியுரிமை கொள்கையைப் பார்க்கவும்.</string>
+    <string name="settings_delete_reason_label">காரணம் (விருப்பத்தேர்வு)</string>
+    <string name="settings_delete_type_label">உறுதிப்படுத்த %1$s என்று தட்டச்சு செய்யவும்</string>
+    <string name="settings_delete_confirm">எனது கணக்கை நீக்கு</string>
+    <string name="settings_delete_submitting">சமர்ப்பிக்கப்படுகிறது…</string>
+    <string name="settings_delete_error_generic">கோரிக்கையைச் சமர்ப்பிக்க முடியவில்லை.</string>
+    <string name="settings_delete_done_title">கோரிக்கை பெறப்பட்டது</string>
+    <string name="settings_delete_done_body">உங்கள் கணக்கு செயலிழக்கச் செய்யப்பட்டுள்ளது, உங்கள் மருத்துவமனைக்கும் தெரிவிக்கப்பட்டுள்ளது. உங்கள் சுயவிவரமும் செயலித் தரவும் நீக்கப்படும், 30 நாட்களுக்குள் மின்னஞ்சல் மூலம் உறுதிப்படுத்துவோம்.\n\nஉங்கள் சேவை வழங்குநர் சட்டப்படி தக்கவைக்க வேண்டிய சில மருத்துவப் பதிவுகள் வைக்கப்படலாம்.</string>
+
+    <!-- ===== Medical disclaimer & health-data disclosure =====
+      Legal copy. Pending the clinic's native-Tamil review — until then this is
+      what a Tamil-reading patient is shown, so it is deliberately plainer than
+      the English and keeps every warning sign in the same order. -->
+    <string name="consent_title">தொடங்கும் முன்</string>
+    <string name="consent_intro">இதைப் படியுங்கள். ஒரு முறை மட்டும் போதும்.</string>
+
+    <string name="consent_medical_heading">இந்தச் செயலி உங்கள் சிகிச்சைக்கு உதவுகிறது — அதற்குப் பதிலாகாது</string>
+    <string name="consent_medical_body">உங்கள் இதய மறுவாழ்வுக் குழு உங்களுக்குப் பயிற்சிகளை வழங்கவும் உங்கள் முன்னேற்றத்தைப் பின்தொடரவும் பயன்படுத்தும் ஒரு கருவியே RehabCardia. இது ஒரு மருத்துவ சாதனம் அல்ல. இது நோயைக் கண்டறியாது, உங்கள் இதயத்தைக் கண்காணிக்காது, மருத்துவ அவசரநிலையைக் கண்டறியாது. இது காட்டும் எதுவும் உங்கள் மருத்துவர், உடற்பயிற்சி சிகிச்சையாளர் அல்லது செவிலியரின் ஆலோசனைக்குப் பதிலாகாது.\n\nஉங்கள் மருத்துவர் ஒதுக்கிய பயிற்சிகளை மட்டும், அவர்கள் உங்களுடன் ஒப்புக்கொண்ட அளவிலேயே செய்யுங்கள். செயலியில் உள்ள எதுவும் உங்கள் சிகிச்சைக் குழு நேரில் சொன்னதற்கு மாறாக இருந்தால், உங்கள் சிகிச்சைக் குழுவைப் பின்பற்றுங்கள்.</string>
+
+    <string name="consent_safety_heading">பயிற்சியை நிறுத்தி உதவி பெறுங்கள்</string>
+    <string name="consent_safety_body">மார்பு வலி அல்லது இறுக்கம், வழக்கத்திற்கு மாறான மூச்சுத் திணறல், தலைச்சுற்றல் அல்லது மயக்கம், ஒழுங்கற்ற அல்லது வேகமான இதயத் துடிப்பு, குளிர்ந்த வியர்வை, அல்லது புதிதாக வரும் அல்லது அதிகரிக்கும் வலி ஏற்பட்டால் உடனே நிறுத்தி உங்கள் சிகிச்சைக் குழுவைத் தொடர்பு கொள்ளுங்கள்.\n\nஅறிகுறிகள் கடுமையாக இருந்தால், அவற்றை அறிவிக்க இந்தச் செயலியைப் பயன்படுத்த வேண்டாம் — உங்கள் உள்ளூர் அவசர எண்ணை அழையுங்கள் அல்லது அருகிலுள்ள அவசர சிகிச்சைப் பிரிவுக்குச் செல்லுங்கள்.</string>
+
+    <string name="consent_data_heading">நாங்கள் என்ன சேகரிக்கிறோம், யார் பார்க்க முடியும்</string>
+    <string name="consent_data_body">உங்கள் மருத்துவர் உங்கள் மீட்சியைப் பின்தொடர, நீங்கள் உள்ளிடும் உடல்நலத் தகவல்களை இந்தச் செயலி சேகரிக்கிறது: நீங்கள் முடித்த பயிற்சிகள், உங்கள் வலியின் அளவு, ஒவ்வொரு அமர்வும் எவ்வளவு கடினமாக இருந்தது, நீங்கள் சேர்க்கும் குறிப்புகள், அத்துடன் உங்கள் பெயர், மின்னஞ்சல் முகவரி மற்றும் சந்திப்பு விவரங்கள்.\n\nஇந்தத் தகவல் உங்கள் சிகிச்சைக்குப் பொறுப்பான மருத்துவர் மற்றும் மருத்துவமனை நிர்வாகியுடன் பகிரப்படுகிறது. இது மறையாக்கம் செய்யப்பட்டு சேமிக்கப்படுகிறது, ஒருபோதும் விற்கப்படுவதில்லை, விளம்பரத்திற்குப் பயன்படுத்தப்படுவதில்லை. உங்கள் கணக்கையும் தரவையும் நீக்கும்படி எப்போது வேண்டுமானாலும் அமைப்புகளிலிருந்து கோரலாம்.</string>
+
+    <string name="consent_privacy_link">முழு தனியுரிமை கொள்கையைப் படிக்கவும்</string>
+    <string name="consent_accept">இதைப் படித்துப் புரிந்துகொண்டேன்</string>
+    <string name="consent_decline">நான் ஒப்புக்கொள்ளவில்லை — என்னை வெளியேற்றவும்</string>
+    <string name="consent_reopen">இதை எப்போது வேண்டுமானாலும் அமைப்புகளிலிருந்து மீண்டும் படிக்கலாம்.</string>
+
+    <!-- ===== Forced / optional update gate ===== -->
+    <string name="update_required_title">புதுப்பிப்பு தேவை</string>
+    <string name="update_now">இப்போது புதுப்பி</string>
+    <string name="update_recheck">ஏற்கனவே புதுப்பித்துவிட்டேன் — மீண்டும் சரிபார்</string>
+    <string name="update_installed_version">நிறுவப்பட்ட பதிப்பு %1$s</string>
+    <string name="update_available_title">புதுப்பிப்பு கிடைக்கிறது</string>
+    <string name="update_action">புதுப்பி</string>
+    <string name="update_maybe_later">பிறகு பார்க்கலாம்</string>
+
+    <string name="consent_scroll_hint">தொடர இறுதி வரை ஸ்க்ரால் செய்யவும்.</string>
 </resources>

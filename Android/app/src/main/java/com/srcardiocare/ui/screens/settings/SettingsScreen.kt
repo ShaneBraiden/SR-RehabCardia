@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.provider.Settings
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -61,13 +62,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.srcardiocare.R
+import com.srcardiocare.core.auth.signOutAndRestart
 import com.srcardiocare.core.locale.LocaleManager
 import com.srcardiocare.core.prefs.AppPreferences
 import com.srcardiocare.core.push.PushChannels
-import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.data.firebase.UserRepository
 import com.srcardiocare.ui.components.DisclaimerScreen
 import com.srcardiocare.ui.components.LegalLinks
@@ -101,13 +104,20 @@ fun SettingsScreen(
     var showDeleteConfirm by remember { mutableStateOf(false) }
     var deleteState by remember { mutableStateOf<DeleteState>(DeleteState.Idle) }
 
+    // Resolved here, not at the catch site: stringResource is @Composable and
+    // the failure is handled inside a coroutine.
+    val deleteErrorFallback = stringResource(R.string.settings_delete_error_generic)
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.settings_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.action_back)
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -124,11 +134,11 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = DesignTokens.Spacing.XL)
         ) {
-            SettingsSection("Appearance")
+            SettingsSection(R.string.settings_section_appearance)
             SettingsCard {
                 ThemeOptionRow(
-                    label = "Follow device",
-                    caption = "Match your phone's day/night setting",
+                    label = stringResource(R.string.settings_theme_system),
+                    caption = stringResource(R.string.settings_theme_system_caption),
                     icon = Icons.Default.PhoneAndroid,
                     selected = themeMode == AppPreferences.ThemeMode.SYSTEM,
                     onClick = {
@@ -137,8 +147,8 @@ fun SettingsScreen(
                     }
                 )
                 ThemeOptionRow(
-                    label = "Light",
-                    caption = "Always use the light theme",
+                    label = stringResource(R.string.settings_theme_light),
+                    caption = stringResource(R.string.settings_theme_light_caption),
                     icon = Icons.Default.LightMode,
                     selected = themeMode == AppPreferences.ThemeMode.LIGHT,
                     onClick = {
@@ -147,8 +157,8 @@ fun SettingsScreen(
                     }
                 )
                 ThemeOptionRow(
-                    label = "Dark",
-                    caption = "Easier on the eyes at night",
+                    label = stringResource(R.string.settings_theme_dark),
+                    caption = stringResource(R.string.settings_theme_dark_caption),
                     icon = Icons.Default.DarkMode,
                     selected = themeMode == AppPreferences.ThemeMode.DARK,
                     onClick = {
@@ -160,15 +170,15 @@ fun SettingsScreen(
             }
 
             if (showLanguage) {
-                SettingsSection("Language")
+                SettingsSection(R.string.language)
                 SettingsCard {
                     LanguageOptionRow(
-                        label = "English",
+                        label = stringResource(R.string.language_english),
                         selected = currentLanguage == LocaleManager.ENGLISH,
                         onClick = { applyLanguage(context, LocaleManager.ENGLISH) }
                     )
                     LanguageOptionRow(
-                        label = "தமிழ்",
+                        label = stringResource(R.string.language_tamil),
                         selected = currentLanguage == LocaleManager.TAMIL,
                         onClick = { applyLanguage(context, LocaleManager.TAMIL) },
                         showDivider = false
@@ -176,18 +186,18 @@ fun SettingsScreen(
                 }
                 Spacer(modifier = Modifier.height(DesignTokens.Spacing.XS))
                 Text(
-                    "Changing the language restarts the app screen.",
+                    stringResource(R.string.settings_language_restart_note),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
-            SettingsSection("Notifications")
+            SettingsSection(R.string.settings_section_notifications)
             SettingsCard {
                 NOTIFICATION_ROWS.forEach { row ->
                     ToggleRow(
-                        label = row.label,
-                        caption = row.caption,
+                        label = stringResource(row.label),
+                        caption = stringResource(row.caption),
                         icon = row.icon,
                         checked = row.channelId !in mutedChannels,
                         onCheckedChange = { enabled ->
@@ -197,8 +207,8 @@ fun SettingsScreen(
                     )
                 }
                 ToggleRow(
-                    label = "In-app sounds",
-                    caption = "Play a sound for confirmations inside the app",
+                    label = stringResource(R.string.settings_notif_sound),
+                    caption = stringResource(R.string.settings_notif_sound_caption),
                     icon = Icons.Default.VolumeUp,
                     checked = inAppSound,
                     onCheckedChange = {
@@ -215,41 +225,41 @@ fun SettingsScreen(
                 // that does work.
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     NavigateRow(
-                        label = "Notification tone & vibration",
-                        caption = "Opens Android's notification settings",
+                        label = stringResource(R.string.settings_notif_tone),
+                        caption = stringResource(R.string.settings_notif_tone_caption),
                         icon = Icons.Default.MusicNote,
                         onClick = { openChannelSettings(context) }
                     )
                 }
             }
 
-            SettingsSection("Legal & safety")
+            SettingsSection(R.string.settings_section_legal)
             SettingsCard {
                 NavigateRow(
-                    label = "Medical disclaimer & safety information",
-                    caption = "What this app is for, and when to stop and get help",
+                    label = stringResource(R.string.settings_legal_disclaimer),
+                    caption = stringResource(R.string.settings_legal_disclaimer_caption),
                     icon = Icons.Default.HealthAndSafety,
                     onClick = { showDisclaimer = true }
                 )
                 NavigateRow(
-                    label = "Privacy policy",
-                    caption = "What we collect and who it is shared with",
+                    label = stringResource(R.string.settings_legal_privacy),
+                    caption = stringResource(R.string.settings_legal_privacy_caption),
                     icon = Icons.Default.Policy,
                     onClick = { openUrl(context, LegalLinks.PRIVACY_POLICY) }
                 )
                 NavigateRow(
-                    label = "Terms of service",
-                    caption = "The terms you agreed to when your account was created",
+                    label = stringResource(R.string.settings_legal_terms),
+                    caption = stringResource(R.string.settings_legal_terms_caption),
                     icon = Icons.Default.Description,
                     onClick = { openUrl(context, LegalLinks.TERMS) }
                 )
             }
 
-            SettingsSection("Account")
+            SettingsSection(R.string.settings_section_account)
             SettingsCard {
                 NavigateRow(
-                    label = "Delete my account",
-                    caption = "Request permanent removal of your account and app data",
+                    label = stringResource(R.string.settings_delete_row),
+                    caption = stringResource(R.string.settings_delete_row_caption),
                     icon = Icons.Default.DeleteForever,
                     onClick = { showDeleteConfirm = true }
                 )
@@ -276,7 +286,7 @@ fun SettingsScreen(
                         UserRepository.requestOwnAccountDeletion(reason)
                         DeleteState.Submitted
                     } catch (e: Exception) {
-                        DeleteState.Failed(e.message ?: "Could not submit the request.")
+                        DeleteState.Failed(e.message ?: deleteErrorFallback)
                     }
                 }
             },
@@ -284,8 +294,7 @@ fun SettingsScreen(
                 // A submitted request has already blocked the session server
                 // side, so there is nothing left to return to.
                 if (deleteState is DeleteState.Submitted) {
-                    FirebaseService.logout()
-                    context.findActivity()?.recreate()
+                    signOutAndRestart(context)
                 } else {
                     showDeleteConfirm = false
                     deleteState = DeleteState.Idle
@@ -294,6 +303,13 @@ fun SettingsScreen(
         )
     }
 }
+
+/**
+ * Typed verbatim by the user and compared literally, so it is not translated —
+ * a Tamil word here would be matched against a Latin-script keyboard entry and
+ * the confirm button would never enable. The label around it *is* translated.
+ */
+private const val DELETE_CONFIRM_WORD = "DELETE"
 
 private sealed interface DeleteState {
     object Idle : DeleteState
@@ -317,24 +333,24 @@ private fun DeleteAccountDialog(
 ) {
     var typed by remember { mutableStateOf("") }
     var reason by remember { mutableStateOf("") }
-    val confirmed = typed.trim().equals("DELETE", ignoreCase = true)
+    val confirmed = typed.trim().equals(DELETE_CONFIRM_WORD, ignoreCase = true)
 
     if (state is DeleteState.Submitted) {
         AlertDialog(
             onDismissRequest = onDismiss,
-            title = { Text("Request received", fontWeight = FontWeight.Bold) },
-            text = {
+            title = {
                 Text(
-                    "Your account has been deactivated and your clinic has been " +
-                        "notified. Your profile and app data will be deleted, and " +
-                        "we will confirm by email within 30 days.\n\n" +
-                        "Some clinical records may be kept where your provider is " +
-                        "required by law to retain them."
+                    stringResource(R.string.settings_delete_done_title),
+                    fontWeight = FontWeight.Bold
                 )
             },
+            text = { Text(stringResource(R.string.settings_delete_done_body)) },
             confirmButton = {
                 TextButton(onClick = onDismiss) {
-                    Text("Sign out", fontWeight = FontWeight.SemiBold)
+                    Text(
+                        stringResource(R.string.action_sign_out),
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
             }
         )
@@ -343,20 +359,20 @@ private fun DeleteAccountDialog(
 
     AlertDialog(
         onDismissRequest = { if (state !is DeleteState.Submitting) onDismiss() },
-        title = { Text("Delete your account?", fontWeight = FontWeight.Bold) },
+        title = {
+            Text(
+                stringResource(R.string.settings_delete_title),
+                fontWeight = FontWeight.Bold
+            )
+        },
         text = {
             Column {
-                Text(
-                    "This ends your access to RehabCardia. Your profile, exercise " +
-                        "assignments, session history, feedback and messages will be " +
-                        "deleted. Records your clinic is legally required to keep may " +
-                        "be retained — see the privacy policy."
-                )
+                Text(stringResource(R.string.settings_delete_body))
                 Spacer(modifier = Modifier.height(DesignTokens.Spacing.MD))
                 OutlinedTextField(
                     value = reason,
                     onValueChange = { reason = it.take(500) },
-                    label = { Text("Reason (optional)") },
+                    label = { Text(stringResource(R.string.settings_delete_reason_label)) },
                     singleLine = false,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -364,7 +380,14 @@ private fun DeleteAccountDialog(
                 OutlinedTextField(
                     value = typed,
                     onValueChange = { typed = it },
-                    label = { Text("Type DELETE to confirm") },
+                    label = {
+                        Text(
+                            stringResource(
+                                R.string.settings_delete_type_label,
+                                DELETE_CONFIRM_WORD
+                            )
+                        )
+                    },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -384,7 +407,10 @@ private fun DeleteAccountDialog(
                 enabled = confirmed && state !is DeleteState.Submitting
             ) {
                 Text(
-                    if (state is DeleteState.Submitting) "Submitting…" else "Delete my account",
+                    stringResource(
+                        if (state is DeleteState.Submitting) R.string.settings_delete_submitting
+                        else R.string.settings_delete_confirm
+                    ),
                     color = DesignTokens.Colors.Error,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -394,36 +420,41 @@ private fun DeleteAccountDialog(
             TextButton(
                 onClick = onDismiss,
                 enabled = state !is DeleteState.Submitting
-            ) { Text("Cancel") }
+            ) { Text(stringResource(R.string.action_cancel)) }
         },
         shape = RoundedCornerShape(DesignTokens.Radius.LG)
     )
 }
 
+/**
+ * Resource ids rather than strings: this table is a top-level `val`, built once
+ * at class-init time when there is no Context and no locale. Holding rendered
+ * text here would freeze whatever language was current at process start.
+ */
 private data class NotificationRow(
     val channelId: String,
-    val label: String,
-    val caption: String,
+    @StringRes val label: Int,
+    @StringRes val caption: Int,
     val icon: ImageVector
 )
 
 private val NOTIFICATION_ROWS = listOf(
     NotificationRow(
         PushChannels.GENERAL,
-        "Exercises & updates",
-        "New prescriptions, reminders and feedback",
+        R.string.settings_notif_general,
+        R.string.settings_notif_general_caption,
         Icons.Default.Notifications
     ),
     NotificationRow(
         PushChannels.CHAT,
-        "Messages",
-        "Direct messages with your clinician",
+        R.string.settings_notif_chat,
+        R.string.settings_notif_chat_caption,
         Icons.Default.ChatBubble
     ),
     NotificationRow(
         PushChannels.APPOINTMENTS,
-        "Appointments",
-        "Bookings, changes and confirmations",
+        R.string.settings_notif_appointments,
+        R.string.settings_notif_appointments_caption,
         Icons.Default.CalendarMonth
     )
 )
@@ -445,10 +476,12 @@ private fun openChannelSettings(context: Context) {
 // ── Building blocks ─────────────────────────────────────────────────────
 
 @Composable
-private fun SettingsSection(title: String) {
+private fun SettingsSection(@StringRes title: Int) {
     Spacer(modifier = Modifier.height(DesignTokens.Spacing.XL))
     Text(
-        title.uppercase(),
+        // Tamil has no case, so uppercase() is a no-op there and the heading
+        // simply renders as written — the spacing below carries the hierarchy.
+        stringResource(title).uppercase(),
         style = MaterialTheme.typography.labelMedium,
         fontWeight = FontWeight.SemiBold,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -538,7 +571,10 @@ private fun LanguageOptionRow(
     showDivider: Boolean = true
 ) = ThemeOptionRow(
     label = label,
-    caption = if (selected) "Currently selected" else "Tap to switch",
+    caption = stringResource(
+        if (selected) R.string.settings_language_selected
+        else R.string.settings_language_switch
+    ),
     icon = Icons.Default.Language,
     selected = selected,
     onClick = onClick,
