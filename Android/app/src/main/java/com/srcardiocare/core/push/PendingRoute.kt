@@ -28,4 +28,16 @@ object PendingRoute {
         _pending.value = null
         return current
     }
+
+    /**
+     * Drops an un-consumed target on sign-out.
+     *
+     * A push tapped by the outgoing user queues a route here before the NavHost
+     * is composed. Left in place, the next account to sign in drains it and is
+     * deep-linked into a screen — a chat thread, a patient profile — that was
+     * addressed to somebody else.
+     */
+    fun clear() {
+        _pending.value = null
+    }
 }

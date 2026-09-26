@@ -131,6 +131,59 @@
     <string name="workout_session_done">அமர்வு %1$d முடிந்தது</string>
 
     <!--
+      ===== Pre-exercise safety rules =====
+      Clinical instruction, not UI copy — the Tamil here is what a patient will
+      act on mid-session. Terminology follows the glossary: அமர்வு = session,
+      சுற்று = set, முறை = rep. Wording is drawn from the clinic's own Tamil
+      patient handout where one exists for the line; the rest is translated
+      from the English booklet and still needs native clinical sign-off before
+      it is treated as reviewed.
+    -->
+    <string name="rules_title">பயிற்சி பாதுகாப்பு விதிகள்</string>
+    <string name="rules_subtitle">ஒவ்வொரு அமர்வுக்கும் முன்பு இதைப் படியுங்கள். சில நொடிகள் மட்டுமே ஆகும்.</string>
+    <string name="rules_leave_desc">தொடங்காமல் வெளியேறு</string>
+
+    <string name="rules_stop_heading">இவற்றில் ஏதேனும் தோன்றினால் உடனே நிறுத்துங்கள்</string>
+    <string-array name="rules_stop_items">
+        <item>நெஞ்சு வலி, இறுக்கம் அல்லது பாரம்</item>
+        <item>உங்களுக்கு வழக்கத்திற்கு மாறான மூச்சுத் திணறல்</item>
+        <item>தலைசுற்றல், மயக்கம் அல்லது குளிர் வியர்வை</item>
+        <item>ஒழுங்கற்ற அல்லது வேகமான இதயத் துடிப்பு</item>
+        <item>கழுத்து, தாடை, கை அல்லது முதுகுக்குப் பரவும் வலி</item>
+    </string-array>
+    <string name="rules_stop_footer">இவற்றைப் பொருட்படுத்தாமல் தொடராதீர்கள். அமர்வை நிறுத்திவிட்டு உங்கள் சிகிச்சைக் குழுவைத் தொடர்பு கொள்ளுங்கள். அறிகுறி கடுமையாக இருந்தால், அவசர எண்ணை அழையுங்கள் அல்லது அருகிலுள்ள அவசர சிகிச்சைப் பிரிவுக்குச் செல்லுங்கள்.</string>
+
+    <string name="rules_do_heading">செய்ய வேண்டியவை</string>
+    <string-array name="rules_do_items">
+        <item>தொடங்கும் முன் சில நிமிடங்கள் மெதுவாக உடலைத் தயார்படுத்துங்கள், முடித்தபின் மெதுவாக ஓய்வுக்கு வாருங்கள்.</item>
+        <item>உங்கள் இயன்முறை மருத்துவர் பரிந்துரைத்த சுற்றுகளையும் முறைகளையும் மட்டும் செய்யுங்கள்.</item>
+        <item>முழுவதும் இயல்பாக மூச்சு விடுங்கள் — ஒருபோதும் மூச்சை அடக்க வேண்டாம்.</item>
+        <item>முதுகை நேராக வைத்து, மெதுவாகவும் சீராகவும் அசையுங்கள்.</item>
+        <item>சுற்றுகளுக்கு இடையே முழு ஓய்வு எடுங்கள்; தேவைப்பட்டால் இன்னும் அதிக நேரம் ஓய்வெடுங்கள்.</item>
+        <item>அருகில் தண்ணீர் வைத்திருந்து, தேவைப்படும்போது குடியுங்கள்.</item>
+    </string-array>
+
+    <string name="rules_dont_heading">செய்யக் கூடாதவை</string>
+    <string-array name="rules_dont_items">
+        <item>உணவு உண்ட 45 நிமிடங்களுக்குள் பயிற்சி செய்ய வேண்டாம்.</item>
+        <item>அதிகம் சிரமப்படவோ, அவசரமாக அசையவோ, மூச்சை அடக்கவோ வேண்டாம்.</item>
+        <item>திடீரென உடலைத் திருப்பவோ குனியவோ வேண்டாம்; பலமாகத் தள்ளவோ இழுக்கவோ வேண்டாம்.</item>
+        <item>அதிக வெயிலிலோ அதிக குளிரிலோ பயிற்சி செய்ய வேண்டாம்.</item>
+        <item>சோர்வாக இருக்கும்போது தொடர வேண்டாம் — சோர்வு என்பது நிறுத்தச் சொல்லும் அறிகுறி.</item>
+        <item>உங்கள் மீட்சியின் வேகத்தை மற்றவர்களுடன் ஒப்பிட வேண்டாம்.</item>
+    </string-array>
+
+    <string name="rules_sternal_heading">இதய அறுவை சிகிச்சை செய்திருந்தால் (முதல் 6 வாரங்கள்)</string>
+    <string-array name="rules_sternal_items">
+        <item>கைகளை உடலோடு சேர்த்து வைத்து, 2–4 கிலோவுக்கு மேல் தூக்க வேண்டாம்.</item>
+        <item>படுக்கையிலிருந்தோ நாற்காலியிலிருந்தோ கைகளை ஊன்றி எழ வேண்டாம்.</item>
+        <item>இரு கைகளையும் தலைக்கு மேல் நீட்டவோ, முதுகுக்குப் பின்னால் நீட்டவோ வேண்டாம்.</item>
+        <item>இருமும்போதோ தும்மும்போதோ நெஞ்சில் ஒரு தலையணையை அணைத்துக் கொள்ளுங்கள்.</item>
+    </string-array>
+
+    <string name="rules_acknowledge">புரிந்துகொண்டேன் — தொடங்குவோம்</string>
+
+    <!--
       ===== Post-workout feedback =====
       Clinically critical — this is what the patient reports back to the doctor.
       See glossary §6. "Borg" stays in Latin script.
@@ -333,6 +386,7 @@
     <!-- ===== Shared components ===== -->
     <string name="privacy_policy">தனியுரிமைக் கொள்கை</string>
     <string name="terms_of_service">சேவை விதிமுறைகள்</string>
+    <string name="sign_out_in_progress">வெளியேறுகிறது…</string>
     <string name="sign_out_confirm_message">வெளியேற விரும்புகிறீர்களா?</string>
     <string name="fullscreen_enter">முழுத்திரை</string>
     <string name="fullscreen_exit">முழுத்திரையிலிருந்து வெளியேறு</string>

@@ -5,6 +5,7 @@ import android.content.Context
 import android.util.Log
 import com.google.firebase.FirebaseApp
 import com.srcardiocare.core.auth.AuthManager
+import com.srcardiocare.core.auth.SessionTeardown
 import com.srcardiocare.core.locale.LocaleManager
 import com.srcardiocare.core.push.PushChannels
 import kotlinx.coroutines.CoroutineScope
@@ -52,7 +53,14 @@ class SRCardiocareApp : Application() {
             // Initialize App Check after Firebase is ready
             initializeAppCheck()
 
-            AuthManager(this@SRCardiocareApp)
+            AuthManager(this@SRCardiocareApp).also { authManager ->
+                // Finish any sign-out the previous process did not get to
+                // complete before it exited. Deliberately here rather than in
+                // onCreate: it needs the AuthManager, it touches the encrypted
+                // preferences (too slow for the launch thread), and everything
+                // that reads the session waits on this same Deferred.
+                SessionTeardown.finishPendingSignOut(this@SRCardiocareApp, authManager)
+            }
         }
     }
 
@@ -83,7 +91,13 @@ class SRCardiocareApp : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
-        
+
+        // Finish the last sign-out before anything can read from Firestore.
+        // This has to come first: clearPersistence() only works on an instance
+        // nobody has touched yet, and the update gate reads config/appVersion
+        // as soon as Compose starts. See SessionTeardown.
+        SessionTeardown.clearFirestoreCacheIfRequested(this)
+
         // Register notification channels for push + deep-link routing.
         PushChannels.register(this)
 

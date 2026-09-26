@@ -13,6 +13,8 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.srcardiocare.MainActivity
 import com.srcardiocare.R
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withTimeoutOrNull
 import org.json.JSONObject
 
 /**
@@ -115,6 +117,51 @@ class PushMessagingService : FirebaseMessagingService() {
                         .set(mapOf("fcmTokens" to listOf(token)), com.google.firebase.firestore.SetOptions.merge())
                         .addOnFailureListener { Log.w(TAG, "fcmTokens merge failed", err) }
                 }
+        }
+
+        /** Upper bound on how long a token operation may delay signing out. */
+        private const val TOKEN_OP_TIMEOUT_MS = 3_000L
+
+        /**
+         * Detaches this handset from [uid]'s push fan-out. Call while the user
+         * is still signed in — the `users/{uid}` write needs their session.
+         *
+         * Two steps, and the second is the one that actually guarantees it:
+         *
+         *  1. `arrayRemove` the token from the outgoing user's document, so the
+         *     fan-out stops naming this device. Best effort — a handset with no
+         *     signal cannot do this, and sign-out must not be blocked on it.
+         *  2. Delete the registration token outright. This is what makes the
+         *     leak impossible rather than merely unlikely: whatever documents
+         *     still list the old token, FCM now rejects it as `UNREGISTERED`
+         *     and delivers nothing. The next sign-in mints a fresh token.
+         *
+         * Without this, `arrayUnion` left one device on every account that had
+         * ever signed into it, so a patient's clinical push notifications kept
+         * arriving on a handset the next person was already using.
+         */
+        suspend fun detachDevice(uid: String) {
+            val messaging = FirebaseMessaging.getInstance()
+
+            val token = runCatching {
+                withTimeoutOrNull(TOKEN_OP_TIMEOUT_MS) { messaging.token.await() }
+            }.getOrNull()
+
+            if (token != null) {
+                runCatching {
+                    withTimeoutOrNull(TOKEN_OP_TIMEOUT_MS) {
+                        FirebaseFirestore.getInstance()
+                            .collection("users")
+                            .document(uid)
+                            .update("fcmTokens", FieldValue.arrayRemove(token))
+                            .await()
+                    }
+                }.onFailure { Log.w(TAG, "fcmTokens arrayRemove failed", it) }
+            }
+
+            runCatching {
+                withTimeoutOrNull(TOKEN_OP_TIMEOUT_MS) { messaging.deleteToken().await() }
+            }.onFailure { Log.w(TAG, "deleteToken failed", it) }
         }
 
         fun parseParams(raw: String): Map<String, String> {

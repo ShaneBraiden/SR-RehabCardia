@@ -37,6 +37,18 @@ object LocaleManager {
     private const val KEY_CHOSEN = "language_chosen"
 
     /**
+     * Prefix for "the language this account picked", one entry per uid.
+     *
+     * [KEY_LANGUAGE] is the locale the *handset* is currently rendering in, and
+     * sign-out clears it so the next person to pick the device up is not handed
+     * the last user's language. These entries are the other half of that: they
+     * remember what each account chose so signing back in restores it silently.
+     * Without them the reset is indistinguishable from never having asked, and
+     * a patient who chose Tamil once is asked again at every single login.
+     */
+    private const val KEY_USER_PREFIX = "language_for_"
+
+    /**
      * Plain SharedPreferences, not [com.srcardiocare.core.security.SecurePreferences].
      * A locale tag is not a secret, and this is read on the `attachBaseContext`
      * startup path where an EncryptedSharedPreferences unlock would cost real time.
@@ -53,13 +65,46 @@ object LocaleManager {
     /**
      * Persists [tag]. Does not take effect until the activity is recreated —
      * callers are expected to follow this with `activity.recreate()`.
+     *
+     * [uid] is the account making the choice. Pass it wherever one is signed
+     * in: it is what lets [restoreFor] put the language back after a sign-out
+     * has cleared the handset-wide tag, so the prompt is answered once per
+     * account per device rather than once per login. Null is accepted for the
+     * rare caller with no session, and simply means nothing is remembered.
      */
-    fun setLanguage(context: Context, tag: String) {
+    fun setLanguage(context: Context, tag: String, uid: String? = null) {
         val safe = if (tag in SUPPORTED) tag else ENGLISH
-        prefs(context).edit()
+        val editor = prefs(context).edit()
             .putString(KEY_LANGUAGE, safe)
             .putBoolean(KEY_CHOSEN, true)
-            .apply()
+        if (!uid.isNullOrBlank()) editor.putString(KEY_USER_PREFIX + uid, safe)
+        editor.apply()
+    }
+
+    /** The language [uid] chose on this device, or null if they never have. */
+    fun rememberedFor(context: Context, uid: String): String? =
+        prefs(context).getString(KEY_USER_PREFIX + uid, null)?.takeIf { it in SUPPORTED }
+
+    /**
+     * Re-applies the language [uid] picked the last time they signed in here.
+     *
+     * Returns true when the active locale actually changed, which is the
+     * caller's signal to recreate the activity — resources are bound in
+     * `attachBaseContext`, so nothing already composed will re-resolve. Returns
+     * false both when there is nothing remembered (the caller should show the
+     * picker) and when the handset is already in the right language, so it is
+     * safe to call on every launch without looping.
+     */
+    fun restoreFor(context: Context, uid: String): Boolean {
+        val remembered = rememberedFor(context, uid) ?: return false
+        val current = getLanguage(context)
+        if (current == remembered && hasChosenLanguage(context)) return false
+
+        prefs(context).edit()
+            .putString(KEY_LANGUAGE, remembered)
+            .putBoolean(KEY_CHOSEN, true)
+            .commit()
+        return current != remembered
     }
 
     /**
@@ -71,6 +116,9 @@ object LocaleManager {
      * from an English reader who has. The prompt is shown once, on first launch
      * after signing in, and not again until the next sign-out clears it via
      * [reset] — which is also why the login screen needs no toggle of its own.
+     *
+     * A returning account does not see it a second time: [restoreFor] raises
+     * this flag again from what they chose last time, before the gate reads it.
      */
     fun hasChosenLanguage(context: Context): Boolean =
         prefs(context).getBoolean(KEY_CHOSEN, false)
@@ -87,14 +135,24 @@ object LocaleManager {
      * (the switch lives behind a patient login). Resetting here is what makes
      * [hasChosenLanguage] mean "chosen by the person currently signed in".
      *
+     * Only the handset-wide keys go: the per-account entries behind
+     * [KEY_USER_PREFIX] deliberately survive, so this un-applies the outgoing
+     * user's language without forgetting that they ever chose it. Signing back
+     * in restores it through [restoreFor] rather than re-asking.
+     *
      * Takes effect on the next activity creation, exactly like [setLanguage] —
      * callers sign out and recreate.
      */
     fun reset(context: Context) {
+        // commit(), not apply(): sign-out ends by killing the process, and an
+        // apply() write is queued rather than made. Losing this one hands the
+        // next person to sign in the previous user's language, which is the
+        // exact failure this function exists to prevent. One small file, once
+        // per sign-out — the blocking write is affordable here.
         prefs(context).edit()
             .remove(KEY_LANGUAGE)
             .remove(KEY_CHOSEN)
-            .apply()
+            .commit()
     }
 
     fun isTamil(context: Context) = getLanguage(context) == TAMIL

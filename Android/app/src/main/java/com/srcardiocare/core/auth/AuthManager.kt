@@ -30,8 +30,15 @@ class AuthManager(context: Context) {
 
     val currentUID: String? get() = auth.currentUser?.uid
 
+    /**
+     * Drops the cached role and ends the Firebase session.
+     *
+     * commit() rather than apply(): this runs on the sign-out path, which ends
+     * by killing the process, and a queued write does not survive that. See
+     * [com.srcardiocare.core.auth.SessionTeardown].
+     */
     fun clearAll() {
-        prefs.edit().clear().apply()
+        prefs.edit().clear().commit()
         auth.signOut()
     }
 

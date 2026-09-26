@@ -27,7 +27,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
-import com.srcardiocare.core.auth.AuthManager
+import com.srcardiocare.core.auth.signOutAndRestart
 import com.srcardiocare.core.push.DeepLink
 import com.srcardiocare.core.push.PendingRoute
 import com.srcardiocare.data.firebase.FirebaseService
@@ -128,7 +128,7 @@ fun SRCardiocareNavGraph(
     navController: NavHostController,
     startDestination: String = Route.Login.path
 ) {
-    CurrentUserDocGuard(navController = navController)
+    CurrentUserDocGuard()
     PushDeepLinkHandler(navController = navController)
 
     // "Powered by" badge floats over every screen except the chat screens.
@@ -561,8 +561,16 @@ private fun PushDeepLinkHandler(navController: NavHostController) {
     }
 }
 
+/**
+ * Watches the signed-in user's own document and ejects them if the account is
+ * deleted or blocked while they are using it.
+ *
+ * Takes no NavController: the exit is a full [signOutAndRestart], which lands
+ * on the login screen by recreating the Activity rather than by navigating a
+ * back stack that is about to be discarded anyway.
+ */
 @Composable
-private fun CurrentUserDocGuard(navController: NavHostController) {
+private fun CurrentUserDocGuard() {
     val context = LocalContext.current
     var redirected by remember { mutableStateOf(false) }
 
@@ -576,13 +584,17 @@ private fun CurrentUserDocGuard(navController: NavHostController) {
             .addSnapshotListener { snapshot, error ->
                 if (redirected || error != null) return@addSnapshotListener
 
+                // Both exits below go through the same teardown the sign-out
+                // button uses. They used to clear the encrypted preferences and
+                // navigate, which left the rest of the session in place — the
+                // cached role, the push subscription, the locale, the tray —
+                // so an account deleted or blocked mid-session was ejected far
+                // less thoroughly than one that simply signed out. An account
+                // revoked by an admin is exactly the case that deserves the
+                // more complete exit, not the lesser one.
                 if (snapshot != null && !snapshot.exists()) {
                     redirected = true
-                    AuthManager(context).clearAll()
-                    navController.navigate(Route.Login.path) {
-                        popUpTo(0) { inclusive = true }
-                        launchSingleTop = true
-                    }
+                    signOutAndRestart(context)
                     return@addSnapshotListener
                 }
 
@@ -590,11 +602,7 @@ private fun CurrentUserDocGuard(navController: NavHostController) {
                     val isBlocked = snapshot.getBoolean("isBlocked") == true
                     if (isBlocked) {
                         redirected = true
-                        AuthManager(context).clearAll()
-                        navController.navigate(Route.Login.path) {
-                            popUpTo(0) { inclusive = true }
-                            launchSingleTop = true
-                        }
+                        signOutAndRestart(context)
                         return@addSnapshotListener
                     }
 

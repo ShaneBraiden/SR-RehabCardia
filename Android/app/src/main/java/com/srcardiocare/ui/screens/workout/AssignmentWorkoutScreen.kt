@@ -23,6 +23,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -79,6 +80,21 @@ fun AssignmentWorkoutScreen(
     onComplete: () -> Unit,
     onBack: () -> Unit
 ) {
+    // The clinic's safety brief gates every session — see PreExerciseRules.kt.
+    // It is held ahead of all the workout state on purpose: until the patient
+    // acknowledges it no session row is written, no video decoder is started,
+    // and no tutorial fires, so backing out here costs nothing and leaves
+    // nothing behind.
+    var rulesAcknowledged by rememberSaveable { mutableStateOf(false) }
+    if (!rulesAcknowledged) {
+        PreExerciseRulesScreen(
+            exerciseName = assignment.exerciseName,
+            onAcknowledge = { rulesAcknowledged = true },
+            onBack = onBack
+        )
+        return
+    }
+
     val context = LocalContext.current
     val activity = context as? Activity
     val haptics = LocalHapticFeedback.current
@@ -403,6 +419,10 @@ private fun SetProgressBar(currentSet: Int, totalSets: Int, phase: Phase) {
 // so the shared ExoPlayer/WebView instance hands off without re-buffering).
 // ───────────────────────────────────────────────────────────────────────────────
 
+// AspectRatioFrameLayout.RESIZE_MODE_* is @UnstableApi in Media3. Opting in
+// here rather than suppressing the lint check: the constant is what keeps the
+// demo video uncropped, and pinning the Media3 version is the real guard.
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
 private fun VideoSurface(
     phase: Phase,

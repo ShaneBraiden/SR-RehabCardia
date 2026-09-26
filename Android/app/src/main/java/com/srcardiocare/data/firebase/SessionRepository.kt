@@ -78,6 +78,18 @@ object SessionRepository {
         }
     }
 
+    /**
+     * Drops every rate-limit bucket on sign-out.
+     *
+     * Buckets are keyed by session id, so they cannot be *charged* to the wrong
+     * account — but they are account-scoped state that outlives the session
+     * that created them, and the next person to sign in on this handset should
+     * start from a clean allowance rather than inherit a throttled one.
+     */
+    fun clearRateLimiters() {
+        synchronized(setCompletionRateLimiters) { setCompletionRateLimiters.clear() }
+    }
+
     /** Start a new exercise session. */
     suspend fun startSession(
         assignmentId: String,
@@ -270,6 +282,39 @@ object SessionRepository {
         return snapshot.documents.map { it.id to (it.data ?: emptyMap()) }
     }
 
+    /**
+     * Every session [patientId] has ever logged, across all their assignments.
+     *
+     * Satisfies the patient's own list rule and the admin one. A doctor must
+     * use [fetchSessionsForDoctor] instead — their branch of the rule
+     * authorises on the denormalised `doctorId`, so a query that does not
+     * constrain it is rejected wholesale rather than filtered down.
+     */
+    suspend fun fetchAllSessionsForPatient(patientId: String): List<Pair<String, Map<String, Any?>>> {
+        val snapshot = FirebaseClients.db.collection("sessionLogs")
+            .whereEqualTo("patientId", patientId)
+            .get().await()
+        return snapshot.documents.map { it.id to (it.data ?: emptyMap()) }
+    }
+
+    /**
+     * Every session logged against [doctorId] — their whole caseload, in one
+     * query rather than one per patient.
+     *
+     * `doctorId` is stamped onto each log at creation and is the same field
+     * their list rule authorises on, so the caseload is a single indexed read
+     * and splitting it by patient is arithmetic we can do locally. The
+     * dashboard needs counts for every patient at once; fanning out over a
+     * caseload to get them is the pattern the status dots above already had to
+     * be walked back from.
+     */
+    suspend fun fetchSessionsForDoctor(doctorId: String): List<Pair<String, Map<String, Any?>>> {
+        val snapshot = FirebaseClients.db.collection("sessionLogs")
+            .whereEqualTo("doctorId", doctorId)
+            .get().await()
+        return snapshot.documents.map { it.id to (it.data ?: emptyMap()) }
+    }
+
     /** Fetch today's sessions for a patient (across all assignments). */
     suspend fun fetchTodaysSessions(patientId: String): List<Pair<String, Map<String, Any?>>> {
         val today = java.time.LocalDate.now().toString()
@@ -337,6 +382,12 @@ object SessionRepository {
 
     suspend fun getTodaysSessions(patientId: String): List<SessionLog> =
         fetchTodaysSessions(patientId).map { (id, data) -> data.toSessionLog(id) }
+
+    suspend fun getAllSessionsForPatient(patientId: String): List<SessionLog> =
+        fetchAllSessionsForPatient(patientId).map { (id, data) -> data.toSessionLog(id) }
+
+    suspend fun getSessionsForDoctor(doctorId: String): List<SessionLog> =
+        fetchSessionsForDoctor(doctorId).map { (id, data) -> data.toSessionLog(id) }
 
     /**
      * [patientId]'s sessions for one assignment, as seen by [viewerId] in

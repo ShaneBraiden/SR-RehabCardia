@@ -130,6 +130,58 @@
     <string name="workout_complete_title">Workout Complete</string>
     <string name="workout_session_done">Session %1$d done</string>
 
+    <!-- ===== Pre-exercise safety rules =====
+      Shown before EVERY workout session, ahead of the demo video. The wording
+      is the clinic\'s own patient booklet ("Cardiac Rehabilitation Phase II —
+      Home-based Physical activities: Guidelines", Sri Ramachandra Faculty of
+      Physiotherapy) — Exercise Counselling, the sternal precautions, and the
+      warning signs that end a session. Treat it like the consent block: it is
+      clinical instruction, not UI copy. Any change to the booklet should be
+      mirrored here and re-reviewed by the clinic in both languages. -->
+    <string name="rules_title">Exercise safety rules</string>
+    <string name="rules_subtitle">Please read this before every session. It only takes a moment.</string>
+    <string name="rules_leave_desc">Leave without starting</string>
+
+    <string name="rules_stop_heading">Stop straight away if you feel</string>
+    <string-array name="rules_stop_items">
+        <item>Chest pain, tightness or heaviness</item>
+        <item>Breathlessness that is unusual for you</item>
+        <item>Dizziness, faintness or a cold sweat</item>
+        <item>An irregular or racing heartbeat</item>
+        <item>Pain spreading to your neck, jaw, arm or back</item>
+    </string-array>
+    <string name="rules_stop_footer">Do not push through these. End the session and contact your care team. If a symptom is severe, call your local emergency number or go to the nearest emergency department.</string>
+
+    <string name="rules_do_heading">Do</string>
+    <string-array name="rules_do_items">
+        <item>Warm up gently before you start, and cool down afterwards.</item>
+        <item>Do only the sets and reps your physiotherapist assigned.</item>
+        <item>Breathe normally throughout — never hold your breath.</item>
+        <item>Move slowly and smoothly, keeping your posture straight.</item>
+        <item>Take the full rest between sets, and longer if you need it.</item>
+        <item>Keep water beside you and drink when you need to.</item>
+    </string-array>
+
+    <string name="rules_dont_heading">Don\'t</string>
+    <string-array name="rules_dont_items">
+        <item>Don\'t exercise within 45 minutes of a meal.</item>
+        <item>Don\'t strain, rush the movement, or hold your breath.</item>
+        <item>Don\'t twist or bend suddenly, or push and pull with force.</item>
+        <item>Don\'t exercise in extreme heat or cold.</item>
+        <item>Don\'t carry on when you are tired — fatigue is a signal to stop.</item>
+        <item>Don\'t compare your recovery speed with anyone else\'s.</item>
+    </string-array>
+
+    <string name="rules_sternal_heading">If you have had heart surgery (first 6 weeks)</string>
+    <string-array name="rules_sternal_items">
+        <item>Keep your arms close to your body, and lift no more than 2–4 kg.</item>
+        <item>Don\'t push or pull yourself up from a bed or chair with your arms.</item>
+        <item>Don\'t reach overhead with both arms or stretch behind your back.</item>
+        <item>Hold a pillow against your chest when you cough or sneeze.</item>
+    </string-array>
+
+    <string name="rules_acknowledge">I understand — let\'s begin</string>
+
     <!-- ===== Post-workout feedback ===== -->
     <string name="feedback_title">Workout Complete!</string>
     <string name="feedback_subtitle">Great job! Let us know how you felt.</string>
@@ -344,6 +396,7 @@
     <!-- ===== Shared components ===== -->
     <string name="privacy_policy">Privacy Policy</string>
     <string name="terms_of_service">Terms of Service</string>
+    <string name="sign_out_in_progress">Signing out…</string>
     <string name="sign_out_confirm_message">Are you sure you want to sign out?</string>
     <string name="fullscreen_enter">Fullscreen</string>
     <string name="fullscreen_exit">Exit fullscreen</string>

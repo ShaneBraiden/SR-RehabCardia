@@ -434,6 +434,9 @@ fun ExerciseLibraryScreen(onBack: () -> Unit, onUpload: () -> Unit) {
 /**
  * Fullscreen dialog for video playback in Exercise Library.
  */
+// AspectRatioFrameLayout.RESIZE_MODE_* is @UnstableApi in Media3 — see the
+// matching opt-in on VideoSurface in AssignmentWorkoutScreen.
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 private fun VideoPlayerDialog(

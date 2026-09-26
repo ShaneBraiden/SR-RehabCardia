@@ -27,7 +27,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
 import com.srcardiocare.R
 import com.srcardiocare.data.firebase.AssignmentRepository
+import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.data.firebase.SessionRepository
+import com.srcardiocare.data.firebase.UserRepository
 import com.srcardiocare.data.model.*
 import com.srcardiocare.ui.components.SkeletonListRow
 import com.srcardiocare.ui.components.tutorial.TutorialHelpButton
@@ -55,10 +57,37 @@ fun PatientHistoryScreen(
     val today = LocalDate.now()
     val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
+    // This screen serves two viewers: a patient reading their own history, and
+    // a doctor opening it from the patient's profile. Both `assignments` and
+    // `sessionLogs` authorise a clinician per document on the denormalised
+    // doctorId, so a query constrained only by patientId — which is what a
+    // patient's own read looks like — is rejected wholesale for a doctor. The
+    // catch below then rendered the denial as an empty history: every session
+    // the patient had logged, missing.
+    val viewerId = FirebaseService.currentUID
+    var viewerRole by remember { mutableStateOf("") }
+
+    // Only a viewer who is *not* the patient can need the scoped variants, so
+    // the patient's own visit pays no extra read for a role it will not use.
+    suspend fun resolveViewerRole(): String {
+        if (viewerId == null || viewerId == patientId) return ""
+        if (viewerRole.isBlank()) {
+            viewerRole = runCatching { UserRepository.getUser(viewerId).role }.getOrDefault("")
+        }
+        return viewerRole
+    }
+
     suspend fun loadData() {
-        if (patientId.isBlank()) return
+        if (patientId.isBlank() || viewerId == null) {
+            // Nothing to read — settle the screen rather than leave the
+            // skeleton shimmering at a viewer who will never get data.
+            isLoading = false
+            isRefreshing = false
+            return
+        }
         try {
-            val assignments = AssignmentRepository.getAssignments(patientId)
+            val role = resolveViewerRole()
+            val assignments = AssignmentRepository.getAssignmentsFor(patientId, viewerId, role)
             val historyList = mutableListOf<HistoryExerciseItem>()
 
             for (assignment in assignments) {
@@ -68,7 +97,9 @@ fun PatientHistoryScreen(
 
                 if (today.isBefore(startDate)) continue
 
-                val allSessions = SessionRepository.getAllSessionsForAssignment(patientId, assignment.id)
+                val allSessions = SessionRepository.getAllSessionsForAssignmentFor(
+                    patientId, assignment.id, viewerId, role
+                )
                 val groupedByDate = allSessions.groupBy { it.sessionDate }
 
                 val limitDate = if (today.isAfter(endDate)) endDate else today.minusDays(1)

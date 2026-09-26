@@ -8,7 +8,7 @@ import com.srcardiocare.data.firebase.AssignmentRepository
 import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.data.firebase.SessionRepository
 import com.srcardiocare.data.firebase.UserRepository
-import com.srcardiocare.data.firebase.WorkoutRepository
+import com.srcardiocare.data.model.SessionLog
 import com.srcardiocare.data.model.SessionStatus
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -176,35 +176,56 @@ class DoctorDashboardViewModel : ViewModel() {
                     )
                 }
 
-                val patientWorkoutRefs = users.filter { it.role.ifBlank { "patient" } == "patient" }
-                val stats = coroutineScope {
-                    patientWorkoutRefs.map { patient ->
-                        async {
-                            val patientName = patient.fullName.ifBlank { "Unknown" }
-                            try {
-                                val workouts = WorkoutRepository.getWorkouts(patient.id)
-                                val completedSessions = workouts.count { it.completedAtMs != null }
-                                val totalSessions = workouts.size
-                                val lastCompletedAt = workouts.mapNotNull { it.completedAtMs }.maxOrNull()
-                                if (totalSessions > 0) {
-                                    PatientWorkoutStat(
-                                        patientId = patient.id,
-                                        patientName = patientName,
-                                        completedSessions = completedSessions,
-                                        totalSessions = totalSessions,
-                                        lastCompletedAtMs = lastCompletedAt
-                                    )
-                                } else {
-                                    null
+                // The completion chart counts `sessionLogs` — the collection
+                // the patient app actually writes when a workout is finished.
+                //
+                // It used to count `workouts`, whose write path was retired
+                // when the patient flow moved to assignments/sessionLogs. So
+                // the chart could only ever show a frozen historical total, and
+                // for a doctor not even that: `workouts` is authorised per
+                // document on the denormalised doctorId, and the query
+                // constrained only patientId, so every read was denied
+                // wholesale and silently swallowed. Sessions logged today never
+                // moved the donut because nothing was writing what it read.
+                //
+                // A doctor's whole caseload is one indexed read on that same
+                // doctorId. An admin has no such key — their dashboard spans
+                // every clinician — so they fall back to one query per patient.
+                val sessionsByPatient: Map<String, List<SessionLog>> = try {
+                    if (role == "doctor") {
+                        SessionRepository.getSessionsForDoctor(uid).groupBy { it.patientId }
+                    } else {
+                        coroutineScope {
+                            patientRefs.map { patient ->
+                                async {
+                                    patient.id to try {
+                                        SessionRepository.getAllSessionsForPatient(patient.id)
+                                    } catch (_: Exception) {
+                                        emptyList()
+                                    }
                                 }
-                            } catch (_: Exception) {
-                                null
-                            }
+                            }.awaitAll().toMap()
                         }
-                    }.awaitAll()
-                        .filterNotNull()
-                        .sortedByDescending { it.completedSessions }
+                    }
+                } catch (_: Exception) {
+                    emptyMap()
                 }
+
+                val stats = patientRefs.mapNotNull { patient ->
+                    val sessions = sessionsByPatient[patient.id].orEmpty()
+                    if (sessions.isEmpty()) return@mapNotNull null
+                    val completed = sessions.filter { it.status == SessionStatus.COMPLETED }
+                    PatientWorkoutStat(
+                        patientId = patient.id,
+                        patientName = patient.fullName.ifBlank { "Unknown" },
+                        completedSessions = completed.size,
+                        totalSessions = sessions.size,
+                        // Only a finished session counts as a last completion:
+                        // abandoning one also stamps completedAt, as the moment
+                        // it was given up on rather than finished.
+                        lastCompletedAtMs = completed.mapNotNull { it.completedAtMs }.maxOrNull()
+                    )
+                }.sortedByDescending { it.completedSessions }
 
                 _state.update {
                     it.copy(

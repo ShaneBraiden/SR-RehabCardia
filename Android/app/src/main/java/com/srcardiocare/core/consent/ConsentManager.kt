@@ -73,4 +73,16 @@ object ConsentManager {
         synchronized(acceptedInSession) { acceptedInSession.remove(uid) }
         prefs(context).edit().remove(key(uid)).apply()
     }
+
+    /**
+     * Empties the in-process cache on sign-out, leaving the stored record alone.
+     *
+     * The disk keys are already per-uid, so this changes no decision — someone
+     * who accepted still walks straight through when they sign back in. It is
+     * here so that no fragment of the outgoing session outlives it in memory,
+     * which is the property the account-switch teardown is trying to hold.
+     */
+    fun clearSessionCache() {
+        synchronized(acceptedInSession) { acceptedInSession.clear() }
+    }
 }

@@ -71,6 +71,7 @@ import com.srcardiocare.core.auth.signOutAndRestart
 import com.srcardiocare.core.locale.LocaleManager
 import com.srcardiocare.core.prefs.AppPreferences
 import com.srcardiocare.core.push.PushChannels
+import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.data.firebase.UserRepository
 import com.srcardiocare.ui.components.DisclaimerScreen
 import com.srcardiocare.ui.components.LegalLinks
@@ -460,9 +461,13 @@ private val NOTIFICATION_ROWS = listOf(
 )
 
 private fun applyLanguage(context: Context, tag: String) {
-    if (LocaleManager.getLanguage(context) == tag) return
-    LocaleManager.setLanguage(context, tag)
-    context.findActivity()?.recreate()
+    // Written even when the tag is unchanged: the point of passing the uid is
+    // to record what this account settled on, and re-picking the language you
+    // are already in is a perfectly ordinary way to settle on it. Only the
+    // recreate is conditional — resources are already correct otherwise.
+    val changed = LocaleManager.getLanguage(context) != tag
+    LocaleManager.setLanguage(context, tag, FirebaseService.currentUID)
+    if (changed) context.findActivity()?.recreate()
 }
 
 /** Deep-links to the app's notification settings, where tone lives. */
