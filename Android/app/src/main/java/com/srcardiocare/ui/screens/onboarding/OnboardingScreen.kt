@@ -81,8 +81,8 @@ import kotlinx.coroutines.launch
  * stay inside `remember` — stringResource is not callable from a remember block.
  */
 private data class OnboardingPage(
-    @StringRes val titleRes: Int,
-    @StringRes val bodyRes: Int,
+    @param:StringRes val titleRes: Int,
+    @param:StringRes val bodyRes: Int,
     val accent: Color,
     val illustration: @Composable () -> Unit
 )

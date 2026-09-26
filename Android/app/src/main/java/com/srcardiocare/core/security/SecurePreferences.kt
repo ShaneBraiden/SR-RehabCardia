@@ -4,6 +4,7 @@ package com.srcardiocare.core.security
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import androidx.core.content.edit
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 
@@ -74,24 +75,24 @@ object SecurePreferences {
             if (legacyData.isNotEmpty()) {
                 Log.i(TAG, "Migrating ${legacyData.size} entries from legacy preferences")
 
-                val editor = encryptedPrefs.edit()
-                for ((key, value) in legacyData) {
-                    when (value) {
-                        is String -> editor.putString(key, value)
-                        is Int -> editor.putInt(key, value)
-                        is Long -> editor.putLong(key, value)
-                        is Float -> editor.putFloat(key, value)
-                        is Boolean -> editor.putBoolean(key, value)
-                        is Set<*> -> {
-                            @Suppress("UNCHECKED_CAST")
-                            editor.putStringSet(key, value as Set<String>)
+                encryptedPrefs.edit {
+                    for ((key, value) in legacyData) {
+                        when (value) {
+                            is String -> putString(key, value)
+                            is Int -> putInt(key, value)
+                            is Long -> putLong(key, value)
+                            is Float -> putFloat(key, value)
+                            is Boolean -> putBoolean(key, value)
+                            is Set<*> -> {
+                                @Suppress("UNCHECKED_CAST")
+                                putStringSet(key, value as Set<String>)
+                            }
                         }
                     }
                 }
-                editor.apply()
 
                 // Clear legacy preferences after successful migration
-                legacyPrefs.edit().clear().apply()
+                legacyPrefs.edit { clear() }
                 Log.i(TAG, "Migration completed successfully")
             }
         } catch (e: Exception) {

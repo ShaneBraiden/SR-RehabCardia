@@ -3,7 +3,6 @@ package com.srcardiocare.ui.screens.settings
 
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.provider.Settings
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
@@ -23,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.ChatBubble
 import androidx.compose.material.icons.filled.DarkMode
@@ -35,7 +35,6 @@ import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Policy
-import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -210,13 +209,13 @@ fun SettingsScreen(
                 ToggleRow(
                     label = stringResource(R.string.settings_notif_sound),
                     caption = stringResource(R.string.settings_notif_sound_caption),
-                    icon = Icons.Default.VolumeUp,
+                    icon = Icons.AutoMirrored.Filled.VolumeUp,
                     checked = inAppSound,
                     onCheckedChange = {
                         inAppSound = it
                         AppPreferences.setInAppSoundEnabled(context, it)
                     },
-                    showDivider = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+                    showDivider = true
                 )
 
                 // Tone and vibration are properties of the system channel on
@@ -224,14 +223,12 @@ fun SettingsScreen(
                 // sound is fixed once created. Rather than show a picker that
                 // silently does nothing, hand the user straight to the screen
                 // that does work.
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    NavigateRow(
-                        label = stringResource(R.string.settings_notif_tone),
-                        caption = stringResource(R.string.settings_notif_tone_caption),
-                        icon = Icons.Default.MusicNote,
-                        onClick = { openChannelSettings(context) }
-                    )
-                }
+                NavigateRow(
+                    label = stringResource(R.string.settings_notif_tone),
+                    caption = stringResource(R.string.settings_notif_tone_caption),
+                    icon = Icons.Default.MusicNote,
+                    onClick = { openChannelSettings(context) }
+                )
             }
 
             SettingsSection(R.string.settings_section_legal)
@@ -434,8 +431,8 @@ private fun DeleteAccountDialog(
  */
 private data class NotificationRow(
     val channelId: String,
-    @StringRes val label: Int,
-    @StringRes val caption: Int,
+    @param:StringRes val label: Int,
+    @param:StringRes val caption: Int,
     val icon: ImageVector
 )
 

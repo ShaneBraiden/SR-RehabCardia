@@ -3,6 +3,7 @@
 package com.srcardiocare.core.consent
 
 import android.content.Context
+import androidx.core.content.edit
 
 /**
  * Tracks acceptance of the pre-use disclosures required of a health app:
@@ -62,7 +63,7 @@ object ConsentManager {
 
     fun markAccepted(context: Context, uid: String) {
         synchronized(acceptedInSession) { acceptedInSession.add(uid) }
-        prefs(context).edit().putBoolean(key(uid), true).apply()
+        prefs(context).edit { putBoolean(key(uid), true) }
     }
 
     /**
@@ -71,7 +72,7 @@ object ConsentManager {
      */
     fun clear(context: Context, uid: String) {
         synchronized(acceptedInSession) { acceptedInSession.remove(uid) }
-        prefs(context).edit().remove(key(uid)).apply()
+        prefs(context).edit { remove(key(uid)) }
     }
 
     /**

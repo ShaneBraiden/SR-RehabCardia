@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.res.Configuration
 import android.os.LocaleList
 import androidx.annotation.StringRes
+import androidx.core.content.edit
 import com.srcardiocare.SRCardiocareApp
 import java.util.Locale
 
@@ -74,11 +75,11 @@ object LocaleManager {
      */
     fun setLanguage(context: Context, tag: String, uid: String? = null) {
         val safe = if (tag in SUPPORTED) tag else ENGLISH
-        val editor = prefs(context).edit()
-            .putString(KEY_LANGUAGE, safe)
-            .putBoolean(KEY_CHOSEN, true)
-        if (!uid.isNullOrBlank()) editor.putString(KEY_USER_PREFIX + uid, safe)
-        editor.apply()
+        prefs(context).edit {
+            putString(KEY_LANGUAGE, safe)
+            putBoolean(KEY_CHOSEN, true)
+            if (!uid.isNullOrBlank()) putString(KEY_USER_PREFIX + uid, safe)
+        }
     }
 
     /** The language [uid] chose on this device, or null if they never have. */
@@ -100,10 +101,10 @@ object LocaleManager {
         val current = getLanguage(context)
         if (current == remembered && hasChosenLanguage(context)) return false
 
-        prefs(context).edit()
-            .putString(KEY_LANGUAGE, remembered)
-            .putBoolean(KEY_CHOSEN, true)
-            .commit()
+        prefs(context).edit(commit = true) {
+            putString(KEY_LANGUAGE, remembered)
+            putBoolean(KEY_CHOSEN, true)
+        }
         return current != remembered
     }
 
@@ -149,10 +150,10 @@ object LocaleManager {
         // next person to sign in the previous user's language, which is the
         // exact failure this function exists to prevent. One small file, once
         // per sign-out — the blocking write is affordable here.
-        prefs(context).edit()
-            .remove(KEY_LANGUAGE)
-            .remove(KEY_CHOSEN)
-            .commit()
+        prefs(context).edit(commit = true) {
+            remove(KEY_LANGUAGE)
+            remove(KEY_CHOSEN)
+        }
     }
 
     fun isTamil(context: Context) = getLanguage(context) == TAMIL

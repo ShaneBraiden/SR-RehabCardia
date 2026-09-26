@@ -245,7 +245,7 @@
 
     <!-- ===== Chat with doctor ===== -->
     <string name="chat_title">Chat with Doctor</string>
-    <string name="chat_input_hint">Type a message...</string>
+    <string name="chat_input_hint">Type a message…</string>
 
     <!-- ===== Patient profile ===== -->
     <string name="profile_title">My Profile</string>
@@ -290,7 +290,7 @@
     <string name="analytics_workouts">Workouts</string>
     <string name="analytics_total">Total</string>
     <string name="analytics_health_metrics">Recent Health Metrics</string>
-    <string name="analytics_metrics_legend">Respiration (0-10); orange = pain reported, red = severe pain</string>
+    <string name="analytics_metrics_legend">Respiration (0–10); orange = pain reported, red = severe pain</string>
     <string name="analytics_no_feedback">No feedback data available yet.</string>
 
     <!-- ===== Exercise library ===== -->
@@ -315,7 +315,6 @@
     <string name="schedule_request_appointment">Request Appointment</string>
     <string name="schedule_new_appointment_desc">New appointment</string>
     <string name="schedule_patient">Patient</string>
-    <string name="schedule_select_patient">Select patient</string>
     <string name="schedule_search_patient">Search or select a patient</string>
     <string name="schedule_no_patient_match">No matching patient</string>
     <string name="schedule_no_patients">No patients available. Add a patient first.</string>
@@ -370,8 +369,6 @@
       is a patient here. Keep it that way — see ErrorHandler.errorMappings.
     -->
     <string name="error_invalid_credentials">Incorrect email or password. Please check both and try again</string>
-    <string name="error_wrong_password">Incorrect password. Please try again</string>
-    <string name="error_no_account">No account found with this email</string>
     <string name="error_email_in_use">An account with this email already exists</string>
     <string name="error_weak_password">Password is too weak. Please use a stronger password</string>
     <string name="error_network">Network error. Please check your connection</string>
@@ -581,7 +578,6 @@
     <string name="consent_privacy_link">Read the full Privacy Policy</string>
     <string name="consent_accept">I have read and understood this</string>
     <string name="consent_decline">I do not agree — sign me out</string>
-    <string name="consent_reopen">You can read this again any time from Settings.</string>
     <!-- ===== Forced / optional update gate =====
       Wraps every screen including login, so a patient can meet it before the
       app has rendered anything else. The message body itself is authored by the

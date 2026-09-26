@@ -20,6 +20,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.VolumeOff
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -69,6 +71,7 @@ import com.srcardiocare.ui.theme.DesignTokens
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import androidx.core.net.toUri
 
 private enum class Phase { DEMO, ACTIVE, REST, ALL_DONE }
 
@@ -506,7 +509,7 @@ private fun VideoSurface(
                     modifier = Modifier.size(36.dp)
                 ) {
                     Icon(
-                        imageVector = if (isMuted) Icons.Filled.VolumeOff else Icons.Filled.VolumeUp,
+                        imageVector = if (isMuted) Icons.AutoMirrored.Filled.VolumeOff else Icons.AutoMirrored.Filled.VolumeUp,
                         contentDescription = stringResource(
                             if (isMuted) R.string.workout_sound_on else R.string.workout_sound_off
                         ),
@@ -535,6 +538,7 @@ private fun VideoSurface(
 // ───────────────────────────────────────────────────────────────────────────────
 
 @Composable
+@Suppress("ModifierParameter") // one modifier per tutorial target
 private fun ExerciseStage(
     phase: Phase,
     videoUrl: String?,
@@ -732,6 +736,7 @@ private fun RestStage(remaining: Int, total: Int, nextSet: Int, totalSets: Int) 
 // ───────────────────────────────────────────────────────────────────────────────
 
 @Composable
+@Suppress("ModifierParameter") // one modifier per tutorial target
 private fun BottomActionBar(phase: Phase, onPrimary: () -> Unit, buttonModifier: Modifier = Modifier) {
     val (label, container, icon) = when (phase) {
         Phase.DEMO -> Triple(stringResource(R.string.workout_action_ready), DesignTokens.Colors.Primary, Icons.Default.PlayArrow)
@@ -1000,7 +1005,7 @@ private fun buildPlayerHtml(videoUrl: String?, muted: Boolean = false): String {
 
 private fun extractYoutubeVideoId(url: String): String? {
     return runCatching {
-        val uri = Uri.parse(url)
+        val uri = url.toUri()
         when {
             uri.host?.contains("youtu.be") == true -> uri.lastPathSegment
             uri.host?.contains("youtube.com") == true && uri.path?.startsWith("/embed/") == true ->

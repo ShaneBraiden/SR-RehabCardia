@@ -246,7 +246,7 @@
 
     <!-- ===== Chat with doctor ===== -->
     <string name="chat_title">மருத்துவருடன் உரையாடல்</string>
-    <string name="chat_input_hint">செய்தியை உள்ளிடவும்...</string>
+    <string name="chat_input_hint">செய்தியை உள்ளிடவும்…</string>
 
     <!-- ===== Patient profile ===== -->
     <string name="profile_title">எனது சுயவிவரம்</string>
@@ -291,7 +291,7 @@
     <string name="analytics_workouts">பயிற்சிகள்</string>
     <string name="analytics_total">மொத்தம்</string>
     <string name="analytics_health_metrics">சமீபத்திய உடல்நல அளவீடுகள்</string>
-    <string name="analytics_metrics_legend">மூச்சு (0-10); ஆரஞ்சு = வலி தெரிவிக்கப்பட்டது, சிவப்பு = கடுமையான வலி</string>
+    <string name="analytics_metrics_legend">மூச்சு (0–10); ஆரஞ்சு = வலி தெரிவிக்கப்பட்டது, சிவப்பு = கடுமையான வலி</string>
     <string name="analytics_no_feedback">கருத்து தரவு எதுவும் இல்லை.</string>
 
     <!-- ===== Exercise library ===== -->
@@ -316,7 +316,6 @@
     <string name="schedule_new_appointment_desc">புதிய சந்திப்பு</string>
     <string name="schedule_request_appointment">சந்திப்பைக் கோரவும்</string>
     <string name="schedule_patient">நோயாளி</string>
-    <string name="schedule_select_patient">நோயாளியைத் தேர்ந்தெடுக்கவும்</string>
     <string name="schedule_search_patient">நோயாளியைத் தேடவும் அல்லது தேர்ந்தெடுக்கவும்</string>
     <string name="schedule_no_patient_match">பொருந்தும் நோயாளி இல்லை</string>
     <string name="schedule_no_patients">நோயாளிகள் யாரும் இல்லை. முதலில் ஒரு நோயாளியைச் சேர்க்கவும்.</string>
@@ -360,8 +359,6 @@
 
     <!-- ===== Shared error catalogue ===== -->
     <string name="error_invalid_credentials">மின்னஞ்சல் அல்லது கடவுச்சொல் தவறானது. இரண்டையும் சரிபார்த்து மீண்டும் முயற்சிக்கவும்</string>
-    <string name="error_wrong_password">கடவுச்சொல் தவறானது. மீண்டும் முயற்சிக்கவும்</string>
-    <string name="error_no_account">இந்த மின்னஞ்சலுக்கு கணக்கு எதுவும் இல்லை</string>
     <string name="error_email_in_use">இந்த மின்னஞ்சலுடன் ஏற்கனவே ஒரு கணக்கு உள்ளது</string>
     <string name="error_weak_password">கடவுச்சொல் பலவீனமானது. வலிமையான ஒன்றைப் பயன்படுத்தவும்</string>
     <string name="error_network">பிணைய பிழை. உங்கள் இணைப்பைச் சரிபார்க்கவும்</string>
@@ -559,7 +556,6 @@
     <string name="consent_privacy_link">முழு தனியுரிமை கொள்கையைப் படிக்கவும்</string>
     <string name="consent_accept">இதைப் படித்துப் புரிந்துகொண்டேன்</string>
     <string name="consent_decline">நான் ஒப்புக்கொள்ளவில்லை — என்னை வெளியேற்றவும்</string>
-    <string name="consent_reopen">இதை எப்போது வேண்டுமானாலும் அமைப்புகளிலிருந்து மீண்டும் படிக்கலாம்.</string>
 
     <!-- ===== Forced / optional update gate ===== -->
     <string name="update_required_title">புதுப்பிப்பு தேவை</string>

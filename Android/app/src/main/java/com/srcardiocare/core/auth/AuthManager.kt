@@ -3,6 +3,7 @@ package com.srcardiocare.core.auth
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.core.content.edit
 import com.google.firebase.auth.FirebaseAuth
 import com.srcardiocare.core.security.PasswordValidator
 import com.srcardiocare.core.security.SecurePreferences
@@ -24,7 +25,7 @@ class AuthManager(context: Context) {
 
     var userRole: String?
         get() = prefs.getString(KEY_USER_ROLE, null)
-        set(value) = prefs.edit().putString(KEY_USER_ROLE, value).apply()
+        set(value) = prefs.edit { putString(KEY_USER_ROLE, value) }
 
     val isLoggedIn: Boolean get() = auth.currentUser != null
 
@@ -38,7 +39,7 @@ class AuthManager(context: Context) {
      * [com.srcardiocare.core.auth.SessionTeardown].
      */
     fun clearAll() {
-        prefs.edit().clear().commit()
+        prefs.edit(commit = true) { clear() }
         auth.signOut()
     }
 

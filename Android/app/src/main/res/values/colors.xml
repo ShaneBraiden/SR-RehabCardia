@@ -3,25 +3,8 @@
     <!-- Primary Brand -->
     <color name="primary">#FF11C4D4</color>
     <color name="primary_dark">#FF0EA5B2</color>
-    <color name="primary_light">#FFB8EEF2</color>
 
     <!-- Backgrounds -->
     <color name="background_light">#FFF6F8F8</color>
     <color name="background_dark">#FF102022</color>
-
-    <!-- Surfaces -->
-    <color name="surface_light">#FFFFFFFF</color>
-    <color name="surface_dark">#FF1A2C2E</color>
-
-    <!-- Text -->
-    <color name="text_main">#FF111718</color>
-    <color name="text_sub">#FF637588</color>
-
-    <!-- Status -->
-    <color name="error">#FFEF4444</color>
-    <color name="success">#FF10B981</color>
-    <color name="warning">#FFF59E0B</color>
-
-    <!-- Splash / Launcher -->
-    <color name="splash_background">#FF0EA5B2</color>
 </resources>

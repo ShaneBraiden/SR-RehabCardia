@@ -2,6 +2,7 @@
 package com.srcardiocare.core.prefs
 
 import android.content.Context
+import androidx.core.content.edit
 import com.srcardiocare.SRCardiocareApp
 import com.srcardiocare.core.push.PushChannels
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -67,7 +68,7 @@ object AppPreferences {
     }
 
     fun setThemeMode(context: Context, mode: ThemeMode) {
-        prefs(context).edit().putString(KEY_THEME, mode.name).apply()
+        prefs(context).edit { putString(KEY_THEME, mode.name) }
         _themeMode.value = mode
     }
 
@@ -90,7 +91,7 @@ object AppPreferences {
         // A defensive copy: SharedPreferences does not copy the set it is
         // handed, and mutating a stored set in place is a documented way to
         // lose the write.
-        prefs(context).edit().putStringSet(KEY_MUTED_CHANNELS, next.toSet()).apply()
+        prefs(context).edit { putStringSet(KEY_MUTED_CHANNELS, next.toSet()) }
         _mutedChannels.value = next
     }
 
@@ -113,6 +114,6 @@ object AppPreferences {
         prefs(context).getBoolean(KEY_IN_APP_SOUND, true)
 
     fun setInAppSoundEnabled(context: Context, enabled: Boolean) {
-        prefs(context).edit().putBoolean(KEY_IN_APP_SOUND, enabled).apply()
+        prefs(context).edit { putBoolean(KEY_IN_APP_SOUND, enabled) }
     }
 }

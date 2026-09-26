@@ -215,6 +215,7 @@ fun AssignmentListScreen(
 // ═══════════════════════════════════════════════════════════════════════════════
 
 @Composable
+@Suppress("ModifierParameter") // one modifier per tutorial target
 private fun ActiveExerciseCard(
     item: ActiveExerciseItem,
     onClick: () -> Unit,

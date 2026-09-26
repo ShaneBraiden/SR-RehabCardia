@@ -50,7 +50,7 @@ import kotlinx.coroutines.launch
  * separate means the doctor's view and any stored history stay English no
  * matter which language the patient's app is running in.
  */
-private data class PainLocation(val value: String, @StringRes val labelRes: Int)
+private data class PainLocation(val value: String, @param:StringRes val labelRes: Int)
 
 private val PAIN_LOCATIONS = listOf(
     PainLocation("Left Arm", R.string.pain_location_left_arm),

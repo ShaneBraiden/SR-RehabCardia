@@ -43,10 +43,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.srcardiocare.ui.theme.DesignTokens
 import androidx.compose.ui.res.stringResource
@@ -88,9 +89,9 @@ fun TutorialOverlay(
     }
 
     val density = LocalDensity.current
-    val config = LocalConfiguration.current
-    val screenWidthDp = config.screenWidthDp.dp
-    val screenHeightDp = config.screenHeightDp.dp
+    val containerSize = LocalWindowInfo.current.containerSize
+    val screenWidthDp = with(density) { containerSize.width.toDp() }
+    val screenHeightDp = with(density) { containerSize.height.toDp() }
 
     // Convert the target's root-space px bounds into dp for layout offsets.
     val targetLeftDp: Dp
@@ -154,14 +155,14 @@ fun TutorialOverlay(
     Box(modifier = Modifier.fillMaxWidth()) {
         Beacon(
             modifier = Modifier
-                .offset(x = beaconX, y = beaconY)
+                .offset { IntOffset(beaconX.roundToPx(), beaconY.roundToPx()) }
                 .size(BeaconSize),
             onClick = { controller.next() }
         )
 
         TipCard(
             modifier = Modifier
-                .offset(x = cardX, y = cardY)
+                .offset { IntOffset(cardX.roundToPx(), cardY.roundToPx()) }
                 .widthIn(max = cardWidth),
             title = step.title,
             text = step.text,

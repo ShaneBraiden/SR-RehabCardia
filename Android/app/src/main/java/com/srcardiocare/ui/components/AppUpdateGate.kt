@@ -4,7 +4,6 @@ package com.srcardiocare.ui.components
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,7 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -48,6 +47,7 @@ import com.srcardiocare.data.firebase.AppVersionRepository
 import com.srcardiocare.data.firebase.AppVersionRepository.UpdateStatus
 import com.srcardiocare.ui.theme.DesignTokens
 import kotlinx.coroutines.launch
+import androidx.core.net.toUri
 
 /**
  * Wraps the app content and enforces the release gate read from
@@ -260,7 +260,7 @@ private fun UpdateAvailableDialog(
  * a missing activity.
  */
 private fun openPlayStore(context: Context, storeUrl: String) {
-    val marketUri = Uri.parse("market://details?id=${context.packageName}")
+    val marketUri = "market://details?id=${context.packageName}".toUri()
     val marketIntent = Intent(Intent.ACTION_VIEW, marketUri).apply {
         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
@@ -271,7 +271,7 @@ private fun openPlayStore(context: Context, storeUrl: String) {
         // No Play Store app installed — fall through to the browser.
     }
 
-    val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse(storeUrl)).apply {
+    val webIntent = Intent(Intent.ACTION_VIEW, storeUrl.toUri()).apply {
         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
     try {

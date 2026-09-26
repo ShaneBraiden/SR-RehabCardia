@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.sp
 import com.srcardiocare.ui.theme.DesignTokens
 import androidx.compose.ui.res.stringResource
 import com.srcardiocare.R
+import androidx.core.net.toUri
 
 /**
  * "Powered by SRET-AIDA" attribution badge.
@@ -56,7 +57,7 @@ fun LegalLinksRow(modifier: Modifier = Modifier) {
     fun open(url: String) {
         try {
             context.startActivity(
-                android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
+                android.content.Intent(android.content.Intent.ACTION_VIEW, url.toUri())
             )
         } catch (_: android.content.ActivityNotFoundException) {
             // No browser installed — nothing sensible to do.

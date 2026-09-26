@@ -3,7 +3,6 @@ package com.srcardiocare.ui.screens.exercises
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.net.Uri
 import androidx.activity.compose.BackHandler
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -66,6 +65,7 @@ import com.srcardiocare.ui.components.tutorial.TutorialTours
 import com.srcardiocare.ui.components.tutorial.tutorialTarget
 import com.srcardiocare.ui.theme.DesignTokens
 import kotlinx.coroutines.launch
+import androidx.core.net.toUri
 
 private data class ExLibItem(
     val id: String,
@@ -642,7 +642,7 @@ private fun VideoPlayerDialog(
 
 private fun extractYoutubeVideoIdLib(url: String): String? {
     return runCatching {
-        val uri = Uri.parse(url)
+        val uri = url.toUri()
         when {
             uri.host?.contains("youtu.be") == true -> uri.lastPathSegment
             uri.host?.contains("youtube.com") == true && uri.path?.startsWith("/embed/") == true -> {

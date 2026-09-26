@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import androidx.core.content.edit
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.firestore.FirebaseFirestore
 import com.srcardiocare.core.consent.ConsentManager
@@ -15,6 +16,7 @@ import com.srcardiocare.data.firebase.CurrentUserTours
 import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.data.firebase.SessionRepository
 import com.srcardiocare.ui.components.findActivity
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +27,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeoutOrNull
-import java.util.concurrent.TimeUnit
 
 /**
  * The one way out of a session.
@@ -279,7 +280,7 @@ object SessionTeardown {
         runCatching { authManager.clearAll() }
             .onFailure { Log.w(TAG, "deferred clearAll failed", it) }
 
-        prefs.edit().remove(KEY_SIGN_OUT_PENDING).commit()
+        prefs.edit(commit = true) { remove(KEY_SIGN_OUT_PENDING) }
     }
 
     /**
@@ -287,10 +288,10 @@ object SessionTeardown {
      * process dying, which is exactly what a queued write does not do.
      */
     private fun setPending(context: Context, pending: Boolean) {
-        val editor = prefs(context).edit()
-        if (pending) editor.putBoolean(KEY_SIGN_OUT_PENDING, true)
-        else editor.remove(KEY_SIGN_OUT_PENDING)
-        editor.commit()
+        prefs(context).edit(commit = true) {
+            if (pending) putBoolean(KEY_SIGN_OUT_PENDING, true)
+            else remove(KEY_SIGN_OUT_PENDING)
+        }
     }
 
     /**

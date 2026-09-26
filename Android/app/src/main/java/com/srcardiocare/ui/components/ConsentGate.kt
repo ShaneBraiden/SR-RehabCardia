@@ -5,7 +5,6 @@ package com.srcardiocare.ui.components
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -46,6 +45,7 @@ import com.srcardiocare.core.consent.ConsentManager
 import com.srcardiocare.data.firebase.UserRepository
 import com.srcardiocare.ui.theme.DesignTokens
 import kotlinx.coroutines.launch
+import androidx.core.net.toUri
 
 /** Where the published legal documents live. Kept next to the screen that
  *  links to them so a hosting change is a one-line edit. */
@@ -320,7 +320,7 @@ private fun SafetySection(heading: String, body: String) {
 
 /** Opens a legal page in the browser; silent no-op on a device with none. */
 fun openUrl(context: Context, url: String) {
-    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+    val intent = Intent(Intent.ACTION_VIEW, url.toUri())
         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     try {
         context.startActivity(intent)

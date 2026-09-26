@@ -159,8 +159,8 @@ internal fun ChipPicker(
     selected: Int,
     onSelect: (Int) -> Unit,
     renderOption: (Int) -> String,
-    trailing: @Composable (() -> Unit)? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    trailing: @Composable (() -> Unit)? = null
 ) {
     Column(modifier = modifier) {
         Text(
