@@ -1,4 +1,9 @@
 // SecurePreferences.kt — Encrypted SharedPreferences wrapper
+// security-crypto 1.1.0 deprecates the whole library without a drop-in
+// replacement. Moving off it means migrating every stored value to a new
+// store (DataStore + Tink), so it stays until that is done as its own change.
+@file:Suppress("DEPRECATION")
+
 package com.srcardiocare.core.security
 
 import android.content.Context

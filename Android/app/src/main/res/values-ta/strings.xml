@@ -79,7 +79,10 @@
     <string name="greeting_evening">மாலை வணக்கம்</string>
     <string name="loading">ஏற்றுகிறது…</string>
     <string name="home_todays_progress">இன்றைய முன்னேற்றம்</string>
-    <string name="home_progress_count">%2$d பயிற்சிகளில் %1$d முடிந்தது</string>
+    <plurals name="home_progress_count">
+        <item quantity="one">%2$d பயிற்சியில் %1$d முடிந்தது</item>
+        <item quantity="other">%2$d பயிற்சிகளில் %1$d முடிந்தது</item>
+    </plurals>
     <string name="home_dashboard">முகப்பு</string>
     <string name="home_plan_expired">திட்டம் முடிந்தது</string>
     <string name="home_expires_today">இன்று முடிகிறது</string>
@@ -224,7 +227,14 @@
     <string name="assignments_history">வரலாறு</string>
     <string name="assignments_empty_title">பயிற்சிகள் ஏதும் ஒதுக்கப்படவில்லை</string>
     <string name="assignments_empty_subtitle">உங்கள் மருத்துவர் உங்களுக்கு பயிற்சிகளை ஒதுக்குவார்</string>
-    <string name="assignments_sets_reps">%1$d சுற்று • %2$d முறை</string>
+    <plurals name="assignments_sets">
+        <item quantity="one">%d சுற்று</item>
+        <item quantity="other">%d சுற்று</item>
+    </plurals>
+    <plurals name="assignments_reps">
+        <item quantity="one">%d முறை</item>
+        <item quantity="other">%d முறை</item>
+    </plurals>
     <string name="assignments_start">தொடங்கு</string>
     <string name="assignments_in_progress">நடைபெறுகிறது</string>
     <string name="assignments_session_resume">அமர்வு நடைபெறுகிறது - தொடர தட்டவும்</string>

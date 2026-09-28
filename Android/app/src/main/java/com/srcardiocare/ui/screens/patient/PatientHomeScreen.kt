@@ -24,11 +24,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -72,6 +74,7 @@ fun PatientHomeScreen(
     var isLoading by remember { mutableStateOf(true) }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    val resources = LocalResources.current
 
     // Home is a root destination. After login the start destination (Login) is
     // popped off the back stack, so a plain back press would pop Home and leave an
@@ -138,9 +141,9 @@ fun PatientHomeScreen(
                         expiryText = if (nearestExpiry != null) {
                             val daysRemaining = java.time.temporal.ChronoUnit.DAYS.between(today, nearestExpiry).toInt()
                             when {
-                                daysRemaining < 0 -> context.getString(R.string.home_plan_expired)
-                                daysRemaining == 0 -> context.getString(R.string.home_expires_today)
-                                else -> context.resources.getQuantityString(
+                                daysRemaining < 0 -> resources.getString(R.string.home_plan_expired)
+                                daysRemaining == 0 -> resources.getString(R.string.home_expires_today)
+                                else -> resources.getQuantityString(
                                     R.plurals.home_expires_in_days, daysRemaining, daysRemaining
                                 )
                             }
@@ -281,7 +284,7 @@ fun PatientHomeScreen(
                             Column {
                                 Text(stringResource(R.string.home_todays_progress), fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimary)
                                 Spacer(modifier = Modifier.height(4.dp))
-                                Text(stringResource(R.string.home_progress_count, completedCount, totalCount), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f))
+                                Text(pluralStringResource(R.plurals.home_progress_count, totalCount, completedCount, totalCount), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f))
                             }
                         }
                     }

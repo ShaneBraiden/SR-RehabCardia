@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -86,7 +87,8 @@ fun PostWorkoutFeedbackScreen(
     var isSubmitting by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
-    var patientName by remember { mutableStateOf(context.getString(R.string.feedback_patient_fallback)) }
+    val resources = LocalResources.current
+    var patientName by remember { mutableStateOf(resources.getString(R.string.feedback_patient_fallback)) }
 
     val scope = rememberCoroutineScope()
     val toast = rememberToast()
@@ -95,7 +97,7 @@ fun PostWorkoutFeedbackScreen(
     LaunchedEffect(Unit) {
         val uid = FirebaseService.currentUID ?: return@LaunchedEffect
         try {
-            patientName = UserRepository.getUser(uid).fullName.ifBlank { context.getString(R.string.feedback_patient_fallback) }
+            patientName = UserRepository.getUser(uid).fullName.ifBlank { resources.getString(R.string.feedback_patient_fallback) }
         } catch (_: Exception) {}
     }
 
@@ -413,10 +415,10 @@ fun PostWorkoutFeedbackScreen(
                                 FirebaseService.sendChatMessage(uid, uid, patientName, chatText)
                             }
 
-                            toast(context.getString(R.string.feedback_submitted))
+                            toast(resources.getString(R.string.feedback_submitted))
                             onSubmit()
                         } catch (e: Exception) {
-                            toast(context.getString(R.string.feedback_submit_failed))
+                            toast(resources.getString(R.string.feedback_submit_failed))
                             errorMessage = ErrorHandler.getDisplayMessage(e, "save feedback")
                             isSubmitting = false
                         }

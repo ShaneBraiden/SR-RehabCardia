@@ -61,7 +61,9 @@ class PushMessagingService : FirebaseMessagingService() {
         )
 
         val notification = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            // The status bar draws small icons from alpha only, so the full-colour
+            // logo would render as a solid blob — use its silhouette instead.
+            .setSmallIcon(R.drawable.sr_logo_mono)
             .setContentTitle(title)
             .setContentText(body)
             .setStyle(NotificationCompat.BigTextStyle().bigText(body))
@@ -78,6 +80,10 @@ class PushMessagingService : FirebaseMessagingService() {
         val _params = params
     }
 
+    // FCM 25.1 deprecates the token API in favour of register()/onRegistered(),
+    // which delivers the token differently. Kept until that flow can be moved
+    // over and verified on a device — the deprecated calls still work.
+    @Suppress("OVERRIDE_DEPRECATION")
     override fun onNewToken(token: String) {
         val uid = com.srcardiocare.data.firebase.FirebaseService.currentUID ?: return
         saveFcmToken(uid, token)
@@ -94,6 +100,7 @@ class PushMessagingService : FirebaseMessagingService() {
          * the Cloud Function fan-out can target every device the user is signed into.
          * Safe to call on every login — Firestore `arrayUnion` dedupes.
          */
+        @Suppress("DEPRECATION") // see onNewToken
         fun saveFcmToken(uid: String, token: String? = null) {
             if (token != null) {
                 write(uid, token)
@@ -140,6 +147,7 @@ class PushMessagingService : FirebaseMessagingService() {
          * ever signed into it, so a patient's clinical push notifications kept
          * arriving on a handset the next person was already using.
          */
+        @Suppress("DEPRECATION") // see onNewToken
         suspend fun detachDevice(uid: String) {
             val messaging = FirebaseMessaging.getInstance()
 

@@ -32,6 +32,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
@@ -99,6 +100,7 @@ fun AssignmentWorkoutScreen(
     }
 
     val context = LocalContext.current
+    val resources = LocalResources.current
     val activity = context as? Activity
     val haptics = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()
@@ -219,7 +221,7 @@ fun AssignmentWorkoutScreen(
                 showAbandonDialog = false
                 scope.launch {
                     sessionId?.let { runCatching { FirebaseService.abandonSession(it) } }
-                    toast(context.getString(R.string.workout_abandoned_toast))
+                    toast(resources.getString(R.string.workout_abandoned_toast))
                     onBack()
                 }
             },
@@ -234,7 +236,7 @@ fun AssignmentWorkoutScreen(
             onComplete = {
                 scope.launch {
                     sessionId?.let { runCatching { FirebaseService.completeSession(it) } }
-                    toast(context.getString(R.string.workout_completed_toast))
+                    toast(resources.getString(R.string.workout_completed_toast))
                     onComplete()
                 }
             }

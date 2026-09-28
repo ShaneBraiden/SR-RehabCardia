@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import com.srcardiocare.R
 import androidx.compose.ui.text.font.FontWeight
@@ -49,6 +50,7 @@ fun PatientProfileSelfScreen(
     viewModel: PatientProfileSelfViewModel = viewModel()
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val toast = rememberToast()
@@ -93,9 +95,9 @@ fun PatientProfileSelfScreen(
             editFirstName = editFirstName,
             editLastName = editLastName,
             editPhone = editPhone,
-            nameFieldLabel = context.getString(R.string.profile_name_field_label),
+            nameFieldLabel = resources.getString(R.string.profile_name_field_label),
             onValidationError = { field, msg ->
-                val text = msg ?: context.getString(
+                val text = msg ?: resources.getString(
                     when (field) {
                         PatientProfileSelfViewModel.ProfileField.NAME -> R.string.profile_invalid_name
                         PatientProfileSelfViewModel.ProfileField.PHONE -> R.string.profile_invalid_phone
@@ -105,10 +107,10 @@ fun PatientProfileSelfScreen(
             },
             onSuccess = {
                 isEditing = false
-                toast(context.getString(R.string.profile_updated))
+                toast(resources.getString(R.string.profile_updated))
             },
             onError = { msg ->
-                toast(context.getString(R.string.profile_update_failed))
+                toast(resources.getString(R.string.profile_update_failed))
                 scope.launch { snackbarHostState.showSnackbar(msg) }
             }
         )

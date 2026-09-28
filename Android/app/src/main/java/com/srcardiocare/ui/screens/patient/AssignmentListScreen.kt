@@ -306,7 +306,11 @@ private fun ActiveExerciseCard(
                 Spacer(modifier = Modifier.height(2.dp))
 
                 Text(
-                    stringResource(R.string.assignments_sets_reps, item.assignment.sets, item.assignment.reps),
+                    stringResource(
+                        R.string.assignments_sets_reps,
+                        pluralStringResource(R.plurals.assignments_sets, item.assignment.sets, item.assignment.sets),
+                        pluralStringResource(R.plurals.assignments_reps, item.assignment.reps, item.assignment.reps)
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

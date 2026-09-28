@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import android.content.Context
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import com.srcardiocare.R
 import com.srcardiocare.data.firebase.FirebaseService
@@ -51,6 +52,7 @@ fun NotificationsScreen(
     onOpenRoute: (route: String, params: Map<String, String>) -> Unit
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val scope = rememberCoroutineScope()
     val toast = rememberToast()
     var items by remember { mutableStateOf<List<AppNotification>>(emptyList()) }
@@ -82,7 +84,7 @@ fun NotificationsScreen(
                                 scope.launch {
                                     val uid = FirebaseService.currentUID ?: return@launch
                                     runCatching { FirebaseService.markAllNotificationsRead(uid) }
-                                        .onSuccess { toast(context.getString(R.string.notifications_all_marked_read)) }
+                                        .onSuccess { toast(resources.getString(R.string.notifications_all_marked_read)) }
                                 }
                             },
                             modifier = Modifier.tutorialTarget(TutorialIds.NOTIFICATION_MARK_READ)

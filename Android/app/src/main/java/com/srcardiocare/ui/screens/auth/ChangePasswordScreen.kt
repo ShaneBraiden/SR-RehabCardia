@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -46,6 +47,7 @@ fun ChangePasswordScreen(
     var successMessage by remember { mutableStateOf<String?>(null) }
 
     val context = LocalContext.current
+    val resources = LocalResources.current
     val scope = rememberCoroutineScope()
 
     Scaffold(
@@ -187,7 +189,7 @@ fun ChangePasswordScreen(
                     // Validate
                     when {
                         oldPassword.isBlank() -> {
-                            errorMessage = context.getString(R.string.change_password_error_current_blank)
+                            errorMessage = resources.getString(R.string.change_password_error_current_blank)
                             return@Button
                         }
                         else -> {
@@ -200,11 +202,11 @@ fun ChangePasswordScreen(
                         }
                     }
                     if (newPassword != confirmPassword) {
-                        errorMessage = context.getString(R.string.change_password_error_mismatch)
+                        errorMessage = resources.getString(R.string.change_password_error_mismatch)
                         return@Button
                     }
                     if (newPassword == oldPassword) {
-                        errorMessage = context.getString(R.string.change_password_error_same)
+                        errorMessage = resources.getString(R.string.change_password_error_same)
                         return@Button
                     }
 
@@ -222,7 +224,7 @@ fun ChangePasswordScreen(
                                         .await()
                                 } catch (_: Exception) { }
                             }
-                            successMessage = context.getString(R.string.change_password_success)
+                            successMessage = resources.getString(R.string.change_password_success)
                             isLoading = false
                             // Navigate back after short delay
                             kotlinx.coroutines.delay(1500)
@@ -231,7 +233,7 @@ fun ChangePasswordScreen(
                             val msg = when {
                                 e.message?.contains("INVALID_LOGIN_CREDENTIALS") == true ||
                                 e.message?.contains("wrong-password") == true ->
-                                    context.getString(R.string.change_password_error_current_wrong)
+                                    resources.getString(R.string.change_password_error_current_wrong)
                                 else -> ErrorHandler.getDisplayMessage(e, "change password")
                             }
                             errorMessage = msg

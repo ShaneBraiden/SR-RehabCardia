@@ -43,6 +43,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import com.srcardiocare.R
 import com.srcardiocare.core.security.InputValidator
@@ -100,6 +101,7 @@ fun ExerciseLibraryScreen(onBack: () -> Unit, onUpload: () -> Unit) {
     var isDeleting by remember { mutableStateOf(false) }
     var playingVideo by remember { mutableStateOf<ExLibItem?>(null) }
     val context = LocalContext.current
+    val resources = LocalResources.current
     val scope = rememberCoroutineScope()
     val toast = rememberToast()
 
@@ -184,10 +186,10 @@ fun ExerciseLibraryScreen(onBack: () -> Unit, onUpload: () -> Unit) {
                                 try {
                                     FirebaseService.deleteExercise(ex.id, ex.videoUrl)
                                     allExercises = allExercises.filter { it.id != ex.id }
-                                    toast(context.getString(R.string.exercise_removed))
+                                    toast(resources.getString(R.string.exercise_removed))
                                     showDeleteDialogFor = null
                                 } catch (e: Exception) {
-                                    toast(context.getString(R.string.exercise_remove_failed))
+                                    toast(resources.getString(R.string.exercise_remove_failed))
                                     showDeleteDialogFor = null
                                 } finally {
                                     isDeleting = false

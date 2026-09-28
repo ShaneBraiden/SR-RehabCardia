@@ -44,7 +44,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -77,6 +77,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.google.firebase.firestore.FieldValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import com.srcardiocare.R
 import com.srcardiocare.core.security.ErrorHandler
@@ -321,6 +322,7 @@ private fun prettyStatus(status: String): String = when (status.lowercase()) {
 @Composable
 fun ScheduleScreen(onBack: () -> Unit) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val today = remember { LocalDate.now() }
     val rangeStart = remember(today) { today.minusDays(STRIP_DAYS_BEFORE) }
     val rangeEnd = remember(today) { today.plusDays(STRIP_DAYS_AFTER) }
@@ -388,7 +390,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
         action: String
     ) {
         if (notifyUserId.isNullOrBlank()) {
-            throw Exception(context.getString(R.string.schedule_missing_target_user))
+            throw Exception(resources.getString(R.string.schedule_missing_target_user))
         }
 
         FirebaseService.updateAppointment(
@@ -485,7 +487,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
                                     ExposedDropdownMenuDefaults.TrailingIcon(expanded = patientMenuExpanded)
                                 },
                                 modifier = Modifier
-                                    .menuAnchor(MenuAnchorType.PrimaryEditable)
+                                    .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable)
                                     .fillMaxWidth(),
                                 shape = RoundedCornerShape(DesignTokens.Radius.Base),
                                 colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = DesignTokens.Colors.Primary)
@@ -591,10 +593,10 @@ fun ScheduleScreen(onBack: () -> Unit) {
                         scope.launch {
                             try {
                                 if (apptDate.isBefore(LocalDate.now())) {
-                                    throw Exception(context.getString(R.string.schedule_date_in_past))
+                                    throw Exception(resources.getString(R.string.schedule_date_in_past))
                                 }
                                 val uid = currentUid ?: FirebaseService.currentUID
-                                    ?: throw Exception(context.getString(R.string.schedule_not_signed_in))
+                                    ?: throw Exception(resources.getString(R.string.schedule_not_signed_in))
                                 val role = userRole
 
                                 val appointmentData = mutableMapOf<String, Any>(
@@ -607,7 +609,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
                                 if (role == "doctor" || role == "admin") {
                                     val patientId = selectedPatientId
                                     if (patientId.isNullOrBlank()) {
-                                        throw Exception(context.getString(R.string.schedule_select_patient_error))
+                                        throw Exception(resources.getString(R.string.schedule_select_patient_error))
                                     }
 
                                     appointmentData["status"] = "confirmed"
@@ -625,11 +627,11 @@ fun ScheduleScreen(onBack: () -> Unit) {
                                         )
                                     )
 
-                                    snackbarHostState.showSnackbar(context.getString(R.string.schedule_appointment_created))
+                                    snackbarHostState.showSnackbar(resources.getString(R.string.schedule_appointment_created))
                                 } else {
                                     val doctorId = assignedDoctorId
                                     if (doctorId.isNullOrBlank()) {
-                                        throw Exception(context.getString(R.string.schedule_no_doctor_error))
+                                        throw Exception(resources.getString(R.string.schedule_no_doctor_error))
                                     }
 
                                     appointmentData["status"] = "pending"
@@ -647,7 +649,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
                                         )
                                     )
 
-                                    snackbarHostState.showSnackbar(context.getString(R.string.schedule_request_sent))
+                                    snackbarHostState.showSnackbar(resources.getString(R.string.schedule_request_sent))
                                 }
 
                                 showAddDialog = false
@@ -942,7 +944,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
                                                                 body = "Your ${appt.type} request has been accepted.",
                                                                 action = "accepted"
                                                             )
-                                                            snackbarHostState.showSnackbar(context.getString(R.string.schedule_appointment_accepted))
+                                                            snackbarHostState.showSnackbar(resources.getString(R.string.schedule_appointment_accepted))
                                                             viewModel.load()
                                                         } catch (e: Exception) {
                                                             snackbarHostState.showSnackbar(
@@ -967,7 +969,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
                                                                 body = "Your ${appt.type} request was declined.",
                                                                 action = "declined"
                                                             )
-                                                            snackbarHostState.showSnackbar(context.getString(R.string.schedule_appointment_declined))
+                                                            snackbarHostState.showSnackbar(resources.getString(R.string.schedule_appointment_declined))
                                                             viewModel.load()
                                                         } catch (e: Exception) {
                                                             snackbarHostState.showSnackbar(
@@ -996,7 +998,7 @@ fun ScheduleScreen(onBack: () -> Unit) {
                                                             body = "Patient cancelled the ${appt.type} request.",
                                                             action = "cancelled"
                                                         )
-                                                        snackbarHostState.showSnackbar(context.getString(R.string.schedule_request_cancelled))
+                                                        snackbarHostState.showSnackbar(resources.getString(R.string.schedule_request_cancelled))
                                                         viewModel.load()
                                                     } catch (e: Exception) {
                                                         snackbarHostState.showSnackbar(

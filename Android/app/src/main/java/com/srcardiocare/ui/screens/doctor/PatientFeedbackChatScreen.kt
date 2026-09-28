@@ -12,7 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalLocale
 import com.srcardiocare.core.security.InputValidator
 import com.srcardiocare.data.firebase.ChatRepository
 import com.srcardiocare.data.firebase.FeedbackRepository
@@ -85,7 +86,7 @@ fun PatientFeedbackChatScreen(
                     actions = { TutorialHelpButton() },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
                 )
-                TabRow(
+                PrimaryTabRow(
                     selectedTabIndex = selectedTab,
                     containerColor = MaterialTheme.colorScheme.background,
                     contentColor = DesignTokens.Colors.Primary
@@ -206,7 +207,7 @@ private fun ChatTabView(patientId: String) {
                 val text = msg.text
                 val isMe = senderId == currentUid
                 
-                val sdf = SimpleDateFormat("hh:mm a", Locale.getDefault())
+                val sdf = SimpleDateFormat("hh:mm a", LocalLocale.current.platformLocale)
                 val timeStr = msg.timestampMs?.let { sdf.format(java.util.Date(it)) } ?: ""
 
                 Box(
@@ -280,7 +281,7 @@ private fun ChatTabView(patientId: String) {
                 shape = CircleShape,
                 modifier = Modifier.size(48.dp).tutorialTarget(TutorialIds.CHAT_SEND)
             ) {
-                Icon(Icons.Default.Send, contentDescription = "Send", modifier = Modifier.size(24.dp))
+                Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send", modifier = Modifier.size(24.dp))
             }
         }
     }

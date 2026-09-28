@@ -89,6 +89,7 @@ google-services.json
 # Android
 local.properties
 Android/app/build/
+Android/app/release/
 Android/build/
 .gradle/
 Android/.gradle/

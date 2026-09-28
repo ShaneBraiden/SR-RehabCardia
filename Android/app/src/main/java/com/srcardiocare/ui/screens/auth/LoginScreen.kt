@@ -20,6 +20,7 @@ import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentType
@@ -48,6 +49,7 @@ import kotlinx.coroutines.tasks.await
 @Composable
 fun LoginScreen(onLoginSuccess: (role: String) -> Unit, onChangePassword: () -> Unit = {}) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
@@ -84,25 +86,25 @@ fun LoginScreen(onLoginSuccess: (role: String) -> Unit, onChangePassword: () -> 
         // user gets told exactly which field needs attention.
         when {
             trimmedEmail.isBlank() && password.isBlank() -> {
-                errorMessage = context.getString(R.string.login_error_empty_fields)
+                errorMessage = resources.getString(R.string.login_error_empty_fields)
                 emailInvalid = true
                 passwordInvalid = true
                 return
             }
             trimmedEmail.isBlank() -> {
-                errorMessage = context.getString(R.string.login_error_email_required)
+                errorMessage = resources.getString(R.string.login_error_email_required)
                 emailInvalid = true
                 passwordInvalid = false
                 return
             }
             password.isBlank() -> {
-                errorMessage = context.getString(R.string.login_error_password_required)
+                errorMessage = resources.getString(R.string.login_error_password_required)
                 emailInvalid = false
                 passwordInvalid = true
                 return
             }
             !android.util.Patterns.EMAIL_ADDRESS.matcher(trimmedEmail).matches() -> {
-                errorMessage = context.getString(R.string.login_error_invalid_email)
+                errorMessage = resources.getString(R.string.login_error_invalid_email)
                 emailInvalid = true
                 passwordInvalid = false
                 return
