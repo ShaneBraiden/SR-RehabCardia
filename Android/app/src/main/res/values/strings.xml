@@ -528,6 +528,15 @@
     <string name="settings_theme_light_caption">Always use the light theme</string>
     <string name="settings_theme_dark">Dark</string>
     <string name="settings_theme_dark_caption">Easier on the eyes at night</string>
+    <string name="settings_section_accent">Theme colour</string>
+    <string name="settings_accent_current">Selected: %1$s</string>
+    <string name="settings_accent_teal">Teal</string>
+    <string name="settings_accent_blue">Blue</string>
+    <string name="settings_accent_green">Green</string>
+    <string name="settings_accent_purple">Purple</string>
+    <string name="settings_accent_pink">Pink</string>
+    <string name="settings_accent_orange">Orange</string>
+    <string name="settings_accent_grey">Grey</string>
 
     <string name="settings_language_selected">Currently selected</string>
     <string name="settings_language_switch">Tap to switch</string>

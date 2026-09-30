@@ -24,10 +24,14 @@ object DesignTokens {
     // ── Colors ──────────────────────────────────────────────────────────────
 
     object Colors {
-        // Primary Brand - Greyish Teal palette (desaturated)
-        val Primary = Color(0xFF5A9EA6)       // Desaturated teal (greyish green)
-        val PrimaryDark = Color(0xFF4A8A91)   // Darker greyish teal
-        val PrimaryLight = Color(0xFFC5DFE2)  // Light greyish teal
+        // Primary Brand — follows the user's accent choice (see AccentPalette.kt).
+        // Getters over snapshot state rather than constants, so the ~200 call
+        // sites that read these directly repaint when the accent changes
+        // without each having to be moved onto MaterialTheme.colorScheme.
+        // Teal (0xFF5A9EA6) remains the default.
+        val Primary: Color get() = ActiveAccent.palette.primary
+        val PrimaryDark: Color get() = ActiveAccent.palette.primaryDark
+        val PrimaryLight: Color get() = ActiveAccent.palette.primaryLight
 
         // Backgrounds - with grey undertones
         val BackgroundLight = Color(0xFFE8EDEF)  // Light grey-teal — distinct from white cards
@@ -49,9 +53,9 @@ object DesignTokens {
 
         // Special - chart colors updated
         val BubbleGrey = Color(0xFFECF0F1)
-        val ChartTeal = Color(0xFF5A9EA6)        // Match primary
-        val ChartLightTeal = Color(0xFFD4E8EA)   // Lighter variant
-        val ChartSecondaryTeal = Color(0xFF8BBDC3)
+        val ChartTeal: Color get() = Primary                                   // Match primary
+        val ChartLightTeal: Color get() = ActiveAccent.palette.chartLight      // Lighter variant
+        val ChartSecondaryTeal: Color get() = ActiveAccent.palette.chartSecondary
         val ChartGrey = Color(0xFFC4CDD0)
 
         // Semantic - slightly desaturated
@@ -71,9 +75,9 @@ object DesignTokens {
         val Slate900 = Color(0xFF0F172A)
 
         // Primary with alpha variants
-        val PrimaryAlpha10 = Color(0x1A5A9EA6)
-        val PrimaryAlpha20 = Color(0x335A9EA6)
-        val PrimaryAlpha30 = Color(0x4D5A9EA6)
+        val PrimaryAlpha10: Color get() = Primary.copy(alpha = 0.1f)
+        val PrimaryAlpha20: Color get() = Primary.copy(alpha = 0.2f)
+        val PrimaryAlpha30: Color get() = Primary.copy(alpha = 0.3f)
     }
 
     // ── Typography ──────────────────────────────────────────────────────────

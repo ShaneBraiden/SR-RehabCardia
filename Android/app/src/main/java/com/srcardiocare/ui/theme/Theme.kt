@@ -11,6 +11,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -21,19 +22,20 @@ import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.TextUnit
 import androidx.core.view.WindowCompat
 import com.srcardiocare.core.locale.LocaleManager
+import com.srcardiocare.core.prefs.AppPreferences.AccentColor
 
 // ── Color Schemes ───────────────────────────────────────────────────────────
 
-private val LightColorScheme = lightColorScheme(
-    primary = DesignTokens.Colors.Primary,
+private fun lightScheme(accent: AccentPalette) = lightColorScheme(
+    primary = accent.primary,
     onPrimary = DesignTokens.Colors.SurfaceLight,
-    primaryContainer = DesignTokens.Colors.PrimaryLight,
+    primaryContainer = accent.primaryLight,
     onPrimaryContainer = DesignTokens.Colors.TextMain,
-    secondary = DesignTokens.Colors.PrimaryDark,
+    secondary = accent.primaryDark,
     onSecondary = DesignTokens.Colors.SurfaceLight,
-    secondaryContainer = DesignTokens.Colors.PrimaryAlpha10,
+    secondaryContainer = accent.primary.copy(alpha = 0.1f),
     onSecondaryContainer = DesignTokens.Colors.TextMain,
-    tertiary = DesignTokens.Colors.ChartSecondaryTeal,
+    tertiary = accent.chartSecondary,
     background = DesignTokens.Colors.BackgroundLight,
     onBackground = DesignTokens.Colors.TextMain,
     surface = DesignTokens.Colors.SurfaceLight,
@@ -46,16 +48,16 @@ private val LightColorScheme = lightColorScheme(
     onError = DesignTokens.Colors.SurfaceLight,
 )
 
-private val DarkColorScheme = darkColorScheme(
-    primary = DesignTokens.Colors.Primary,
+private fun darkScheme(accent: AccentPalette) = darkColorScheme(
+    primary = accent.primary,
     onPrimary = DesignTokens.Colors.BackgroundDark,
-    primaryContainer = DesignTokens.Colors.PrimaryDark,
-    onPrimaryContainer = DesignTokens.Colors.PrimaryLight,
-    secondary = DesignTokens.Colors.PrimaryLight,
+    primaryContainer = accent.primaryDark,
+    onPrimaryContainer = accent.primaryLight,
+    secondary = accent.primaryLight,
     onSecondary = DesignTokens.Colors.BackgroundDark,
-    secondaryContainer = DesignTokens.Colors.PrimaryAlpha20,
-    onSecondaryContainer = DesignTokens.Colors.PrimaryLight,
-    tertiary = DesignTokens.Colors.ChartSecondaryTeal,
+    secondaryContainer = accent.primary.copy(alpha = 0.2f),
+    onSecondaryContainer = accent.primaryLight,
+    tertiary = accent.chartSecondary,
     background = DesignTokens.Colors.BackgroundDark,
     onBackground = DesignTokens.Colors.Slate100,
     surface = DesignTokens.Colors.SurfaceDark,
@@ -144,16 +146,26 @@ private val AppShapes = Shapes(
 @Composable
 fun SRCardiocareTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    accent: AccentColor = AccentColor.TEAL,
     dynamicColor: Boolean = false, // Disabled: we use Stitch-defined colors
     content: @Composable () -> Unit
 ) {
+    val palette = accent.palette()
+    // Written during composition, ahead of every reader below it, so the
+    // DesignTokens accent getters and MaterialTheme agree on the very same
+    // frame. An equal value is a no-op write, so this costs nothing when the
+    // accent has not changed.
+    if (ActiveAccent.palette != palette) ActiveAccent.palette = palette
+
+    val stitchScheme = remember(darkTheme, palette) {
+        if (darkTheme) darkScheme(palette) else lightScheme(palette)
+    }
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+        else -> stitchScheme
     }
 
     val view = LocalView.current

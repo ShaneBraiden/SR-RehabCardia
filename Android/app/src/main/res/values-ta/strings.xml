@@ -509,6 +509,15 @@
     <string name="settings_theme_light_caption">எப்போதும் வெளிர் தோற்றத்தைப் பயன்படுத்து</string>
     <string name="settings_theme_dark">அடர்</string>
     <string name="settings_theme_dark_caption">இரவில் கண்களுக்கு இதமானது</string>
+    <string name="settings_section_accent">தீம் நிறம்</string>
+    <string name="settings_accent_current">தேர்ந்தெடுத்தது: %1$s</string>
+    <string name="settings_accent_teal">நீலப்பச்சை</string>
+    <string name="settings_accent_blue">நீலம்</string>
+    <string name="settings_accent_green">பச்சை</string>
+    <string name="settings_accent_purple">ஊதா</string>
+    <string name="settings_accent_pink">இளஞ்சிவப்பு</string>
+    <string name="settings_accent_orange">ஆரஞ்சு</string>
+    <string name="settings_accent_grey">சாம்பல்</string>
 
     <string name="settings_language_selected">தற்போது தேர்ந்தெடுக்கப்பட்டது</string>
     <string name="settings_language_switch">மாற்ற தட்டவும்</string>

@@ -83,7 +83,10 @@ class MainActivity : ComponentActivity() {
                 else -> isSystemInDarkTheme()
             }
 
-            SRCardiocareTheme(darkTheme = darkTheme) {
+            val storedAccent = remember { AppPreferences.getAccentColor(this) }
+            val liveAccent by AppPreferences.accentColor.collectAsState()
+
+            SRCardiocareTheme(darkTheme = darkTheme, accent = liveAccent ?: storedAccent) {
                 // Auth resolution is hoisted above every gate on purpose.
                 //
                 // It used to live inside AppUpdateGate's content lambda, which

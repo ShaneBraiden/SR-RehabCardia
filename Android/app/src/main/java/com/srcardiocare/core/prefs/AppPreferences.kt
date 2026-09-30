@@ -27,8 +27,19 @@ object AppPreferences {
     /** Appearance. [SYSTEM] follows the device's own day/night setting. */
     enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
+    /**
+     * Accent colour. Names only — the actual colour values live with the rest
+     * of the design tokens in `ui.theme.AccentPalette`. The stored value is the
+     * enum name, so entries may be added but never renamed.
+     *
+     * Red is left out on purpose: it is the app's error colour, and a red
+     * accent would make every primary button read as a warning.
+     */
+    enum class AccentColor { TEAL, BLUE, GREEN, PURPLE, PINK, ORANGE, GREY }
+
     private const val PREFS = "rehabcardia_settings"
     private const val KEY_THEME = "theme_mode"
+    private const val KEY_ACCENT = "accent_color"
     private const val KEY_MUTED_CHANNELS = "muted_channels"
     private const val KEY_IN_APP_SOUND = "in_app_sound"
 
@@ -70,6 +81,24 @@ object AppPreferences {
     fun setThemeMode(context: Context, mode: ThemeMode) {
         prefs(context).edit { putString(KEY_THEME, mode.name) }
         _themeMode.value = mode
+    }
+
+    private val _accentColor = MutableStateFlow<AccentColor?>(null)
+
+    /** Observable for the same reason as [themeMode]. */
+    val accentColor: StateFlow<AccentColor?> = _accentColor.asStateFlow()
+
+    fun getAccentColor(context: Context): AccentColor {
+        _accentColor.value?.let { return it }
+        val stored = prefs(context).getString(KEY_ACCENT, null)
+        val accent = AccentColor.entries.firstOrNull { it.name == stored } ?: AccentColor.TEAL
+        _accentColor.value = accent
+        return accent
+    }
+
+    fun setAccentColor(context: Context, accent: AccentColor) {
+        prefs(context).edit { putString(KEY_ACCENT, accent.name) }
+        _accentColor.value = accent
     }
 
     // ── Notifications ───────────────────────────────────────────────────

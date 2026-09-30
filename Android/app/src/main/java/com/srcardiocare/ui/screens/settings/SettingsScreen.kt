@@ -6,10 +6,13 @@ import android.content.Intent
 import android.provider.Settings
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,6 +21,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -25,6 +30,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.ChatBubble
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Description
@@ -62,6 +68,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -77,6 +86,7 @@ import com.srcardiocare.ui.components.LegalLinks
 import com.srcardiocare.ui.components.findActivity
 import com.srcardiocare.ui.components.openUrl
 import com.srcardiocare.ui.theme.DesignTokens
+import com.srcardiocare.ui.theme.palette
 import kotlinx.coroutines.launch
 
 /**
@@ -95,6 +105,7 @@ fun SettingsScreen(
     val context = LocalContext.current
 
     var themeMode by remember { mutableStateOf(AppPreferences.getThemeMode(context)) }
+    var accent by remember { mutableStateOf(AppPreferences.getAccentColor(context)) }
     var mutedChannels by remember { mutableStateOf(AppPreferences.getMutedChannels(context)) }
     var inAppSound by remember { mutableStateOf(AppPreferences.isInAppSoundEnabled(context)) }
     val currentLanguage = LocaleManager.getLanguage(context)
@@ -166,6 +177,17 @@ fun SettingsScreen(
                         AppPreferences.setThemeMode(context, themeMode)
                     },
                     showDivider = false
+                )
+            }
+
+            SettingsSection(R.string.settings_section_accent)
+            SettingsCard {
+                AccentPicker(
+                    selected = accent,
+                    onSelect = {
+                        accent = it
+                        AppPreferences.setAccentColor(context, it)
+                    }
                 )
             }
 
@@ -563,6 +585,65 @@ private fun ThemeOptionRow(
         }
     }
     RowDivider(showDivider)
+}
+
+/**
+ * A swatch per accent. Wraps rather than scrolls so every choice is visible at
+ * once on a narrow phone; the chosen colour's name is spelled out underneath
+ * because a swatch alone says nothing to a screen reader or a colour-blind user.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun AccentPicker(
+    selected: AppPreferences.AccentColor,
+    onSelect: (AppPreferences.AccentColor) -> Unit
+) {
+    Column(modifier = Modifier.padding(DesignTokens.Spacing.MD)) {
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.MD),
+            verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.MD)
+        ) {
+            AppPreferences.AccentColor.entries.forEach { option ->
+                val palette = option.palette()
+                val isSelected = option == selected
+                val name = stringResource(palette.label)
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(palette.primary)
+                        .border(
+                            width = if (isSelected) 3.dp else 0.dp,
+                            color = if (isSelected) MaterialTheme.colorScheme.onSurface else Color.Transparent,
+                            shape = CircleShape
+                        )
+                        .selectable(
+                            selected = isSelected,
+                            role = Role.RadioButton,
+                            onClick = { onSelect(option) }
+                        )
+                        .semantics { contentDescription = name },
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (isSelected) {
+                        Icon(
+                            Icons.Default.Check,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(DesignTokens.Spacing.SM))
+        Text(
+            stringResource(R.string.settings_accent_current, stringResource(selected.palette().label)),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
 }
 
 @Composable
