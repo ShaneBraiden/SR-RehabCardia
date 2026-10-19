@@ -129,7 +129,12 @@ private fun FeedbackTabView(patientId: String, patientName: String) {
 
     LaunchedEffect(patientId) {
         try {
-            val res = FeedbackRepository.getPatientFeedbacks(patientId)
+            // A doctor's list rule authorises on the denormalised doctorId, so
+            // the read must know the viewer's role to constrain it — an
+            // unconstrained patientId query is denied outright.
+            val viewerId = FirebaseService.currentUID ?: throw Exception("Not authenticated")
+            val viewerRole = UserRepository.getUser(viewerId).role
+            val res = FeedbackRepository.getPatientFeedbacksFor(patientId, viewerId, viewerRole)
             val sdf = SimpleDateFormat("dd/MM/yyyy • hh:mm a", Locale.getDefault())
             feedbacks = res.map { fb ->
                 val dateStr = fb.submittedAtMs?.let { sdf.format(java.util.Date(it)) } ?: "Just now"

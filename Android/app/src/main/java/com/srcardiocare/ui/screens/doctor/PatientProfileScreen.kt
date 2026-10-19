@@ -149,7 +149,11 @@ fun PatientProfileScreen(
                 if (viewerId == null) emptyList()
                 else AssignmentRepository.getAssignmentsFor(patientId, viewerId, viewerRole)
             } catch (_: Exception) { emptyList() }
-            feedbacks = try { FeedbackRepository.getPatientFeedbacks(patientId) } catch (_: Exception) { emptyList() }
+            // Same per-document doctorId scoping as assignments above.
+            feedbacks = try {
+                if (viewerId == null) emptyList()
+                else FeedbackRepository.getPatientFeedbacksFor(patientId, viewerId, viewerRole)
+            } catch (_: Exception) { emptyList() }
 
             // Build completed-workout durations (total = wall-clock incl. rest;
             // active = total minus the planned rest between sets).

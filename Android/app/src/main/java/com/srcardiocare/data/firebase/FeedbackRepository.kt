@@ -51,9 +51,35 @@ object FeedbackRepository {
         ref.set(mutableData).await()
     }
 
+    /**
+     * Every feedback [patientId] has submitted.
+     *
+     * Satisfies the patient's own list rule and the admin one. A doctor must
+     * use [fetchPatientFeedbacksAsDoctor] instead — their branch of the rule
+     * authorises on the denormalised `doctorId`, so a query that does not
+     * constrain it is rejected wholesale rather than filtered down.
+     */
     suspend fun fetchPatientFeedbacks(patientId: String): List<Pair<String, Map<String, Any?>>> {
         val snapshot = FirebaseClients.db.collection("postWorkoutFeedback")
             .whereEqualTo("patientId", patientId)
+            .get().await()
+        return snapshot.documents.map { it.id to (it.data ?: emptyMap()) }
+            .sortedByDescending { (it.second["submittedAt"] as? com.google.firebase.Timestamp)?.seconds ?: 0L }
+    }
+
+    /**
+     * As [fetchPatientFeedbacks], but for a doctor reading a patient's
+     * feedback. Without the `doctorId` constraint the query was denied, the
+     * clinician screens caught the denial, and every patient showed
+     * "No feedbacks recorded yet" no matter how much they had submitted.
+     */
+    suspend fun fetchPatientFeedbacksAsDoctor(
+        patientId: String,
+        doctorId: String
+    ): List<Pair<String, Map<String, Any?>>> {
+        val snapshot = FirebaseClients.db.collection("postWorkoutFeedback")
+            .whereEqualTo("patientId", patientId)
+            .whereEqualTo("doctorId", doctorId)
             .get().await()
         return snapshot.documents.map { it.id to (it.data ?: emptyMap()) }
             .sortedByDescending { (it.second["submittedAt"] as? com.google.firebase.Timestamp)?.seconds ?: 0L }
@@ -78,6 +104,23 @@ object FeedbackRepository {
 
     suspend fun getPatientFeedbacks(patientId: String): List<PostWorkoutFeedback> =
         fetchPatientFeedbacks(patientId).map { (id, data) -> data.toPostWorkoutFeedback(id) }
+
+    /**
+     * [patientId]'s feedback as seen by [viewerId] in [viewerRole]. Admins and
+     * the patient themselves may read the whole set; a doctor is scoped to the
+     * feedback stamped with their own id.
+     */
+    suspend fun getPatientFeedbacksFor(
+        patientId: String,
+        viewerId: String,
+        viewerRole: String
+    ): List<PostWorkoutFeedback> =
+        if (viewerRole == "doctor" && viewerId != patientId) {
+            fetchPatientFeedbacksAsDoctor(patientId, viewerId)
+                .map { (id, data) -> data.toPostWorkoutFeedback(id) }
+        } else {
+            getPatientFeedbacks(patientId)
+        }
 
     suspend fun getDoctorFeedbacks(doctorId: String): List<PostWorkoutFeedback> =
         fetchDoctorFeedbacks(doctorId).map { (id, data) -> data.toPostWorkoutFeedback(id) }
