@@ -7,12 +7,15 @@ import com.google.firebase.functions.FirebaseFunctionsException
 import com.srcardiocare.data.model.User
 import kotlinx.coroutines.tasks.await
 
+/** The `users/{uid}` document does not exist (e.g. the account was deleted). */
+class UserNotFoundException(val uid: String) : Exception("User not found: $uid")
+
 /** CRUD and queries over the `users` collection, plus patient data cleanup. */
 object UserRepository {
 
     suspend fun fetchUser(uid: String): Map<String, Any?> {
         val doc = FirebaseClients.db.collection("users").document(uid).get().await()
-        return doc.data ?: throw Exception("User not found: $uid")
+        return doc.data ?: throw UserNotFoundException(uid)
     }
 
     suspend fun fetchCurrentUser(): Map<String, Any?> {
@@ -37,6 +40,32 @@ object UserRepository {
     /** Update another user's fields by their ID (for admin/doctor). */
     suspend fun updateUserById(uid: String, fields: Map<String, Any>) {
         FirebaseClients.db.collection("users").document(uid).update(fields).await()
+    }
+
+    /**
+     * Profile fields a clinician may change on a patient's record. Anything
+     * outside this set — role, block state, doctor assignment, onboarding
+     * flags — has its own dedicated path and must never ride along on a
+     * profile edit.
+     */
+    private val PATIENT_EDITABLE_FIELDS = setOf("firstName", "lastName", "phone", "age", "gender", "injuries")
+
+    /**
+     * A doctor's or admin's edit of a patient's profile.
+     *
+     * Only the keys in [changes] are written, so a field the clinician did not
+     * touch keeps whatever another client stored there. A null value removes
+     * the field (e.g. clearing an age). Authorization is the `users` update
+     * rule: an admin, or the doctor the patient is assigned to.
+     */
+    suspend fun updatePatientDetails(patientId: String, changes: Map<String, Any?>) {
+        require(changes.keys.all { it in PATIENT_EDITABLE_FIELDS }) {
+            "Not a patient profile field: ${changes.keys - PATIENT_EDITABLE_FIELDS}"
+        }
+        if (changes.isEmpty()) return
+        val updates = changes.mapValues { (_, value) -> value ?: FieldValue.delete() } +
+            ("updatedAt" to FieldValue.serverTimestamp())
+        FirebaseClients.db.collection("users").document(patientId).update(updates).await()
     }
 
     /**
@@ -202,7 +231,7 @@ object UserRepository {
      *    SDK removes that split entirely.
      *
      * Authorization is enforced server-side: a doctor may only delete a patient
-     * assigned to them.
+     * assigned to them; an admin may delete any patient.
      */
     suspend fun deletePatient(patientId: String) {
         callDeleteUserAccount(mapOf("uid" to patientId))

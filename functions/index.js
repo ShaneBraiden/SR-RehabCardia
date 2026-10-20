@@ -189,56 +189,138 @@ async function restampPatientRecords(patientId, doctorId) {
 // ───────────────────────────────────────────────────────────────────────────
 
 /**
- * Collections holding documents that belong to a deleted user, keyed by the
- * field that names them. Everything here is removed alongside the account.
+ * A patient's clinical records, keyed by the field that names the patient.
+ * Everything here is removed alongside a patient's account.
  *
  * Kept deliberately explicit rather than derived: a wrong guess here deletes
  * another patient's clinical history, so each entry is a decision, not a
  * pattern match.
+ *
+ * Only ever matched on `patientId`. An earlier version also matched
+ * `doctorId`, which meant deleting a *doctor* wiped the plans, sessions and
+ * feedback of every patient they had ever treated — patients who still exist
+ * and are about to be handed to another clinician.
  */
-const USER_OWNED_DOCUMENTS = [
-  {collection: "plans", fields: ["patientId", "doctorId"]},
-  {collection: "workouts", fields: ["patientId", "doctorId"]},
-  {collection: "appointments", fields: ["patientId", "doctorId"]},
-  {collection: "sessionLogs", fields: ["patientId", "doctorId"]},
-  {collection: "postWorkoutFeedback", fields: ["patientId", "doctorId"]},
-  {collection: "notifications", fields: ["userId"]},
+const PATIENT_RECORD_COLLECTIONS = [
+  "plans",
+  "assignments",
+  "workouts",
+  "appointments",
+  "sessionLogs",
+  "postWorkoutFeedback",
+  "feedback",
 ];
 
 /**
- * Deletes every document a user owns across [USER_OWNED_DOCUMENTS].
- * @param {string} uid The user whose documents should be removed.
+ * Storage prefixes addressed by user UID (see storage.rules): the profile
+ * image for any role, and a patient's workout videos, session attachments and
+ * chat uploads.
+ * @param {string} uid The user whose files are being located.
+ * @return {string[]} Prefixes to delete, each ending in a slash.
+ */
+function storagePrefixesFor(uid) {
+  return [
+    `users/${uid}/`,
+    `workouts/${uid}/`,
+    `sessionLogs/${uid}/`,
+    `chats/${uid}/`,
+  ];
+}
+
+/**
+ * Deletes every document matching `field == value` in one collection.
+ * @param {string} collection The collection to query.
+ * @param {string} field The field naming the owner.
+ * @param {string} value The owner's uid.
+ * @return {Promise<number>} Documents deleted.
+ */
+async function deleteWhere(collection, field, value) {
+  const db = admin.firestore();
+  const snap = await db.collection(collection).where(field, "==", value).get();
+  if (snap.empty) return 0;
+
+  // Firestore caps a batch at 500 writes.
+  const docs = snap.docs;
+  for (let i = 0; i < docs.length; i += 450) {
+    const batch = db.batch();
+    for (const doc of docs.slice(i, i + 450)) batch.delete(doc.ref);
+    await batch.commit();
+  }
+  return docs.length;
+}
+
+/**
+ * Deletes everything a user owns: their notifications, clinical records, chat
+ * thread and uploaded files.
+ *
+ * Safe for any role, and for an orphaned account whose role is unknown: every
+ * match is on this exact uid as the *owner* (`patientId`, `userId`, or a path
+ * segment), so for a doctor or admin the patient-keyed parts simply match
+ * nothing. Nothing is matched on `doctorId` — see PATIENT_RECORD_COLLECTIONS.
+ *
+ * Every step is best-effort and logged. One unreadable collection must not
+ * abort the whole deletion — the Auth account is the part that actually
+ * blocks re-adding the person.
+ * @param {string} uid The user whose data should be removed.
  * @return {Promise<number>} Total documents deleted.
  */
-async function purgeUserDocuments(uid) {
+async function purgeUserData(uid) {
   const db = admin.firestore();
   let deleted = 0;
 
-  for (const {collection, fields} of USER_OWNED_DOCUMENTS) {
-    for (const field of fields) {
-      try {
-        const snap = await db.collection(collection)
-            .where(field, "==", uid)
-            .get();
-        if (snap.empty) continue;
-
-        // Firestore caps a batch at 500 writes.
-        const docs = snap.docs;
-        for (let i = 0; i < docs.length; i += 450) {
-          const batch = db.batch();
-          for (const doc of docs.slice(i, i + 450)) batch.delete(doc.ref);
-          await batch.commit();
-        }
-        deleted += docs.length;
-      } catch (err) {
-        // One unreadable collection must not abort the whole deletion — the
-        // Auth account is the part that actually blocks re-adding the person.
-        logger.error("purgeUserDocuments: failed",
-            {collection, field, uid, message: err.message});
-      }
+  const targets = [
+    {collection: "notifications", field: "userId"},
+    ...PATIENT_RECORD_COLLECTIONS.map((collection) =>
+      ({collection, field: "patientId"})),
+  ];
+  for (const {collection, field} of targets) {
+    try {
+      deleted += await deleteWhere(collection, field, uid);
+    } catch (err) {
+      logger.error("purgeUserData: collection failed",
+          {collection, field, uid, message: err.message});
     }
   }
+
+  // The chat thread is addressed by patient uid, with its messages in a
+  // subcollection that a plain document delete would leave behind.
+  try {
+    await db.recursiveDelete(db.collection("chats").doc(uid));
+  } catch (err) {
+    logger.error("purgeUserData: chat delete failed",
+        {uid, message: err.message});
+  }
+
+  for (const prefix of storagePrefixesFor(uid)) {
+    try {
+      await admin.storage().bucket().deleteFiles({prefix});
+    } catch (err) {
+      logger.error("purgeUserData: storage delete failed",
+          {prefix, message: err.message});
+    }
+  }
+
   return deleted;
+}
+
+/**
+ * Reads the caller's role from their own `users/{uid}` document.
+ *
+ * Firestore, not the ID token, is the source of truth: firestore.rules and
+ * storage.rules both authorise from the user document (revision 3), and
+ * `syncUserClaims` is not deployed, so no token carries a `role` claim. A
+ * claims check here rejected every caller — admin and doctor alike — with
+ * "Only an admin or doctor can delete an account."
+ * @param {string} uid The caller's uid.
+ * @return {Promise<{role: string, isBlocked: boolean}>} The caller's standing.
+ */
+async function callerStanding(uid) {
+  const snap = await admin.firestore().collection("users").doc(uid).get();
+  const data = snap.exists ? snap.data() : {};
+  return {
+    role: String(data.role || "").toLowerCase(),
+    isBlocked: data.isBlocked === true,
+  };
 }
 
 /**
@@ -248,7 +330,7 @@ async function purgeUserDocuments(uid) {
  * up accounts orphaned by the old client-side delete, where the Firestore doc
  * is already gone but the Auth record still holds the address hostage.
  *
- * Authorization:
+ * Authorization (roles read from Firestore — see callerStanding):
  *   - admin may delete any non-admin account;
  *   - a doctor may delete a patient assigned to them;
  *   - nobody may delete themselves through this path (use account settings),
@@ -270,7 +352,10 @@ exports.deleteUserAccount = onCall(
         throw new HttpsError("unauthenticated", "Sign in required.");
       }
 
-      const callerRole = caller.token.role;
+      const {role: callerRole, isBlocked} = await callerStanding(caller.uid);
+      if (isBlocked) {
+        throw new HttpsError("permission-denied", "Your account is blocked.");
+      }
       if (callerRole !== "admin" && callerRole !== "doctor") {
         throw new HttpsError(
             "permission-denied",
@@ -323,18 +408,19 @@ exports.deleteUserAccount = onCall(
       const db = admin.firestore();
       const userSnap = await db.collection("users").doc(uid).get();
       const target = userSnap.exists ? userSnap.data() : null;
+      const targetRole = target ? String(target.role || "").toLowerCase() : "";
 
       // Authorization against the target, where one still exists. An orphaned
       // Auth record has no role to check, so admins alone may clear those.
       if (target) {
-        if (target.role === "admin") {
+        if (targetRole === "admin") {
           throw new HttpsError(
               "permission-denied",
               "Admin accounts cannot be deleted from the app.",
           );
         }
         if (callerRole === "doctor") {
-          const isOwnPatient = target.role === "patient" &&
+          const isOwnPatient = targetRole === "patient" &&
             target.assignedDoctorId === caller.uid;
           if (!isOwnPatient) {
             throw new HttpsError(
@@ -352,10 +438,26 @@ exports.deleteUserAccount = onCall(
 
       // Clinical data first. If the run dies partway the account still exists,
       // so a retry finds a coherent state rather than an unreachable orphan.
-      const documentsDeleted = await purgeUserDocuments(uid);
+      const documentsDeleted = await purgeUserData(uid);
 
       if (userSnap.exists) {
         await db.collection("users").doc(uid).delete();
+      }
+
+      // If the user had asked to be deleted, record that the clinic acted on
+      // it — this is the trail behind the promise /delete-account.html makes.
+      try {
+        const requestRef = db.collection("accountDeletionRequests").doc(uid);
+        if ((await requestRef.get()).exists) {
+          await requestRef.update({
+            status: "completed",
+            completedAt: admin.firestore.FieldValue.serverTimestamp(),
+            completedBy: caller.uid,
+          });
+        }
+      } catch (err) {
+        logger.error("deleteUserAccount: deletion request update failed",
+            {uid, message: err.message});
       }
 
       // The Auth record is what actually frees the email address. Everything

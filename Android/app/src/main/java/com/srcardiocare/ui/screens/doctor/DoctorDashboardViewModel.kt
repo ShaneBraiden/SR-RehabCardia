@@ -168,7 +168,7 @@ class DoctorDashboardViewModel : ViewModel() {
                         initials = initials.ifBlank { "?" },
                         meta = if (userRoleStr == "patient") {
                             patientMetaLine(
-                                age = ageFrom(user.dateOfBirth),
+                                age = ageOf(user),
                                 sex = sexInitial(user.gender),
                                 weekNumber = patientWeekMap[user.id]
                             )

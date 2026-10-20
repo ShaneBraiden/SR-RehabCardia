@@ -5,6 +5,10 @@
 // new exercise opens the dedicated AssignExerciseScreen; tapping an assigned row
 // opens EditAssignmentScreen (edit / remove). The legacy `plans` collection is
 // still dual-written by the data layer for back-compat but is no longer read here.
+//
+// The managing clinician — an admin, or the doctor the patient is assigned to —
+// can also edit the patient's details (EditPatientScreen) and delete the
+// patient outright (the `deleteUserAccount` callable).
 package com.srcardiocare.ui.screens.doctor
 
 import androidx.compose.foundation.background
@@ -14,13 +18,16 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChatBubble
+import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.PersonOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,20 +35,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import com.google.firebase.firestore.FirebaseFirestoreException
+import com.srcardiocare.core.security.ErrorHandler
 import com.srcardiocare.data.firebase.AssignmentRepository
 import com.srcardiocare.data.firebase.FeedbackRepository
 import com.srcardiocare.data.firebase.FirebaseService
 import com.srcardiocare.data.firebase.SessionRepository
+import com.srcardiocare.data.firebase.UserNotFoundException
 import com.srcardiocare.data.firebase.UserRepository
 import com.srcardiocare.data.model.Assignment
 import com.srcardiocare.data.model.PostWorkoutFeedback
 import com.srcardiocare.data.model.SessionStatus
 import com.srcardiocare.data.model.WorkoutDuration
 import com.srcardiocare.ui.components.InitialsAvatar
+import com.srcardiocare.ui.components.ProfileInfoRow
 import com.srcardiocare.ui.components.SkeletonBarChart
 import com.srcardiocare.ui.components.SkeletonListRow
 import com.srcardiocare.ui.components.SkeletonProfileHeader
@@ -81,17 +93,20 @@ fun PatientProfileScreen(
     onEditAssignment: (assignmentId: String) -> Unit,
     onOpenChat: () -> Unit,
     onHistoryTap: () -> Unit,
+    onEditDetails: () -> Unit,
     onManageAssignments: () -> Unit = {}
 ) {
-    val context = androidx.compose.ui.platform.LocalContext.current
-    // Server rules only permit admins to delete user accounts — hide the
-    // action for doctors so they don't hit a guaranteed permission error.
-    val isAdmin = remember {
-        com.srcardiocare.core.auth.AuthManager(context).userRole == "ADMIN"
-    }
     var patientName by remember { mutableStateOf("") }
     var patientCondition by remember { mutableStateOf("") }
     var patientInitials by remember { mutableStateOf("") }
+    var patientAge by remember { mutableStateOf<Int?>(null) }
+    var patientGender by remember { mutableStateOf("") }
+    var patientPhone by remember { mutableStateOf("") }
+    var patientEmail by remember { mutableStateOf("") }
+    // Set when the patient record itself can't be read — most often because
+    // it was deleted, or moved to another doctor, while a link to it (a
+    // notification, a stale list) was still around.
+    var loadError by remember { mutableStateOf<String?>(null) }
     var assignments by remember { mutableStateOf<List<Assignment>>(emptyList()) }
     var feedbacks by remember { mutableStateOf<List<PostWorkoutFeedback>>(emptyList()) }
     var workoutDurations by remember { mutableStateOf<List<WorkoutDuration>>(emptyList()) }
@@ -113,8 +128,20 @@ fun PatientProfileScreen(
     var showDoctorPicker by remember { mutableStateOf(false) }
     var isAssigningDoctor by remember { mutableStateOf(false) }
 
+    // Delete-patient state
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var isDeleting by remember { mutableStateOf(false) }
+
     val scope = rememberCoroutineScope()
     val toast = rememberToast()
+
+    // Editing and deleting mirror the server's rules: an admin, or the doctor
+    // this patient is assigned to (the `users` update rule and the
+    // `deleteUserAccount` callable both check exactly this). Hiding the
+    // actions otherwise spares the user a guaranteed permission error.
+    val canManagePatient = currentUserRole == "admin" ||
+        (currentUserRole == "doctor" && currentAssignedDoctorId.isNotBlank() &&
+            currentAssignedDoctorId == FirebaseService.currentUID)
 
     // The viewer's own role, resolved once and reused. `assignments` is
     // authorised per document for a doctor, so the read below has to know
@@ -135,10 +162,23 @@ fun PatientProfileScreen(
         try {
             val viewerId = FirebaseService.currentUID
             val viewerRole = resolveViewerRole()
-            val patient = UserRepository.getUser(patientId)
+            val patient = try {
+                UserRepository.getUser(patientId)
+            } catch (e: Exception) {
+                // Only an initial load swaps the screen for the error state; a
+                // failed refresh on resume keeps what is already shown.
+                if (patientName.isBlank()) loadError = patientLoadErrorMessage(e)
+                return
+            }
+            loadError = null
             patientName = patient.fullName
             patientInitials = "${patient.firstName.firstOrNull() ?: ""}${patient.lastName.firstOrNull() ?: ""}".uppercase()
-            patientCondition = patient.injuries.firstOrNull() ?: ""
+            patientCondition = patient.injuries.joinToString(", ")
+            patientAge = ageOf(patient)
+            patientGender = patient.gender?.trim().orEmpty()
+            patientPhone = patient.phone?.trim().orEmpty()
+            patientEmail = patient.email
+            currentAssignedDoctorId = patient.assignedDoctorId ?: ""
             careStatus = patient.careStatus ?: ""
 
             // Doctors are authorised on `assignments` per document via the
@@ -184,9 +224,9 @@ fun PatientProfileScreen(
     LaunchedEffect(patientId) {
         loadPatientData()
 
-        // Fetch assigned doctor and all doctors (for admin picker)
+        // Fetch all doctors (for the admin picker). The assigned doctor itself
+        // is read by loadPatientData so it stays current across refreshes.
         try {
-            currentAssignedDoctorId = UserRepository.getUser(patientId).assignedDoctorId ?: ""
             if (currentUserRole == "admin") {
                 allDoctors = UserRepository.getAllDoctors().map { doctor ->
                     doctor.id to "Dr. ${doctor.lastName}".let { if (doctor.lastName.isBlank()) doctor.firstName else it }
@@ -256,6 +296,31 @@ fun PatientProfileScreen(
         )
     }
 
+    if (showDeleteDialog) {
+        DeletePatientDialog(
+            patientName = patientName,
+            isDeleting = isDeleting,
+            onDismiss = { if (!isDeleting) showDeleteDialog = false },
+            onConfirm = {
+                isDeleting = true
+                scope.launch {
+                    try {
+                        FirebaseService.deletePatient(patientId)
+                        toast("Patient deleted")
+                        showDeleteDialog = false
+                        onBack()
+                    } catch (e: Exception) {
+                        // The callable's message explains *why* (not assigned
+                        // to you, offline, …); a flat string hid all of it.
+                        toast(e.message ?: "Failed to delete patient")
+                        isDeleting = false
+                        showDeleteDialog = false
+                    }
+                }
+            }
+        )
+    }
+
     TutorialHost(tourKey = TutorialKeys.DOCTOR_PATIENT_PROFILE, steps = TutorialTours.doctorPatientProfile) {
     Scaffold(
         topBar = {
@@ -296,6 +361,35 @@ fun PatientProfileScreen(
                 repeat(3) { SkeletonListRow() }
                 Spacer(modifier = Modifier.height(DesignTokens.Spacing.XL))
             }
+        } else if (loadError != null) {
+            Column(
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize()
+                    .padding(DesignTokens.Spacing.XL),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Icon(Icons.Default.PersonOff, contentDescription = null, modifier = Modifier.size(56.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(modifier = Modifier.height(DesignTokens.Spacing.MD))
+                Text("Patient unavailable", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+                Spacer(modifier = Modifier.height(DesignTokens.Spacing.XS))
+                Text(
+                    loadError.orEmpty(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(DesignTokens.Spacing.XL))
+                Row(horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.MD)) {
+                    OutlinedButton(onClick = onBack, shape = RoundedCornerShape(DesignTokens.Radius.Base)) { Text("Go back") }
+                    Button(
+                        onClick = { scope.launch { loadPatientData() } },
+                        shape = RoundedCornerShape(DesignTokens.Radius.Base),
+                        colors = ButtonDefaults.buttonColors(containerColor = DesignTokens.Colors.Primary)
+                    ) { Text("Retry") }
+                }
+            }
         } else {
         Column(
             modifier = Modifier
@@ -315,8 +409,29 @@ fun PatientProfileScreen(
             Spacer(modifier = Modifier.height(DesignTokens.Spacing.MD))
             Text(patientName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
             if (patientCondition.isNotBlank()) {
-                Text(patientCondition, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    patientCondition,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = DesignTokens.Spacing.XL)
+                )
             }
+
+            Spacer(modifier = Modifier.height(DesignTokens.Spacing.XL))
+
+            // ── Patient Details (editable by the managing clinician) ──────
+            PatientDetailsCard(
+                age = patientAge,
+                gender = patientGender,
+                phone = patientPhone,
+                email = patientEmail,
+                onEdit = onEditDetails.takeIf { canManagePatient },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = DesignTokens.Spacing.XL)
+                    .tutorialTarget(TutorialIds.DPP_DETAILS)
+            )
 
             Spacer(modifier = Modifier.height(DesignTokens.Spacing.XL))
 
@@ -732,64 +847,37 @@ fun PatientProfileScreen(
 
             Spacer(modifier = Modifier.height(DesignTokens.Spacing.XXL))
 
-            // ── Delete Patient Section ────────────────────────────────────
-            var showDeleteDialog by remember { mutableStateOf(false) }
-            var isDeleting by remember { mutableStateOf(false) }
-
-            if (showDeleteDialog) {
-                AlertDialog(
-                    onDismissRequest = { if (!isDeleting) showDeleteDialog = false },
-                    title = { Text("Delete Patient", color = DesignTokens.Colors.Error) },
-                    text = { Text("Are you sure you want to delete this patient? This permanently removes their sign-in account and all their data (plans, workouts, etc.) and cannot be undone. Their email address becomes free to register again.") },
-                    confirmButton = {
-                        TextButton(
-                            onClick = {
-                                isDeleting = true
-                                scope.launch {
-                                    try {
-                                        FirebaseService.deletePatient(patientId)
-                                        toast("Patient deleted")
-                                        showDeleteDialog = false
-                                        onBack() // Navigate back on success
-                                    } catch (e: Exception) {
-                                        // The callable's message explains *why*
-                                        // (not assigned to you, admin account,
-                                        // offline); a flat string hid all of it.
-                                        toast(e.message ?: "Failed to delete patient")
-                                        isDeleting = false
-                                        showDeleteDialog = false
-                                    }
-                                }
-                            },
-                            enabled = !isDeleting
-                        ) {
-                            if (isDeleting) {
-                                CircularProgressIndicator(modifier = Modifier.size(16.dp), color = DesignTokens.Colors.Error, strokeWidth = 2.dp)
-                            } else {
-                                Text("Delete", color = DesignTokens.Colors.Error, fontWeight = FontWeight.Bold)
-                            }
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showDeleteDialog = false }, enabled = !isDeleting) {
-                            Text("Cancel")
-                        }
-                    }
-                )
-            }
-
-            if (isAdmin) {
-                OutlinedButton(
-                    onClick = { showDeleteDialog = true },
+            // ── Danger zone: delete patient ───────────────────────────────
+            if (canManagePatient) {
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = DesignTokens.Spacing.XL)
-                        .height(48.dp),
-                    shape = RoundedCornerShape(DesignTokens.Radius.Button),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = DesignTokens.Colors.Error),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, DesignTokens.Colors.Error)
                 ) {
-                    Text("Delete Patient", fontWeight = FontWeight.SemiBold)
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    Spacer(modifier = Modifier.height(DesignTokens.Spacing.LG))
+                    Text("Danger Zone", fontWeight = FontWeight.Bold, color = DesignTokens.Colors.Error)
+                    Text(
+                        "Permanently removes this patient's account and all of their records.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(DesignTokens.Spacing.MD))
+                    OutlinedButton(
+                        onClick = { showDeleteDialog = true },
+                        enabled = !isDeleting,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .tutorialTarget(TutorialIds.DPP_DELETE),
+                        shape = RoundedCornerShape(DesignTokens.Radius.Button),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = DesignTokens.Colors.Error),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, DesignTokens.Colors.Error)
+                    ) {
+                        Icon(Icons.Default.DeleteForever, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(DesignTokens.Spacing.SM))
+                        Text("Delete Patient", fontWeight = FontWeight.SemiBold)
+                    }
                 }
             }
 
@@ -862,4 +950,145 @@ private fun AssignedExerciseRow(assignment: Assignment, onClick: () -> Unit) {
             Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
         }
     }
+}
+
+/**
+ * Turns a failed read of the patient's own record into what the clinician
+ * should be told. A doctor reading a patient who was deleted — or moved to
+ * another doctor — is *denied* by the rules rather than shown a missing
+ * document, so both cases read the same way here.
+ */
+private fun patientLoadErrorMessage(e: Exception): String {
+    val gone = e is UserNotFoundException ||
+        (e as? FirebaseFirestoreException)?.code == FirebaseFirestoreException.Code.PERMISSION_DENIED
+    return if (gone) {
+        "This patient's record is no longer available to you. They may have been deleted or moved to another doctor."
+    } else {
+        ErrorHandler.getDisplayMessage(e, "load patient")
+    }
+}
+
+/** Age · gender, mobile and email, with an Edit action when [onEdit] is set. */
+@Composable
+private fun PatientDetailsCard(
+    age: Int?,
+    gender: String,
+    phone: String,
+    email: String,
+    onEdit: (() -> Unit)?,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(DesignTokens.Radius.LG),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(
+            modifier = Modifier.padding(
+                start = DesignTokens.Spacing.LG,
+                end = DesignTokens.Spacing.SM,
+                top = DesignTokens.Spacing.SM,
+                bottom = DesignTokens.Spacing.LG
+            )
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth().heightIn(min = 40.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Patient Details", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                if (onEdit != null) {
+                    TextButton(onClick = onEdit) {
+                        Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp), tint = DesignTokens.Colors.Primary)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Edit", color = DesignTokens.Colors.Primary, fontWeight = FontWeight.SemiBold)
+                    }
+                }
+            }
+            Column(modifier = Modifier.padding(end = DesignTokens.Spacing.SM)) {
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Box(modifier = Modifier.weight(1f)) {
+                        ProfileInfoRow(label = "Age", value = age?.let { "$it years" } ?: "", showDivider = false)
+                    }
+                    Box(modifier = Modifier.weight(1f)) {
+                        ProfileInfoRow(label = "Gender", value = gender, showDivider = false)
+                    }
+                }
+                HorizontalDivider(color = DesignTokens.Colors.NeutralLight, thickness = 0.5.dp)
+                ProfileInfoRow(label = "Mobile", value = phone)
+                ProfileInfoRow(label = "Email", value = email, showDivider = false)
+            }
+        }
+    }
+}
+
+/**
+ * Confirmation for the one irreversible action on this screen. Typing DELETE
+ * is deliberate friction: the button sits at the bottom of a long scroll, next
+ * to routine actions, and what it removes is a patient's clinical history.
+ */
+@Composable
+private fun DeletePatientDialog(
+    patientName: String,
+    isDeleting: Boolean,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    var confirmText by remember { mutableStateOf("") }
+    val confirmed = confirmText.trim().equals("DELETE", ignoreCase = true)
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { Icon(Icons.Default.DeleteForever, contentDescription = null, tint = DesignTokens.Colors.Error) },
+        title = {
+            Text(
+                "Delete ${patientName.ifBlank { "this patient" }}?",
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.SM)) {
+                Text("This permanently deletes their sign-in account and everything attached to it:")
+                listOf(
+                    "Exercise assignments and workout history",
+                    "Health feedback, chat messages and uploads",
+                    "Appointments and notifications"
+                ).forEach { item ->
+                    Text("•  $item", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Text(
+                    "This cannot be undone. Their email address becomes free to register again.",
+                    fontWeight = FontWeight.SemiBold
+                )
+                OutlinedTextField(
+                    value = confirmText,
+                    onValueChange = { confirmText = it.take(10) },
+                    label = { Text("Type DELETE to confirm") },
+                    singleLine = true,
+                    enabled = !isDeleting,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(DesignTokens.Radius.Base),
+                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = DesignTokens.Colors.Error)
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm, enabled = confirmed && !isDeleting) {
+                if (isDeleting) {
+                    CircularProgressIndicator(modifier = Modifier.size(16.dp), color = DesignTokens.Colors.Error, strokeWidth = 2.dp)
+                } else {
+                    Text(
+                        "Delete permanently",
+                        color = if (confirmed) DesignTokens.Colors.Error else MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !isDeleting) { Text("Cancel") }
+        }
+    )
 }

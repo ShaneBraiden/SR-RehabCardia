@@ -32,6 +32,7 @@ object TutorialKeys {
     const val DOCTOR_PATIENT_PROFILE = "doctor_patient_profile"
     const val PATIENT_FEEDBACK_CHAT = "patient_feedback_chat"
     const val EDIT_ASSIGNMENT = "edit_assignment"
+    const val EDIT_PATIENT = "edit_patient"
     const val ADD_PATIENT = "add_patient"
     const val ADD_DOCTOR = "add_doctor"
     const val VIDEO_UPLOAD = "video_upload"
@@ -126,6 +127,12 @@ object TutorialIds {
     const val DPP_SEND_FEEDBACK = "dpp_send_feedback"
     const val DPP_ASSIGNMENTS = "dpp_assignments"
     const val DPP_HISTORY = "dpp_history"
+    const val DPP_DETAILS = "dpp_details"
+    const val DPP_DELETE = "dpp_delete"
+
+    // ── Edit patient ──
+    const val EP_FORM = "ep_form"
+    const val EP_SAVE = "ep_save"
 
     // ── Patient feedback chat (doctor) ──
     const val PFC_FEEDBACKS_TAB = "pfc_feedbacks_tab"
@@ -281,10 +288,17 @@ object TutorialTours {
     )
 
     val doctorPatientProfile = listOf(
+        TutorialStep(TutorialIds.DPP_DETAILS, "Patient details", "Age, contact and condition at a glance. Tap Edit to correct them."),
         TutorialStep(TutorialIds.DPP_METRICS, "Patient metrics", "Charts summarize this patient's recovery and adherence."),
         TutorialStep(TutorialIds.DPP_SEND_FEEDBACK, "Send feedback", "Send a message or feedback directly to this patient."),
         TutorialStep(TutorialIds.DPP_ASSIGNMENTS, "Manage plan", "Assign, edit, or review this patient's exercises."),
-        TutorialStep(TutorialIds.DPP_HISTORY, "History", "See everything this patient has completed.")
+        TutorialStep(TutorialIds.DPP_HISTORY, "History", "See everything this patient has completed."),
+        TutorialStep(TutorialIds.DPP_DELETE, "Delete patient", "Permanently remove this patient's account and records. This cannot be undone.")
+    )
+
+    val editPatient = listOf(
+        TutorialStep(TutorialIds.EP_FORM, "Patient details", "Correct the patient's name, age, gender, mobile number or condition."),
+        TutorialStep(TutorialIds.EP_SAVE, "Save", "Save to update the patient's record. Only the fields you changed are written.")
     )
 
     val patientFeedbackChat = listOf(

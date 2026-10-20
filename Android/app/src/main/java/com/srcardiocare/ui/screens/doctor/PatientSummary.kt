@@ -30,6 +30,14 @@ fun ageFrom(dateOfBirth: String?, today: LocalDate = LocalDate.now()): Int? {
     return Period.between(dob, today).years.takeIf { it in 0..130 }
 }
 
+/**
+ * The patient's age: derived from [User.dateOfBirth] when one is recorded,
+ * otherwise the whole-years `age` a clinician typed on Add / Edit Patient.
+ * A date of birth wins because it stays correct as the years pass.
+ */
+fun ageOf(user: User): Int? =
+    ageFrom(user.dateOfBirth) ?: user.age?.takeIf { it > 0 }
+
 /** "M" / "F" / first initial of anything else. Null when unrecorded. */
 fun sexInitial(gender: String?): String? =
     gender?.trim()?.takeIf { it.isNotBlank() }?.first()?.uppercase()
@@ -66,7 +74,7 @@ fun patientMetaLine(age: Int?, sex: String?, weekNumber: Int?): String =
 /** Convenience: build the meta line straight off a [User] and their assignments. */
 fun patientMetaLine(user: User, assignments: List<Assignment>): String =
     patientMetaLine(
-        age = ageFrom(user.dateOfBirth),
+        age = ageOf(user),
         sex = sexInitial(user.gender),
         weekNumber = rehabWeek(assignments)
     )

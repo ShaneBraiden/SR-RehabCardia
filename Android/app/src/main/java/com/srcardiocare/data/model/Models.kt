@@ -29,6 +29,10 @@ data class User(
     // Patient profile fields
     val gender: String? = null,
     val dateOfBirth: String? = null,
+    // Whole years as typed by the clinician (Add / Edit Patient). Android never
+    // collects a date of birth, so this is the only age most patients have —
+    // `dateOfBirth`, when present, comes from other clients or seeded data.
+    val age: Int? = null,
     val injuries: List<String> = emptyList(),
     val primaryGoal: String? = null,
     // Doctor profile fields

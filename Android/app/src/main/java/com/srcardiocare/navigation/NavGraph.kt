@@ -73,6 +73,9 @@ sealed class Route(val path: String) {
     object AddPatient : Route("doctor/add-patient")
     object AddDoctor : Route("doctor/add-doctor")
     object PatientProfile : Route("doctor/patient/{patientId}")
+    object EditPatient : Route("doctor/patient/{patientId}/edit") {
+        fun createPath(patientId: String) = "doctor/patient/$patientId/edit"
+    }
     object AssignExercise : Route("doctor/patient/{patientId}/assign") {
         fun createPath(patientId: String) = "doctor/patient/$patientId/assign"
     }
@@ -288,9 +291,22 @@ fun SRCardiocareNavGraph(
                 },
                 onOpenChat = { navController.navigate(Route.PatientFeedbackChat.createPath(patientId)) },
                 onHistoryTap = { navController.navigate(Route.PatientHistory.createPath(patientId)) },
+                onEditDetails = { navController.navigate(Route.EditPatient.createPath(patientId)) },
                 onManageAssignments = {
                     navController.navigate(Route.AdminPatientAssignments.createPath(patientId))
                 }
+            )
+        }
+
+        composable(
+            route = Route.EditPatient.path,
+            arguments = listOf(navArgument("patientId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val patientId = backStackEntry.arguments?.getString("patientId") ?: ""
+            com.srcardiocare.ui.screens.doctor.EditPatientScreen(
+                patientId = patientId,
+                onBack = { navController.popBackStack() },
+                onSaved = { navController.popBackStack() }
             )
         }
 

@@ -42,7 +42,7 @@ fun AddPatientScreen(onSaved: () -> Unit, onBack: () -> Unit) {
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    val genders = listOf("Male", "Female", "Other")
+    val genders = PATIENT_GENDERS
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val toast = rememberToast()

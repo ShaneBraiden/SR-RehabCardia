@@ -24,6 +24,7 @@ fun Map<String, Any?>.toUser(id: String): User = User(
     autoToursEnabled = this["autoToursEnabled"] as? Boolean ?: false,
     gender = this["gender"] as? String,
     dateOfBirth = this["dateOfBirth"] as? String,
+    age = (this["age"] as? Number)?.toInt(),
     injuries = (this["injuries"] as? List<*>)?.mapNotNull { it as? String } ?: emptyList(),
     primaryGoal = this["primaryGoal"] as? String,
     speciality = this["speciality"] as? String,
